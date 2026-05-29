@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Enquiry Submitted</p>
+    <h1 class="text-3xl font-bold text-slate-950 mt-3">Thank you</h1>
+    <p class="text-slate-600 mt-4 leading-7">Your enquiry has been received by HIVE and will be reviewed.</p>
+    <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-600">
+        <p>Reference: {{ enquiry.id }}</p>
+        <p>Company: {{ enquiry.company_name }}</p>
+        <p>Status: {{ enquiry.status|title }}</p>
+    </div>
+    <a href="{{ url_for('public_directory.directory_index') }}" class="mt-8 inline-flex rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Back to Directory</a>
+</div>
+{% endblock %}
