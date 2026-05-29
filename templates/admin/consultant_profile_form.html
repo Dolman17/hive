@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Admin Consultant</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">Edit {{ consultant.name }}</h1>
+        <p class="text-slate-600 mt-2">Manage profile, directory visibility and verification.</p>
+    </div>
+    <a href="{{ url_for('consultant_profiles.admin_consultant_detail', consultant_id=consultant.id) }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back</a>
+</div>
+
+<form method="POST" class="space-y-5 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div><label class="block text-sm font-medium text-slate-700 mb-1">Business name</label><input name="business_name" value="{{ profile.business_name or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3"></div>
+    <div><label class="block text-sm font-medium text-slate-700 mb-1">Location</label><input name="location" value="{{ profile.location or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3"></div>
+    <div><label class="block text-sm font-medium text-slate-700 mb-1">Bio</label><textarea name="bio" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ profile.bio or '' }}</textarea></div>
+    <div><label class="block text-sm font-medium text-slate-700 mb-1">Specialisms</label><textarea name="specialisms" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ profile.specialisms or '' }}</textarea></div>
+    <div><label class="block text-sm font-medium text-slate-700 mb-1">Sectors</label><textarea name="sectors" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ profile.sectors or '' }}</textarea></div>
+    <label class="flex items-center gap-3 text-sm text-slate-700"><input type="checkbox" name="remote_available" {% if profile.remote_available %}checked{% endif %}> Remote available</label>
+    <label class="flex items-center gap-3 text-sm text-slate-700"><input type="checkbox" name="is_public" {% if profile.is_public %}checked{% endif %}> Public directory visible</label>
+    <label class="flex items-center gap-3 text-sm text-slate-700"><input type="checkbox" name="insurance_verified" {% if profile.insurance_verified %}checked{% endif %}> Insurance verified</label>
+    <label class="flex items-center gap-3 text-sm text-slate-700"><input type="checkbox" name="qualifications_verified" {% if profile.qualifications_verified %}checked{% endif %}> Qualifications verified</label>
+    <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Save Profile</button>
+</form>
+
+{% endblock %}
