@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Admin</p>
+    <h1 class="text-3xl font-bold text-slate-950 mt-2">Consultants</h1>
+    <p class="text-slate-600 mt-2">Manage consultant profiles, directory visibility and verification.</p>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="divide-y divide-slate-200">
+        {% for row in rows %}
+            {% set consultant = row.consultant %}
+            {% set profile = row.profile %}
+            <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="font-bold text-slate-950">{{ consultant.name }}</h2>
+                    <p class="text-sm text-slate-600 mt-1">{{ consultant.email }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1">{{ profile.business_name or 'No business name' }}</span>
+                        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1">Public: {{ 'Yes' if profile.is_public else 'No' }}</span>
+                        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1">Insurance: {{ 'Yes' if profile.insurance_verified else 'No' }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('consultant_profiles.admin_consultant_detail', consultant_id=consultant.id) }}" class="rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">View</a>
+            </div>
+        {% else %}
+            <div class="p-8">
+                <h2 class="text-xl font-bold text-slate-950">No consultants found</h2>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
