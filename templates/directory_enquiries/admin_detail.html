@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold text-slate-950 mb-6">Directory Enquiry</h1>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">{{ enquiry.company_name }}</h2>
+        <div class="text-sm text-slate-600 mt-4 space-y-2">
+            <p>Contact: {{ enquiry.contact_name }}</p>
+            <p>Email: {{ enquiry.contact_email }}</p>
+            <p>Phone: {{ enquiry.contact_phone or 'Not provided' }}</p>
+            <p>Urgency: {{ enquiry.urgency|title }}</p>
+        </div>
+        <p class="text-slate-600 mt-5 whitespace-pre-line">{{ enquiry.support_needed or 'No support summary provided.' }}</p>
+    </div>
+    <form method="POST" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5 h-fit">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div><label class="block text-sm font-medium text-slate-700 mb-1">Status</label><select name="status" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white">{% for status in ['new','assigned','accepted','won','lost','closed'] %}<option value="{{ status }}" {% if enquiry.status == status %}selected{% endif %}>{{ status|title }}</option>{% endfor %}</select></div>
+        <div><label class="block text-sm font-medium text-slate-700 mb-1">Assign consultant</label><select name="assigned_consultant_id" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white"><option value="">Unassigned</option>{% for consultant in consultants %}<option value="{{ consultant.id }}" {% if enquiry.assigned_consultant_id == consultant.id %}selected{% endif %}>{{ consultant.name }}</option>{% endfor %}</select></div>
+        <div><label class="block text-sm font-medium text-slate-700 mb-1">Admin notes</label><textarea name="admin_notes" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ enquiry.admin_notes or '' }}</textarea></div>
+        <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Save</button>
+    </form>
+</div>
+{% endblock %}
