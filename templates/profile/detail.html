@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Consultant Profile</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">{{ profile.business_name or current_user.name }}</h1>
+        <p class="text-slate-600 mt-2">Manage the profile HIVE uses for directory, verification and matching.</p>
+    </div>
+    <a href="{{ url_for('consultant_profiles.profile_edit') }}" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Edit Profile</a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Bio</h2>
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.bio or 'No bio added yet.' }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Specialisms</h2>
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.specialisms or 'No specialisms added yet.' }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Sectors</h2>
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.sectors or 'No sectors added yet.' }}</p>
+        </div>
+    </div>
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Status</h2>
+            <div class="text-sm text-slate-600 mt-4 space-y-2">
+                <p>Location: {{ profile.location or 'Not set' }}</p>
+                <p>Remote available: {{ 'Yes' if profile.remote_available else 'No' }}</p>
+                <p>Public: {{ 'Yes' if profile.is_public else 'No' }}</p>
+                <p>Insurance verified: {{ 'Yes' if profile.insurance_verified else 'No' }}</p>
+                <p>Qualifications verified: {{ 'Yes' if profile.qualifications_verified else 'No' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
