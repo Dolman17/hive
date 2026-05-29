@@ -20,6 +20,8 @@ from werkzeug.utils import secure_filename
 from config import Config
 from billing_routes import billing_bp
 from consultant_profile_routes import consultant_profiles_bp
+from public_directory_routes import public_directory_bp
+
 from extensions import db, migrate, login_manager, csrf
 from forms import (
     LoginForm,
@@ -64,6 +66,7 @@ def create_app():
 
     app.register_blueprint(billing_bp)
     app.register_blueprint(consultant_profiles_bp)
+    app.register_blueprint(public_directory_bp)
 
     register_routes(app)
 
