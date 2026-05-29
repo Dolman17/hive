@@ -71,6 +71,13 @@ class User(db.Model, UserMixin):
         foreign_keys="ExpertRequest.consultant_id"
     )
 
+    subscription = db.relationship(
+        "Subscription",
+        backref="user",
+        uselist=False,
+        cascade="all, delete-orphan"
+    )
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -347,6 +354,7 @@ class Lead(db.Model):
         onupdate=datetime.utcnow
     )
 
+
 class ExpertRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
@@ -376,6 +384,33 @@ class ExpertRequest(db.Model):
     )
 
     closed_at = db.Column(db.DateTime)
+
+
+class Subscription(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        unique=True
+    )
+
+    tier = db.Column(db.String(50), default="free", nullable=False)
+    status = db.Column(db.String(50), default="active", nullable=False)
+
+    notes = db.Column(db.Text)
+
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ends_at = db.Column(db.DateTime)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
 
 @login_manager.user_loader
 def load_user(user_id):
