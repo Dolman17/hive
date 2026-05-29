@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Admin</p>
+    <h1 class="text-3xl font-bold text-slate-950 mt-2">Billing Overview</h1>
+    <p class="text-slate-600 mt-2">View consultant billing shell records and subscription metadata.</p>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-slate-200">
+        <h2 class="text-lg font-bold text-slate-950">Consultant Billing Records</h2>
+    </div>
+
+    <div class="divide-y divide-slate-200">
+        {% for row in rows %}
+            {% set consultant = row.consultant %}
+            {% set subscription = row.subscription %}
+            {% set billing_profile = row.billing_profile %}
+            <div class="p-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-950">{{ consultant.name }}</h3>
+                        <p class="text-sm text-slate-600 mt-1">{{ consultant.email }}</p>
+                    </div>
+                    <a href="{{ url_for('admin_consultant_subscription', consultant_id=consultant.id) }}" class="rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Manage Subscription</a>
+                </div>
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 text-sm text-slate-600">
+                    <p>Tier: {{ tier_labels.get(subscription.tier, subscription.tier|title) }}</p>
+                    <p>Status: {{ subscription.status|replace('_', ' ')|title }}</p>
+                    <p>Billing email: {{ billing_profile.billing_email or 'Not set' }}</p>
+                    <p>Customer ID: {{ billing_profile.stripe_customer_id or 'Not created' }}</p>
+                    <p>Subscription ID: {{ billing_profile.stripe_subscription_id or 'Not created' }}</p>
+                    <p>Price ID: {{ billing_profile.stripe_price_id or 'Not set' }}</p>
+                    <p>Checkout session: {{ billing_profile.stripe_checkout_session_id or 'Not created' }}</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-8">
+                <h2 class="text-xl font-bold text-slate-950">No billing records found</h2>
+                <p class="text-slate-600 mt-2">Billing records will appear when consultant subscriptions exist.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
