@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold text-slate-950 mb-6">Directory Enquiries</h1>
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="divide-y divide-slate-200">
+        {% for enquiry in enquiries %}
+            <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h2 class="font-bold text-slate-950">{{ enquiry.company_name }}</h2>
+                    <p class="text-sm text-slate-600 mt-1">{{ enquiry.contact_name }} · {{ enquiry.contact_email }}</p>
+                    <p class="text-sm text-slate-500 mt-2">Status: {{ enquiry.status|title }} · Urgency: {{ enquiry.urgency|title }}</p>
+                </div>
+                <a href="{{ url_for('directory_enquiries.admin_directory_enquiry_detail', enquiry_id=enquiry.id) }}" class="rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Review</a>
+            </div>
+        {% else %}
+            <div class="p-8"><h2 class="text-xl font-bold text-slate-950">No enquiries found</h2></div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
