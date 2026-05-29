@@ -30,7 +30,8 @@ from forms import (
     AdminLeadForm,
     ConsultantLeadNotesForm,
     ExpertRequestForm,
-    AdminExpertRequestForm
+    AdminExpertRequestForm,
+    SubscriptionForm
 )
 from models import (
     User,
@@ -41,7 +42,8 @@ from models import (
     CoverRequest,
     CoverClient,
     Lead,
-    ExpertRequest
+    ExpertRequest,
+    Subscription
 )
 
 
@@ -91,6 +93,100 @@ def consultant_required(view_func):
         return view_func(*args, **kwargs)
 
     return wrapped_view
+
+
+TIER_RANKS = {
+    "free": 0,
+    "starter": 10,
+    "professional": 20,
+    "covered": 30,
+    "boutique": 40,
+    "admin": 100,
+}
+
+TIER_LABELS = {
+    "free": "Free",
+    "starter": "Starter",
+    "professional": "Professional",
+    "covered": "Covered",
+    "boutique": "Boutique",
+    "admin": "Admin",
+}
+
+FEATURE_TIER_LABELS = {
+    "starter": "Starter",
+    "professional": "Professional",
+    "covered": "Covered",
+    "boutique": "Boutique",
+}
+
+
+def get_or_create_subscription(user):
+    subscription = Subscription.query.filter_by(user_id=user.id).first()
+
+    if subscription:
+        return subscription
+
+    default_tier = "admin" if user.role == "admin" else "boutique"
+
+    subscription = Subscription(
+        user_id=user.id,
+        tier=default_tier,
+        status="active",
+        notes="Auto-created by HIVE internal subscription system."
+    )
+
+    db.session.add(subscription)
+    db.session.commit()
+
+    return subscription
+
+
+def user_has_tier(user, required_tier):
+    if not user.is_authenticated:
+        return False
+
+    if user.role == "admin":
+        return True
+
+    subscription = get_or_create_subscription(user)
+
+    if subscription.status not in ["active", "trial"]:
+        return False
+
+    user_rank = TIER_RANKS.get(subscription.tier, 0)
+    required_rank = TIER_RANKS.get(required_tier, 0)
+
+    return user_rank >= required_rank
+
+
+def subscription_required(required_tier):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapped_view(*args, **kwargs):
+            if not current_user.is_authenticated:
+                return redirect(url_for("login"))
+
+            if current_user.role == "admin":
+                return view_func(*args, **kwargs)
+
+            if user_has_tier(current_user, required_tier):
+                return view_func(*args, **kwargs)
+
+            subscription = get_or_create_subscription(current_user)
+
+            return render_template(
+                "billing/upgrade_required.html",
+                required_tier=required_tier,
+                required_tier_label=FEATURE_TIER_LABELS.get(required_tier, required_tier.title()),
+                current_tier=subscription.tier,
+                current_tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title()),
+                subscription=subscription
+            )
+
+        return wrapped_view
+
+    return decorator
 
 
 def slugify(value):
@@ -297,6 +393,7 @@ def register_routes(app):
     @consultant_required
     def dashboard():
         settings = get_or_create_tenant_settings(current_user)
+        subscription = get_or_create_subscription(current_user)
 
         active_apps_count = ConsultantAppAccess.query.filter_by(
             consultant_id=current_user.id,
@@ -348,12 +445,15 @@ def register_routes(app):
             assigned_leads_count=assigned_leads_count,
             active_leads_count=active_leads_count,
             expert_requests_count=expert_requests_count,
-            open_expert_requests_count=open_expert_requests_count
+            open_expert_requests_count=open_expert_requests_count,
+            subscription=subscription,
+            tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title())
         )
 
     @app.route("/website/settings", methods=["GET", "POST"])
     @login_required
     @consultant_required
+    @subscription_required("starter")
     def website_settings():
         settings = get_or_create_tenant_settings(current_user)
         form = TenantSettingsForm(obj=settings)
@@ -409,6 +509,7 @@ def register_routes(app):
     @app.route("/website/preview")
     @login_required
     @consultant_required
+    @subscription_required("starter")
     def website_preview():
         settings = get_or_create_tenant_settings(current_user)
         return render_template("member/website_preview.html", settings=settings)
@@ -435,6 +536,7 @@ def register_routes(app):
     @app.route("/apps")
     @login_required
     @consultant_required
+    @subscription_required("professional")
     def apps_index():
         app_modules = AppModule.query.filter_by(is_active=True).order_by(AppModule.name.asc()).all()
         access_map = get_consultant_app_access_map(current_user.id)
@@ -448,6 +550,7 @@ def register_routes(app):
     @app.route("/apps/<app_slug>/request-access", methods=["POST"])
     @login_required
     @consultant_required
+    @subscription_required("professional")
     def request_app_access(app_slug):
         app_module = AppModule.query.filter_by(slug=app_slug, is_active=True).first_or_404()
         access = get_or_create_app_access(current_user.id, app_module.id)
@@ -465,6 +568,7 @@ def register_routes(app):
     @app.route("/apps/<app_slug>/launch")
     @login_required
     @consultant_required
+    @subscription_required("professional")
     def launch_app(app_slug):
         app_module = AppModule.query.filter_by(slug=app_slug, is_active=True).first_or_404()
         access = ConsultantAppAccess.query.filter_by(
@@ -486,6 +590,7 @@ def register_routes(app):
     @app.route("/resources")
     @login_required
     @consultant_required
+    @subscription_required("starter")
     def resources_list():
         category = request.args.get("category", "").strip()
 
@@ -516,6 +621,7 @@ def register_routes(app):
     @app.route("/resources/<int:resource_id>")
     @login_required
     @consultant_required
+    @subscription_required("starter")
     def resource_detail(resource_id):
         resource = Resource.query.filter_by(
             id=resource_id,
@@ -527,6 +633,7 @@ def register_routes(app):
     @app.route("/resources/<int:resource_id>/download")
     @login_required
     @consultant_required
+    @subscription_required("starter")
     def resource_download(resource_id):
         resource = Resource.query.filter_by(
             id=resource_id,
@@ -549,6 +656,7 @@ def register_routes(app):
     @app.route("/cover")
     @login_required
     @consultant_required
+    @subscription_required("covered")
     def cover_list():
         cover_requests = CoverRequest.query.filter_by(
             consultant_id=current_user.id
@@ -562,6 +670,7 @@ def register_routes(app):
     @app.route("/cover/new", methods=["GET", "POST"])
     @login_required
     @consultant_required
+    @subscription_required("covered")
     def cover_new():
         form = CoverRequestForm()
 
@@ -590,6 +699,7 @@ def register_routes(app):
     @app.route("/cover/<int:cover_id>")
     @login_required
     @consultant_required
+    @subscription_required("covered")
     def cover_detail(cover_id):
         cover_request = get_consultant_cover_or_404(cover_id)
 
@@ -601,6 +711,7 @@ def register_routes(app):
     @app.route("/cover/<int:cover_id>/clients/new", methods=["GET", "POST"])
     @login_required
     @consultant_required
+    @subscription_required("covered")
     def cover_add_client(cover_id):
         cover_request = get_consultant_cover_or_404(cover_id)
 
@@ -639,6 +750,7 @@ def register_routes(app):
     @app.route("/cover/<int:cover_id>/submit", methods=["POST"])
     @login_required
     @consultant_required
+    @subscription_required("covered")
     def cover_submit(cover_id):
         cover_request = get_consultant_cover_or_404(cover_id)
 
@@ -692,6 +804,7 @@ def register_routes(app):
     @app.route("/leads")
     @login_required
     @consultant_required
+    @subscription_required("professional")
     def leads_list():
         leads = Lead.query.filter_by(
             assigned_consultant_id=current_user.id
@@ -702,6 +815,7 @@ def register_routes(app):
     @app.route("/leads/<int:lead_id>", methods=["GET", "POST"])
     @login_required
     @consultant_required
+    @subscription_required("professional")
     def lead_detail(lead_id):
         lead = get_consultant_lead_or_404(lead_id)
         form = ConsultantLeadNotesForm(obj=lead)
@@ -718,6 +832,7 @@ def register_routes(app):
     @app.route("/leads/<int:lead_id>/status/<status>", methods=["POST"])
     @login_required
     @consultant_required
+    @subscription_required("professional")
     def lead_update_status(lead_id, status):
         allowed_statuses = ["accepted", "declined", "won", "lost", "closed"]
 
@@ -735,6 +850,7 @@ def register_routes(app):
     @app.route("/expert-help")
     @login_required
     @consultant_required
+    @subscription_required("boutique")
     def expert_help_list():
         expert_requests = ExpertRequest.query.filter_by(
             consultant_id=current_user.id
@@ -748,6 +864,7 @@ def register_routes(app):
     @app.route("/expert-help/new", methods=["GET", "POST"])
     @login_required
     @consultant_required
+    @subscription_required("boutique")
     def expert_help_new():
         form = ExpertRequestForm()
 
@@ -776,6 +893,7 @@ def register_routes(app):
     @app.route("/expert-help/<int:request_id>")
     @login_required
     @consultant_required
+    @subscription_required("boutique")
     def expert_help_detail(request_id):
         expert_request = get_consultant_expert_request_or_404(request_id)
 
@@ -808,6 +926,10 @@ def register_routes(app):
         open_expert_requests = ExpertRequest.query.filter(
             ExpertRequest.status.in_(["new", "reviewing", "assigned", "responded"])
         ).count()
+        total_subscriptions = Subscription.query.count()
+        active_subscriptions = Subscription.query.filter(
+            Subscription.status.in_(["active", "trial"])
+        ).count()
 
         return render_template(
             "admin/dashboard.html",
@@ -826,7 +948,9 @@ def register_routes(app):
             assigned_leads=assigned_leads,
             won_leads=won_leads,
             total_expert_requests=total_expert_requests,
-            open_expert_requests=open_expert_requests
+            open_expert_requests=open_expert_requests,
+            total_subscriptions=total_subscriptions,
+            active_subscriptions=active_subscriptions
         )
 
     @app.route("/admin/apps")
@@ -1144,6 +1268,53 @@ def register_routes(app):
             "admin/expert_request_detail.html",
             expert_request=expert_request,
             form=form
+        )
+
+    @app.route("/admin/subscriptions")
+    @login_required
+    @admin_required
+    def admin_subscriptions():
+        consultants = User.query.filter_by(role="consultant").order_by(User.name.asc()).all()
+
+        subscription_rows = []
+
+        for consultant in consultants:
+            subscription = get_or_create_subscription(consultant)
+            subscription_rows.append({
+                "consultant": consultant,
+                "subscription": subscription
+            })
+
+        return render_template(
+            "admin/subscriptions.html",
+            subscription_rows=subscription_rows,
+            tier_labels=TIER_LABELS
+        )
+
+    @app.route("/admin/consultants/<int:consultant_id>/subscription", methods=["GET", "POST"])
+    @login_required
+    @admin_required
+    def admin_consultant_subscription(consultant_id):
+        consultant = User.query.filter_by(id=consultant_id, role="consultant").first_or_404()
+        subscription = get_or_create_subscription(consultant)
+        form = SubscriptionForm(obj=subscription)
+
+        if form.validate_on_submit():
+            subscription.tier = form.tier.data
+            subscription.status = form.status.data
+            subscription.notes = form.notes.data
+
+            db.session.commit()
+
+            flash(f"Subscription updated for {consultant.name}.", "success")
+            return redirect(url_for("admin_subscriptions"))
+
+        return render_template(
+            "admin/consultant_subscription.html",
+            consultant=consultant,
+            subscription=subscription,
+            form=form,
+            tier_labels=TIER_LABELS
         )
 
     @app.cli.command("seed-users")
