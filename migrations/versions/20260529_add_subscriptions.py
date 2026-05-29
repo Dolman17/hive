@@ -1,7 +1,7 @@
 """Add subscriptions table
 
 Revision ID: 20260529_add_subscriptions
-Revises: 
+Revises: 95962e381f6b
 Create Date: 2026-05-29
 """
 from alembic import op
@@ -9,7 +9,7 @@ import sqlalchemy as sa
 
 
 revision = "20260529_add_subscriptions"
-down_revision = None
+down_revision = "95962e381f6b"
 branch_labels = None
 depends_on = None
 
