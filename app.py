@@ -18,7 +18,6 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 
 from config import Config
-from billing_routes import billing_bp
 from extensions import db, migrate, login_manager, csrf
 from forms import (
     LoginForm,
@@ -60,8 +59,6 @@ def create_app():
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
-
-    app.register_blueprint(billing_bp)
 
     register_routes(app)
 
