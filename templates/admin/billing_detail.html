@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Admin Billing</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">{{ consultant.name }}</h1>
+        <p class="text-slate-600 mt-2">Edit Stripe-ready billing metadata. No live Stripe calls are made.</p>
+    </div>
+    <a href="{{ url_for('billing.admin_billing') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back to Billing</a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">Billing Metadata</h2>
+        <form method="POST" class="space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Billing email</label>
+                <input name="billing_email" value="{{ billing_profile.billing_email or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Stripe customer ID</label>
+                <input name="stripe_customer_id" value="{{ billing_profile.stripe_customer_id or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Stripe subscription ID</label>
+                <input name="stripe_subscription_id" value="{{ billing_profile.stripe_subscription_id or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Stripe price ID</label>
+                <input name="stripe_price_id" value="{{ billing_profile.stripe_price_id or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Stripe checkout session ID</label>
+                <input name="stripe_checkout_session_id" value="{{ billing_profile.stripe_checkout_session_id or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Current period end</label>
+                <input type="date" name="current_period_end" value="{% if billing_profile.current_period_end %}{{ billing_profile.current_period_end.strftime('%Y-%m-%d') }}{% endif %}" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+            </div>
+
+            <label class="flex items-center gap-3 text-sm text-slate-700">
+                <input type="checkbox" name="cancel_at_period_end" {% if billing_profile.cancel_at_period_end %}checked{% endif %}>
+                Cancel at period end
+            </label>
+
+            <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Save Billing Metadata</button>
+        </form>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Subscription</h2>
+            <div class="text-sm text-slate-600 mt-4 space-y-2">
+                <p>Consultant: {{ consultant.name }}</p>
+                <p>Email: {{ consultant.email }}</p>
+                <p>Tier: {{ tier_label }}</p>
+                <p>Status: {{ subscription.status|replace('_', ' ')|title }}</p>
+            </div>
+            <a href="{{ url_for('admin_consultant_subscription', consultant_id=consultant.id) }}" class="mt-5 inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Manage Subscription</a>
+        </div>
+
+        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-amber-900">Safe shell</h2>
+            <p class="text-sm text-amber-900 mt-4 leading-7">These fields prepare the system for Stripe integration. They do not create customers, subscriptions, checkout sessions, or portal sessions yet.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
