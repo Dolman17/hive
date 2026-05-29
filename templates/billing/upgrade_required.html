@@ -2,11 +2,9 @@
 
 {% block content %}
 
-<div class="max-w-3xl mx-auto">
+<div class="max-w-4xl mx-auto">
     <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            Upgrade Required
-        </p>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Upgrade Required</p>
 
         <h1 class="text-3xl font-bold text-slate-950 mt-3">
             This feature requires the {{ required_tier_label }} tier.
@@ -14,24 +12,29 @@
 
         <p class="text-slate-600 mt-4 leading-7">
             Your current membership is <strong>{{ current_tier_label }}</strong>.
-            To access this feature, your subscription needs to be upgraded.
+            To access this feature, move to the {{ required_tier_label }} tier or above.
         </p>
 
         <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5">
             <h2 class="font-bold text-slate-950">Current access</h2>
-            <p class="text-sm text-slate-600 mt-2">Status: {{ subscription.status|replace("_", " ")|title }}</p>
+            <p class="text-sm text-slate-600 mt-2">Status: {{ subscription.status|replace('_', ' ')|title }}</p>
             <p class="text-sm text-slate-600 mt-1">Tier: {{ current_tier_label }}</p>
         </div>
 
         <div class="mt-8 flex flex-wrap gap-3">
-            <a href="{{ url_for('dashboard') }}"
-               class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
-                Back to Dashboard
+            <a href="{{ url_for('billing.billing_checkout_placeholder', tier=required_tier) }}"
+               class="rounded-xl bg-amber-400 text-slate-950 px-5 py-3 text-sm font-semibold hover:bg-amber-300">
+                View Upgrade Option
             </a>
 
-            <a href="mailto:admin@example.com?subject=HIVE%20membership%20upgrade"
-               class="rounded-xl bg-amber-400 text-slate-950 px-5 py-3 text-sm font-semibold hover:bg-amber-300">
-                Request Upgrade
+            <a href="{{ url_for('billing.billing_home') }}"
+               class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
+                Billing Overview
+            </a>
+
+            <a href="{{ url_for('dashboard') }}"
+               class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+                Back to Dashboard
             </a>
         </div>
     </div>
