@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Notifications</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">Your Notifications</h1>
+        <p class="text-slate-600 mt-2">System notifications for HIVE activity.</p>
+    </div>
+    <form method="POST" action="{{ url_for('notifications.mark_all_notifications_read') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Mark all read</button>
+    </form>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="divide-y divide-slate-200">
+        {% for notification in notifications %}
+            <div class="p-6 {% if not notification.is_read %}bg-amber-50{% endif %}">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div>
+                        <h2 class="font-bold text-slate-950">{{ notification.title }}</h2>
+                        <p class="text-sm text-slate-600 mt-2">{{ notification.message or '' }}</p>
+                        <p class="text-xs text-slate-500 mt-3">{{ notification.category|replace('_', ' ')|title }} · {{ notification.created_at.strftime('%d/%m/%Y %H:%M') if notification.created_at else '' }}</p>
+                    </div>
+                    <form method="POST" action="{{ url_for('notifications.mark_notification_read', notification_id=notification.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                            {% if notification.link_url %}Open{% else %}Mark read{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-8">
+                <h2 class="text-xl font-bold text-slate-950">No notifications yet</h2>
+                <p class="text-slate-600 mt-2">Notifications will appear here when HIVE activity needs your attention.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
