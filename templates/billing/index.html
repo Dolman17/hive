@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Billing</p>
+    <h1 class="text-3xl font-bold text-slate-950 mt-2">Billing Overview</h1>
+    <p class="text-slate-600 mt-2">This is the Stripe-ready billing shell. Live payment processing is not connected yet.</p>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">Current Membership</h2>
+        <div class="text-sm text-slate-600 mt-4 space-y-2">
+            <p>Tier: {{ tier_label }}</p>
+            <p>Status: {{ subscription.status|replace('_', ' ')|title }}</p>
+            <p>Billing email: {{ billing_profile.billing_email or 'Not set' }}</p>
+            <p>Stripe customer ID: {{ billing_profile.stripe_customer_id or 'Not created yet' }}</p>
+            <p>Stripe subscription ID: {{ billing_profile.stripe_subscription_id or 'Not created yet' }}</p>
+        </div>
+    </div>
+
+    <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm text-white">
+        <h2 class="text-lg font-bold">Billing Actions</h2>
+        <div class="mt-5 space-y-3">
+            <a href="{{ url_for('billing.billing_checkout_placeholder', tier='professional') }}" class="block rounded-xl bg-amber-400 text-slate-950 px-4 py-3 text-sm font-semibold text-center hover:bg-amber-300">Checkout Placeholder</a>
+            <a href="{{ url_for('billing.billing_portal_placeholder') }}" class="block rounded-xl bg-white text-slate-950 px-4 py-3 text-sm font-semibold text-center hover:bg-slate-100">Billing Portal Placeholder</a>
+            <a href="{{ url_for('dashboard') }}" class="block rounded-xl border border-slate-700 text-white px-4 py-3 text-sm font-semibold text-center hover:bg-slate-900">Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
