@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="text-3xl font-bold text-slate-950 mb-6">Contact request</h1>
+<form method="POST" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="company_name" placeholder="Company name" class="w-full rounded-xl border border-slate-300 px-4 py-3" required>
+    <input name="contact_name" placeholder="Contact name" class="w-full rounded-xl border border-slate-300 px-4 py-3" required>
+    <input type="email" name="contact_email" placeholder="Contact email" class="w-full rounded-xl border border-slate-300 px-4 py-3" required>
+    <input name="contact_phone" placeholder="Contact phone" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+    <select name="urgency" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
+    <textarea name="support_needed" placeholder="Support needed" class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32"></textarea>
+    <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Submit</button>
+</form>
+{% endblock %}
