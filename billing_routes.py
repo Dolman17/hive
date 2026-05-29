@@ -21,6 +21,34 @@ TIER_LABELS = {
 }
 
 
+TIER_CARDS = [
+    {
+        "tier": "starter",
+        "label": "Starter",
+        "strapline": "Website and basic toolkit access.",
+        "features": ["Consultant website", "Toolkit resources", "Public profile page"],
+    },
+    {
+        "tier": "professional",
+        "label": "Professional",
+        "strapline": "Core consultant operating tools.",
+        "features": ["Everything in Starter", "App marketplace", "PeopleSignal leads", "RecruitFlow AI access path"],
+    },
+    {
+        "tier": "covered",
+        "label": "Covered",
+        "strapline": "Continuity and client cover support.",
+        "features": ["Everything in Professional", "HIVE Covered requests", "Holiday and sickness cover workflow"],
+    },
+    {
+        "tier": "boutique",
+        "label": "Boutique",
+        "strapline": "Full HIVE support layer.",
+        "features": ["Everything in Covered", "Expert Help", "Escalation support", "Premium consultant support workflow"],
+    },
+]
+
+
 class BillingProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subscription_id = db.Column(db.Integer, db.ForeignKey("subscription.id"), nullable=False, unique=True)
@@ -109,7 +137,21 @@ def billing_home():
         "billing/index.html",
         subscription=subscription,
         billing_profile=billing_profile,
-        tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title())
+        tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title()),
+        tier_cards=TIER_CARDS
+    )
+
+
+@billing_bp.route("/billing/pricing")
+@login_required
+@consultant_required
+def billing_pricing():
+    subscription = get_or_create_subscription(current_user)
+    return render_template(
+        "billing/pricing.html",
+        subscription=subscription,
+        tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title()),
+        tier_cards=TIER_CARDS
     )
 
 
