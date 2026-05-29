@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Stripe Checkout Placeholder</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-3">Checkout is ready to wire later</h1>
+        <p class="text-slate-600 mt-4 leading-7">Requested tier: <strong>{{ requested_tier_label }}</strong>. This page is intentionally a placeholder. The next billing sprint can replace this with a Stripe Checkout Session redirect.</p>
+        <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-600 space-y-2">
+            <p>Current tier: {{ subscription.tier|title }}</p>
+            <p>Billing email: {{ billing_profile.billing_email or 'Not set' }}</p>
+            <p>Stripe checkout session ID: {{ billing_profile.stripe_checkout_session_id or 'Not created yet' }}</p>
+        </div>
+        <div class="mt-8 flex flex-wrap gap-3">
+            <a href="{{ url_for('billing.billing_home') }}" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Back to Billing</a>
+            <a href="{{ url_for('dashboard') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Dashboard</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
