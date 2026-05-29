@@ -1,7 +1,7 @@
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
@@ -90,6 +90,15 @@ def get_or_create_billing_profile(subscription):
     return profile
 
 
+def parse_date_or_none(value):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        return None
+
+
 @billing_bp.route("/billing")
 @login_required
 @consultant_required
@@ -145,3 +154,33 @@ def admin_billing():
         rows.append({"consultant": consultant, "subscription": subscription, "billing_profile": profile})
 
     return render_template("admin/billing.html", rows=rows, tier_labels=TIER_LABELS)
+
+
+@billing_bp.route("/admin/billing/<int:consultant_id>", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_billing_detail(consultant_id):
+    consultant = User.query.filter_by(id=consultant_id, role="consultant").first_or_404()
+    subscription = get_or_create_subscription(consultant)
+    billing_profile = get_or_create_billing_profile(subscription)
+
+    if request.method == "POST":
+        billing_profile.billing_email = request.form.get("billing_email", "").strip() or None
+        billing_profile.stripe_customer_id = request.form.get("stripe_customer_id", "").strip() or None
+        billing_profile.stripe_subscription_id = request.form.get("stripe_subscription_id", "").strip() or None
+        billing_profile.stripe_price_id = request.form.get("stripe_price_id", "").strip() or None
+        billing_profile.stripe_checkout_session_id = request.form.get("stripe_checkout_session_id", "").strip() or None
+        billing_profile.current_period_end = parse_date_or_none(request.form.get("current_period_end", "").strip())
+        billing_profile.cancel_at_period_end = request.form.get("cancel_at_period_end") == "on"
+
+        db.session.commit()
+        flash("Billing metadata updated.", "success")
+        return redirect(url_for("billing.admin_billing_detail", consultant_id=consultant.id))
+
+    return render_template(
+        "admin/billing_detail.html",
+        consultant=consultant,
+        subscription=subscription,
+        billing_profile=billing_profile,
+        tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title())
+    )
