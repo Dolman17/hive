@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">HIVE Directory</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">{{ profile.business_name or profile.user.name }}</h1>
+        <p class="text-slate-600 mt-2">{{ profile.location or 'Remote / UK' }}</p>
+    </div>
+    <a href="{{ url_for('public_directory.directory_index') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back to Directory</a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">About</h2>
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.bio or 'No profile bio added yet.' }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Specialisms</h2>
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.specialisms or 'No specialisms listed yet.' }}</p>
+        </div>
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Sector Experience</h2>
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.sectors or 'No sector experience listed yet.' }}</p>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Availability</h2>
+            <div class="text-sm text-slate-600 mt-4 space-y-2">
+                <p>Remote available: {{ 'Yes' if profile.remote_available else 'No' }}</p>
+                <p>Insurance verified: {{ 'Yes' if profile.insurance_verified else 'No' }}</p>
+                <p>Qualifications verified: {{ 'Yes' if profile.qualifications_verified else 'No' }}</p>
+            </div>
+        </div>
+
+        <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm text-white">
+            <h2 class="text-lg font-bold">Interested?</h2>
+            <p class="text-sm text-slate-300 mt-3 leading-6">Contact HIVE to discuss this consultant profile and fit for your requirement.</p>
+            <a href="mailto:admin@example.com?subject=HIVE%20consultant%20directory%20enquiry" class="mt-5 inline-flex rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-sm font-semibold hover:bg-amber-300">Make Enquiry</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
