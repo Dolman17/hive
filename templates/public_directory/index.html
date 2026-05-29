@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">HIVE Directory</p>
+    <h1 class="text-3xl font-bold text-slate-950 mt-2">Find an HR Consultant</h1>
+    <p class="text-slate-600 mt-2">Browse verified public consultant profiles.</p>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Search</label>
+            <input name="q" value="{{ q }}" placeholder="Specialism, sector or name" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Location</label>
+            <input name="location" value="{{ location }}" placeholder="Town, county or region" class="w-full rounded-xl border border-slate-300 px-4 py-3">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Remote</label>
+            <select name="remote" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white">
+                <option value="" {% if not remote %}selected{% endif %}>Any</option>
+                <option value="yes" {% if remote == 'yes' %}selected{% endif %}>Remote available</option>
+            </select>
+        </div>
+        <div class="md:col-span-4 flex flex-wrap gap-3">
+            <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Search Directory</button>
+            <a href="{{ url_for('public_directory.directory_index') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Clear</a>
+        </div>
+    </form>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    {% for profile in profiles %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">{{ profile.location or 'Remote / UK' }}</p>
+            <h2 class="text-xl font-bold text-slate-950 mt-2">{{ profile.business_name or profile.user.name }}</h2>
+            <p class="text-sm text-slate-600 mt-3 leading-6">{{ profile.bio[:180] if profile.bio else 'Independent HR consultant profile.' }}{% if profile.bio and profile.bio|length > 180 %}...{% endif %}</p>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                {% if profile.remote_available %}<span class="rounded-full bg-green-100 text-green-800 px-3 py-1">Remote</span>{% endif %}
+                {% if profile.insurance_verified %}<span class="rounded-full bg-blue-100 text-blue-800 px-3 py-1">Insurance verified</span>{% endif %}
+                {% if profile.qualifications_verified %}<span class="rounded-full bg-purple-100 text-purple-800 px-3 py-1">Qualifications verified</span>{% endif %}
+            </div>
+            <a href="{{ url_for('public_directory.directory_profile', profile_id=profile.id) }}" class="mt-6 inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">View Profile</a>
+        </div>
+    {% else %}
+        <div class="md:col-span-2 xl:col-span-3 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+            <h2 class="text-xl font-bold text-slate-950">No consultants found</h2>
+            <p class="text-slate-600 mt-2">Try changing your search filters.</p>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
