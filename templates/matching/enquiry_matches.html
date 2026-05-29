@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Matching Engine</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">Consultant Matches</h1>
+        <p class="text-slate-600 mt-2">{{ enquiry.company_name }} · {{ enquiry.urgency|title }} urgency</p>
+    </div>
+    <a href="{{ url_for('directory_enquiries.admin_directory_enquiry_detail', enquiry_id=enquiry.id) }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back to Enquiry</a>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
+    <h2 class="text-lg font-bold text-slate-950">Enquiry Summary</h2>
+    <p class="text-sm text-slate-600 mt-3 whitespace-pre-line">{{ enquiry.support_needed or 'No support summary provided.' }}</p>
+</div>
+
+<div class="space-y-5">
+    {% for row in matches %}
+        {% set consultant = row.consultant %}
+        {% set profile = row.profile %}
+        {% set subscription = row.subscription %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+                <div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h2 class="text-xl font-bold text-slate-950">{{ consultant.name }}</h2>
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold {% if row.score >= 70 %}bg-green-100 text-green-800{% elif row.score >= 40 %}bg-amber-100 text-amber-800{% else %}bg-slate-100 text-slate-700{% endif %}">{{ row.score }}% match</span>
+                    </div>
+                    <p class="text-sm text-slate-600 mt-2">{{ profile.business_name or consultant.email }}</p>
+                    <p class="text-sm text-slate-600 mt-3 whitespace-pre-line">{{ profile.specialisms or 'No specialisms listed.' }}</p>
+                    <div class="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
+                        {% for reason in row.reasons %}<span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1">{{ reason }}</span>{% endfor %}
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('matching.assign_match', enquiry_id=enquiry.id, consultant_id=consultant.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Assign</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+            <h2 class="text-xl font-bold text-slate-950">No consultants available</h2>
+            <p class="text-slate-600 mt-2">Add consultant profiles before using the matching engine.</p>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
