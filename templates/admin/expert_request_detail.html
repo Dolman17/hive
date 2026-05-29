@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Admin · Expert Help
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            {{ expert_request.subject }}
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            {{ expert_request.consultant.name }} · {{ expert_request.category }} · Urgency: {{ expert_request.urgency|capitalize }}
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin_expert_requests') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Expert Requests
+    </a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Request Summary</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ expert_request.summary or "No summary added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Desired Outcome</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ expert_request.desired_outcome or "No desired outcome added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950 mb-5">Admin Triage</h2>
+
+            <form method="POST" class="space-y-5">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    {{ form.status.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                    {{ form.status(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+                </div>
+
+                <div>
+                    {{ form.admin_notes.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                    {{ form.admin_notes(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+                </div>
+
+                <div>
+                    {{ form.response_summary.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                    {{ form.response_summary(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+                </div>
+
+                {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
+            </form>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Status</h2>
+
+            <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold
+                {% if expert_request.status == 'new' %}
+                    bg-amber-100 text-amber-800
+                {% elif expert_request.status in ['reviewing', 'assigned'] %}
+                    bg-blue-100 text-blue-800
+                {% elif expert_request.status == 'responded' %}
+                    bg-green-100 text-green-800
+                {% elif expert_request.status == 'closed' %}
+                    bg-slate-950 text-white
+                {% else %}
+                    bg-slate-100 text-slate-700
+                {% endif %}
+            ">
+                {{ expert_request.status|capitalize }}
+            </span>
+
+            <div class="text-sm text-slate-600 mt-5 space-y-2">
+                <p>Consultant: {{ expert_request.consultant.name }}</p>
+                <p>Category: {{ expert_request.category }}</p>
+                <p>Urgency: {{ expert_request.urgency|capitalize }}</p>
+                <p>Created: {{ expert_request.created_at.strftime("%d %b %Y %H:%M") }}</p>
+
+                {% if expert_request.closed_at %}
+                    <p>Closed: {{ expert_request.closed_at.strftime("%d %b %Y %H:%M") }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-amber-900">Scope note</h2>
+
+            <p class="text-sm text-amber-900 mt-4 leading-7">
+                Keep clear separation between HR guidance and regulated legal advice. Use this record to document triage and next steps.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            HIVE Covered
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            Add Covered Client
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Add the client handover details needed for cover delivery.
+        </p>
+    </div>
+
+    <a href="{{ url_for('cover_detail', cover_id=cover_request.id) }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Request
+    </a>
+</div>
+
+<form method="POST" class="space-y-8">
+    {{ form.hidden_tag() }}
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">Client Details</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+                {{ form.client_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.client_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.client_name.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.contact_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.contact_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+
+            <div>
+                {{ form.contact_email.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.contact_email(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.contact_email.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.contact_phone.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.contact_phone(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">Cover Handover</h2>
+
+        <div class="space-y-5">
+            <div>
+                {{ form.retainer_scope.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.retainer_scope(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+
+            <div>
+                {{ form.authority_limits.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.authority_limits(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+
+            <div>
+                {{ form.escalation_rules.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.escalation_rules(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+
+            <div>
+                {{ form.open_issues.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.open_issues(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+            </div>
+
+            <div>
+                {{ form.risk_notes.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.risk_notes(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex justify-end">
+        {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
+    </div>
+</form>
+
+{% endblock %}

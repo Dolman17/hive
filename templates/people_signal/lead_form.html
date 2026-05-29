@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            PeopleSignal
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            New PeopleSignal Lead
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Simulate a PeopleSignal-generated opportunity for HIVE routing.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin_leads') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Leads
+    </a>
+</div>
+
+<form method="POST" class="space-y-8">
+    {{ form.hidden_tag() }}
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">Company and Contact</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+                {{ form.source_reference.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.source_reference(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+
+            <div>
+                {{ form.company_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.company_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.company_name.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.contact_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.contact_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+
+            <div>
+                {{ form.contact_email.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.contact_email(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.contact_email.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.contact_phone.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.contact_phone(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+
+            <div>
+                {{ form.location.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.location(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+
+            <div>
+                {{ form.sector.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.sector(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+            </div>
+
+            <div>
+                {{ form.employee_count.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.employee_count(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">PeopleSignal Data</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+                {{ form.signal_type.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.signal_type(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+            </div>
+
+            <div>
+                {{ form.urgency.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.urgency(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+            </div>
+
+            <div>
+                {{ form.people_signal_score.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.people_signal_score(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.people_signal_score.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.risk_level.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.risk_level(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+            </div>
+
+            <div class="md:col-span-2">
+                {{ form.signal_summary.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.signal_summary(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+            </div>
+
+            <div class="md:col-span-2">
+                {{ form.support_needed.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.support_needed(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex justify-end">
+        {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
+    </div>
+</form>
+
+{% endblock %}

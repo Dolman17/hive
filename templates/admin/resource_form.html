@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Admin
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            {{ page_title }}
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Create or update a HIVE Toolkit resource.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin_resources') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Resources
+    </a>
+</div>
+
+<form method="POST" enctype="multipart/form-data" class="space-y-8">
+    {{ form.hidden_tag() }}
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">Resource Details</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+                {{ form.title.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.title(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.title.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.category.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.category(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.category.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div>
+                {{ form.required_tier.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.required_tier(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
+                {% for error in form.required_tier.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="md:col-span-2">
+                {{ form.description.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.description(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+
+            <div class="md:col-span-2">
+                {{ form.resource_file.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.resource_file(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+
+                {% if resource and resource.original_filename %}
+                    <p class="text-xs text-slate-500 mt-2">
+                        Current file: {{ resource.original_filename }}
+                    </p>
+                {% endif %}
+
+                {% for error in form.resource_file.errors %}
+                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950 mb-5">Consultant Guidance</h2>
+
+        <div class="space-y-5">
+            <div>
+                {{ form.consultant_notes.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.consultant_notes(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+            </div>
+
+            <div>
+                {{ form.risk_flags.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.risk_flags(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+
+            <div>
+                {{ form.escalation_points.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                {{ form.escalation_points(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
+                {{ form.is_active(class="h-5 w-5 rounded border-slate-300") }}
+                Active
+            </label>
+            <p class="text-xs text-slate-500 mt-1">
+                Inactive resources are hidden from consultants.
+            </p>
+        </div>
+
+        {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
+    </div>
+</form>
+
+{% endblock %}

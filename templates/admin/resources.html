@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Admin
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            Resource Library
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Upload and manage consultant-ready Toolkit resources.
+        </p>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+        <a href="{{ url_for('admin_dashboard') }}"
+           class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+            Back to Admin
+        </a>
+
+        <a href="{{ url_for('admin_new_resource') }}"
+           class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
+            New Resource
+        </a>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-slate-200">
+        <h2 class="text-lg font-bold text-slate-950">
+            Resources
+        </h2>
+    </div>
+
+    <div class="divide-y divide-slate-200">
+        {% for resource in resources %}
+            <div class="p-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="font-bold text-slate-950">
+                            {{ resource.title }}
+                        </h3>
+
+                        {% if resource.is_active %}
+                            <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold">
+                                Active
+                            </span>
+                        {% else %}
+                            <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                                Inactive
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <p class="text-sm text-slate-600 mt-2">
+                        {{ resource.description or "No description added." }}
+                    </p>
+
+                    <p class="text-xs text-slate-400 mt-2">
+                        Category: {{ resource.category or "None" }} · Tier: {{ resource.required_tier|capitalize }}
+                        {% if resource.original_filename %}
+                            · File: {{ resource.original_filename }}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ url_for('admin_edit_resource', resource_id=resource.id) }}"
+                       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                        Edit
+                    </a>
+
+                    {% if resource.is_active %}
+                        <a href="{{ url_for('resource_detail', resource_id=resource.id) }}"
+                           class="rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                            View
+                        </a>
+                    {% endif %}
+
+                    <form method="POST"
+                          action="{{ url_for('admin_delete_resource', resource_id=resource.id) }}"
+                          onsubmit="return confirm('Delete this resource? This cannot be undone.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm font-semibold hover:bg-red-100">
+                            Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-8">
+                <h2 class="text-xl font-bold text-slate-950">No resources yet</h2>
+                <p class="text-slate-600 mt-2">
+                    Add your first consultant-ready Toolkit resource.
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

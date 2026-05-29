@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+        HIVE Apps
+    </p>
+
+    <h1 class="text-3xl font-bold text-slate-950 mt-2">
+        App Marketplace
+    </h1>
+
+    <p class="text-slate-600 mt-2">
+        Request and launch additional HIVE tools for your consultancy.
+    </p>
+</div>
+
+{% if not app_modules %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+        <h2 class="text-xl font-bold text-slate-950">No apps available yet</h2>
+        <p class="text-slate-600 mt-2">
+            Ask an admin to run <span class="font-mono">flask seed-apps</span>.
+        </p>
+    </div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    {% for app_module in app_modules %}
+        {% set access = access_map.get(app_module.id) %}
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-950">
+                        {{ app_module.name }}
+                    </h2>
+
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400 mt-1">
+                        Required tier: {{ app_module.required_tier|capitalize }}
+                    </p>
+                </div>
+
+                {% if access and access.status == "active" %}
+                    <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold">
+                        Active
+                    </span>
+                {% elif access and access.status == "requested" %}
+                    <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">
+                        Requested
+                    </span>
+                {% elif access and access.status == "suspended" %}
+                    <span class="rounded-full bg-red-100 text-red-800 px-3 py-1 text-xs font-semibold">
+                        Suspended
+                    </span>
+                {% else %}
+                    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                        Not active
+                    </span>
+                {% endif %}
+            </div>
+
+            <p class="text-sm text-slate-600 mt-4 leading-6 flex-1">
+                {{ app_module.description }}
+            </p>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+                {% if access and access.status == "active" %}
+                    <a href="{{ url_for('launch_app', app_slug=app_module.slug) }}"
+                       class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                        Launch
+                    </a>
+                {% elif access and access.status == "requested" %}
+                    <button type="button"
+                            class="inline-flex rounded-xl bg-slate-100 text-slate-500 px-4 py-2 text-sm font-semibold cursor-not-allowed">
+                        Awaiting approval
+                    </button>
+                {% else %}
+                    <form method="POST" action="{{ url_for('request_app_access', app_slug=app_module.slug) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="inline-flex rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-sm font-semibold hover:bg-amber-300">
+                            Request access
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

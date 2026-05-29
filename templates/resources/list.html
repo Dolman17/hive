@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            HIVE Toolkit
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            Resource Library
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Consultant-ready templates, notes, risk flags and escalation guidance.
+        </p>
+    </div>
+
+    <a href="{{ url_for('dashboard') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Dashboard
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mb-6">
+    <form method="GET" class="flex flex-col md:flex-row gap-3 md:items-end">
+        <div class="flex-1">
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+                Filter by category
+            </label>
+
+            <select name="category"
+                    class="w-full rounded-xl border border-slate-300 px-4 py-3">
+                <option value="">All categories</option>
+                {% for category in categories %}
+                    <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
+                        {{ category }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit"
+                class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
+            Filter
+        </button>
+
+        {% if selected_category %}
+            <a href="{{ url_for('resources_list') }}"
+               class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+                Clear
+            </a>
+        {% endif %}
+    </form>
+</div>
+
+{% if not resources %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+        <h2 class="text-xl font-bold text-slate-950">No resources found</h2>
+        <p class="text-slate-600 mt-2">
+            Resources will appear here once an admin uploads them.
+        </p>
+    </div>
+{% endif %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+    {% for resource in resources %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                        {{ resource.category or "Resource" }}
+                    </p>
+
+                    <h2 class="text-xl font-bold text-slate-950 mt-2">
+                        {{ resource.title }}
+                    </h2>
+                </div>
+
+                <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                    {{ resource.required_tier|capitalize }}
+                </span>
+            </div>
+
+            {% if resource.description %}
+                <p class="text-sm text-slate-600 mt-4 leading-6 flex-1">
+                    {{ resource.description }}
+                </p>
+            {% else %}
+                <p class="text-sm text-slate-500 mt-4 leading-6 flex-1">
+                    No description added.
+                </p>
+            {% endif %}
+
+            <div class="mt-6 flex flex-wrap gap-3">
+                <a href="{{ url_for('resource_detail', resource_id=resource.id) }}"
+                   class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                    View Resource
+                </a>
+
+                {% if resource.file_path %}
+                    <a href="{{ url_for('resource_download', resource_id=resource.id) }}"
+                       class="inline-flex rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-sm font-semibold hover:bg-amber-300">
+                        Download
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

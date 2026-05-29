@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8">
+    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+        Consultant Portal
+    </p>
+
+    <h1 class="text-3xl font-bold text-slate-950 mt-2">
+        Welcome, {{ current_user.name }}
+    </h1>
+
+    <p class="text-slate-600 mt-2">
+        This is your HIVE consultant dashboard.
+    </p>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-bold text-slate-950">
+                Your Consultant Website
+            </h2>
+
+            <p class="text-sm text-slate-600 mt-2">
+                Manage your branded one-page website hosted by The HIVE.
+            </p>
+
+            <p class="text-sm text-slate-500 mt-2">
+                URL:
+                <span class="font-mono">
+                    /consultants/{{ settings.tenant_slug }}
+                </span>
+            </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            {% if settings.is_published %}
+                <span class="inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold">
+                    Published
+                </span>
+            {% else %}
+                <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">
+                    Draft
+                </span>
+            {% endif %}
+
+            <a href="{{ url_for('website_settings') }}"
+               class="inline-flex items-center rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                Edit Website
+            </a>
+
+            <a href="{{ url_for('website_preview') }}"
+               class="inline-flex items-center rounded-xl bg-white border border-slate-300 text-slate-800 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                Preview
+            </a>
+
+            <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}"
+               class="inline-flex items-center rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-sm font-semibold hover:bg-amber-300">
+                View Public Page
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-9 gap-6 mb-8">
+    <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm text-white">
+        <p class="text-sm text-slate-400">Active apps</p>
+        <p class="text-3xl font-bold mt-2">{{ active_apps_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Requested apps</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ requested_apps_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Toolkit</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ active_resources_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Cover requests</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ cover_requests_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Cover queue</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ submitted_cover_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Signal leads</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ assigned_leads_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Active leads</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ active_leads_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Expert requests</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ expert_requests_count }}</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <p class="text-sm text-slate-500">Open expert help</p>
+        <p class="text-3xl font-bold text-slate-950 mt-2">{{ open_expert_requests_count }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">Apps</h2>
+        <p class="text-sm text-slate-600 mt-2">
+            Access PayScope, RecruitFlow AI, ResolvHR, People Signal and LMS modules.
+        </p>
+        <div class="mt-5">
+            <a href="{{ url_for('apps_index') }}"
+               class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                Manage Apps
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">Toolkit</h2>
+        <p class="text-sm text-slate-600 mt-2">
+            Access consultant-ready templates, workflows and delivery resources.
+        </p>
+        <div class="mt-5">
+            <a href="{{ url_for('resources_list') }}"
+               class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                Open Toolkit
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">HIVE Covered</h2>
+        <p class="text-sm text-slate-600 mt-2">
+            Request holiday, sickness, overflow or emergency cover.
+        </p>
+        <div class="mt-5">
+            <a href="{{ url_for('cover_list') }}"
+               class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                Manage Cover
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">PeopleSignal Leads</h2>
+        <p class="text-sm text-slate-600 mt-2">
+            View PeopleSignal opportunities assigned to your consultancy.
+        </p>
+        <div class="mt-5">
+            <a href="{{ url_for('leads_list') }}"
+               class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                View Leads
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h2 class="text-lg font-bold text-slate-950">Expert Help</h2>
+        <p class="text-sm text-slate-600 mt-2">
+            Request specialist HR, recruitment, ER, TUPE, reward or escalation support.
+        </p>
+        <div class="mt-5">
+            <a href="{{ url_for('expert_help_list') }}"
+               class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                Manage Expert Help
+            </a>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

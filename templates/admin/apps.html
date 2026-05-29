@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Admin
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            App Modules
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Manage the HIVE app marketplace shell and consultant access requests.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin_dashboard') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Admin
+    </a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-200">
+            <h2 class="text-lg font-bold text-slate-950">
+                Available Apps
+            </h2>
+        </div>
+
+        <div class="divide-y divide-slate-200">
+            {% for app_module in app_modules %}
+                <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-950">
+                            {{ app_module.name }}
+                        </h3>
+
+                        <p class="text-sm text-slate-600 mt-1">
+                            {{ app_module.description }}
+                        </p>
+
+                        <p class="text-xs text-slate-400 mt-2">
+                            Slug: {{ app_module.slug }} · Required tier: {{ app_module.required_tier }}
+                        </p>
+                    </div>
+
+                    {% if app_module.is_active %}
+                        <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold">
+                            Active
+                        </span>
+                    {% else %}
+                        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                            Inactive
+                        </span>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="p-6">
+                    <p class="text-slate-600">
+                        No app modules found. Run <span class="font-mono">flask seed-apps</span>.
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-200">
+            <h2 class="text-lg font-bold text-slate-950">
+                Access Requests
+            </h2>
+        </div>
+
+        <div class="divide-y divide-slate-200">
+            {% for request_access in requested_access %}
+                <div class="p-6">
+                    <p class="font-semibold text-slate-950">
+                        {{ request_access.consultant.name }}
+                    </p>
+
+                    <p class="text-sm text-slate-600 mt-1">
+                        Requested: {{ request_access.app_module.name }}
+                    </p>
+
+                    <a href="{{ url_for('admin_consultant_apps', consultant_id=request_access.consultant.id) }}"
+                       class="mt-4 inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                        Manage Access
+                    </a>
+                </div>
+            {% else %}
+                <div class="p-6">
+                    <p class="text-sm text-slate-600">
+                        No pending app access requests.
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-slate-950">
+        Consultant Access Management
+    </h2>
+
+    <p class="text-sm text-slate-600 mt-2">
+        To manage access, open a request above or use the demo consultant access page.
+    </p>
+
+    <p class="text-sm text-slate-500 mt-3">
+        Demo consultant access page:
+        <a href="{{ url_for('admin_consultant_apps', consultant_id=2) }}"
+           class="text-amber-700 font-semibold hover:underline">
+            Manage Demo Consultant Apps
+        </a>
+    </p>
+</div>
+
+{% endblock %}

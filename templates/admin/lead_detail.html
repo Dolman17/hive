@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Admin · PeopleSignal
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            {{ lead.company_name }}
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Source: {{ lead.source|replace("_", " ")|title }}
+            {% if lead.source_reference %}
+                · Reference: {{ lead.source_reference }}
+            {% endif %}
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin_leads') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Leads
+    </a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">PeopleSignal Summary</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ lead.signal_summary or "No signal summary added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Support Needed</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ lead.support_needed or "No support details added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950 mb-5">Admin Routing</h2>
+
+            <form method="POST" class="space-y-5">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    {{ form.assigned_consultant_id.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                    {{ form.assigned_consultant_id(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+                </div>
+
+                <div>
+                    {{ form.status.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                    {{ form.status(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
+                </div>
+
+                <div>
+                    {{ form.admin_notes.label(class="block text-sm font-medium text-slate-700 mb-1") }}
+                    {{ form.admin_notes(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+                </div>
+
+                {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
+            </form>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Lead Status</h2>
+
+            <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold
+                {% if lead.status == 'new' %}
+                    bg-amber-100 text-amber-800
+                {% elif lead.status == 'assigned' %}
+                    bg-blue-100 text-blue-800
+                {% elif lead.status == 'accepted' %}
+                    bg-green-100 text-green-800
+                {% elif lead.status == 'won' %}
+                    bg-slate-950 text-white
+                {% elif lead.status in ['lost', 'declined'] %}
+                    bg-red-100 text-red-800
+                {% else %}
+                    bg-slate-100 text-slate-700
+                {% endif %}
+            ">
+                {{ lead.status|capitalize }}
+            </span>
+
+            <div class="text-sm text-slate-600 mt-5 space-y-2">
+                <p>Risk level: {{ lead.risk_level|capitalize if lead.risk_level else "Not set" }}</p>
+                <p>Urgency: {{ lead.urgency|capitalize if lead.urgency else "Not set" }}</p>
+                {% if lead.people_signal_score is not none %}
+                    <p>PeopleSignal score: {{ lead.people_signal_score }}</p>
+                {% endif %}
+                <p>Created: {{ lead.created_at.strftime("%d %b %Y %H:%M") }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Company</h2>
+
+            <div class="text-sm text-slate-600 mt-4 space-y-2">
+                <p>Contact: {{ lead.contact_name or "Not added" }}</p>
+                <p>Email: {{ lead.contact_email or "Not added" }}</p>
+                <p>Phone: {{ lead.contact_phone or "Not added" }}</p>
+                <p>Sector: {{ lead.sector or "Not added" }}</p>
+                <p>Employees: {{ lead.employee_count or "Not known" }}</p>
+                <p>Location: {{ lead.location or "Not added" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

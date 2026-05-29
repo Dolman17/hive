@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Admin
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            App Access: {{ consultant.name }}
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            Enable or disable HIVE app modules for this consultant.
+        </p>
+    </div>
+
+    <a href="{{ url_for('admin_apps') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Apps
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-slate-200">
+        <h2 class="text-lg font-bold text-slate-950">
+            Available App Modules
+        </h2>
+    </div>
+
+    <div class="divide-y divide-slate-200">
+        {% for app_module in app_modules %}
+            {% set access = access_map.get(app_module.id) %}
+
+            <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <div>
+                    <h3 class="font-bold text-slate-950">
+                        {{ app_module.name }}
+                    </h3>
+
+                    <p class="text-sm text-slate-600 mt-1">
+                        {{ app_module.description }}
+                    </p>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                            {{ app_module.required_tier|capitalize }}
+                        </span>
+
+                        {% if access and access.status == "active" %}
+                            <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold">
+                                Active
+                            </span>
+                        {% elif access and access.status == "requested" %}
+                            <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">
+                                Requested
+                            </span>
+                        {% elif access %}
+                            <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                                {{ access.status|capitalize }}
+                            </span>
+                        {% else %}
+                            <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
+                                No record
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <form method="POST"
+                          action="{{ url_for('admin_enable_app_access', consultant_id=consultant.id, app_id=app_module.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="rounded-xl bg-green-600 text-white px-4 py-2 text-sm font-semibold hover:bg-green-700">
+                            Enable
+                        </button>
+                    </form>
+
+                    <form method="POST"
+                          action="{{ url_for('admin_disable_app_access', consultant_id=consultant.id, app_id=app_module.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="rounded-xl bg-white border border-slate-300 text-slate-800 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
+                            Disable
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

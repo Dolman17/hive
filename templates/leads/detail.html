@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            PeopleSignal Lead
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            {{ lead.company_name }}
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            {{ lead.signal_type|replace("_", " ")|title if lead.signal_type else "PeopleSignal opportunity" }}
+        </p>
+    </div>
+
+    <a href="{{ url_for('leads_list') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Leads
+    </a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">PeopleSignal Summary</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ lead.signal_summary or "No signal summary added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Support Needed</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ lead.support_needed or "No support details added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950 mb-5">Your Notes</h2>
+
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                {{ form.consultant_notes(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
+
+                <div class="mt-5 flex justify-end">
+                    {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Status</h2>
+
+            <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold
+                {% if lead.status == 'assigned' %}
+                    bg-blue-100 text-blue-800
+                {% elif lead.status == 'accepted' %}
+                    bg-green-100 text-green-800
+                {% elif lead.status == 'won' %}
+                    bg-slate-950 text-white
+                {% elif lead.status in ['lost', 'declined'] %}
+                    bg-red-100 text-red-800
+                {% else %}
+                    bg-slate-100 text-slate-700
+                {% endif %}
+            ">
+                {{ lead.status|capitalize }}
+            </span>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+                {% for status in ["accepted", "declined", "won", "lost", "closed"] %}
+                    <form method="POST"
+                          action="{{ url_for('lead_update_status', lead_id=lead.id, status=status) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="rounded-xl px-4 py-2 text-sm font-semibold
+                                {% if status == 'accepted' %}
+                                    bg-green-100 text-green-800 hover:bg-green-200
+                                {% elif status == 'won' %}
+                                    bg-slate-950 text-white hover:bg-slate-800
+                                {% elif status in ['declined', 'lost'] %}
+                                    bg-red-100 text-red-800 hover:bg-red-200
+                                {% else %}
+                                    bg-white border border-slate-300 text-slate-800 hover:bg-slate-50
+                                {% endif %}
+                                ">
+                            {{ status|capitalize }}
+                        </button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Company</h2>
+
+            <div class="text-sm text-slate-600 mt-4 space-y-2">
+                <p>Contact: {{ lead.contact_name or "Not added" }}</p>
+                <p>Email: {{ lead.contact_email or "Not added" }}</p>
+                <p>Phone: {{ lead.contact_phone or "Not added" }}</p>
+                <p>Sector: {{ lead.sector or "Not added" }}</p>
+                <p>Employees: {{ lead.employee_count or "Not known" }}</p>
+                <p>Location: {{ lead.location or "Not added" }}</p>
+            </div>
+        </div>
+
+        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-amber-900">Signal</h2>
+
+            <div class="text-sm text-amber-900 mt-4 space-y-2">
+                <p>Urgency: {{ lead.urgency|capitalize if lead.urgency else "Not set" }}</p>
+                <p>Risk: {{ lead.risk_level|capitalize if lead.risk_level else "Not set" }}</p>
+                {% if lead.people_signal_score is not none %}
+                    <p>Score: {{ lead.people_signal_score }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

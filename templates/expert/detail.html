@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
+            Expert Help
+        </p>
+
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">
+            {{ expert_request.subject }}
+        </h1>
+
+        <p class="text-slate-600 mt-2">
+            {{ expert_request.category }} · Urgency: {{ expert_request.urgency|capitalize }}
+        </p>
+    </div>
+
+    <a href="{{ url_for('expert_help_list') }}"
+       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
+        Back to Expert Help
+    </a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Summary</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ expert_request.summary or "No summary added." }}
+            </p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Desired Outcome</h2>
+
+            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                {{ expert_request.desired_outcome or "No desired outcome added." }}
+            </p>
+        </div>
+
+        {% if expert_request.response_summary %}
+            <div class="bg-green-50 rounded-2xl border border-green-200 p-6 shadow-sm">
+                <h2 class="text-lg font-bold text-green-900">Response Summary</h2>
+
+                <p class="text-green-900 mt-4 leading-7 whitespace-pre-line">
+                    {{ expert_request.response_summary }}
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-slate-950">Status</h2>
+
+            <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold
+                {% if expert_request.status == 'new' %}
+                    bg-amber-100 text-amber-800
+                {% elif expert_request.status in ['reviewing', 'assigned'] %}
+                    bg-blue-100 text-blue-800
+                {% elif expert_request.status == 'responded' %}
+                    bg-green-100 text-green-800
+                {% elif expert_request.status == 'closed' %}
+                    bg-slate-950 text-white
+                {% else %}
+                    bg-slate-100 text-slate-700
+                {% endif %}
+            ">
+                {{ expert_request.status|capitalize }}
+            </span>
+
+            <div class="text-sm text-slate-600 mt-5 space-y-2">
+                <p>Created: {{ expert_request.created_at.strftime("%d %b %Y %H:%M") }}</p>
+
+                {% if expert_request.closed_at %}
+                    <p>Closed: {{ expert_request.closed_at.strftime("%d %b %Y %H:%M") }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-6 shadow-sm">
+            <h2 class="text-lg font-bold text-amber-900">Important</h2>
+
+            <p class="text-sm text-amber-900 mt-4 leading-7">
+                This workflow records an escalation request. It should not be treated as standalone legal advice unless reviewed and confirmed by the appropriate specialist.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

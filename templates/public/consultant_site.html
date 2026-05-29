@@ -1,0 +1,203 @@
+{% if not request.endpoint == "website_preview" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ settings.business_name }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+{% endif %}
+
+<div style="--brand-primary: {{ settings.primary_colour }}; --brand-accent: {{ settings.accent_colour }}; --brand-text: {{ settings.text_colour }};"
+     class="bg-white text-slate-900">
+
+    <header class="border-b border-slate-200">
+        <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                {% if settings.logo_path %}
+                    <img src="{{ url_for('uploaded_file', filename=settings.logo_path) }}"
+                         alt="{{ settings.business_name }} logo"
+                         class="h-12 w-12 object-contain rounded-xl border border-slate-200 bg-white">
+                {% else %}
+                    <div class="h-12 w-12 rounded-xl flex items-center justify-center font-black text-white"
+                         style="background-color: var(--brand-primary);">
+                        {{ settings.business_name[:1] }}
+                    </div>
+                {% endif %}
+
+                <div>
+                    <p class="font-bold text-lg" style="color: var(--brand-text);">
+                        {{ settings.business_name }}
+                    </p>
+
+                    {% if settings.strapline %}
+                        <p class="text-sm text-slate-500">
+                            {{ settings.strapline }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if settings.cta_url %}
+                <a href="{{ settings.cta_url }}"
+                   class="hidden md:inline-flex rounded-xl px-5 py-3 text-sm font-semibold text-white"
+                   style="background-color: var(--brand-primary);">
+                    {{ settings.cta_label or "Book a discovery call" }}
+                </a>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="relative overflow-hidden">
+        <div class="max-w-6xl mx-auto px-6 py-20">
+            <div class="max-w-3xl">
+                <p class="text-sm font-semibold uppercase tracking-wide"
+                   style="color: var(--brand-primary);">
+                    Independent HR Consultancy
+                </p>
+
+                <h1 class="text-4xl md:text-5xl font-black tracking-tight mt-4"
+                    style="color: var(--brand-text);">
+                    {{ settings.strapline or "Practical people support for growing organisations." }}
+                </h1>
+
+                {% if settings.website_intro %}
+                    <p class="text-lg text-slate-600 mt-6 leading-8">
+                        {{ settings.website_intro }}
+                    </p>
+                {% endif %}
+
+                <div class="mt-8 flex flex-wrap gap-3">
+                    {% if settings.cta_url %}
+                        <a href="{{ settings.cta_url }}"
+                           class="rounded-xl px-6 py-3 text-sm font-semibold text-white"
+                           style="background-color: var(--brand-primary);">
+                            {{ settings.cta_label or "Book a discovery call" }}
+                        </a>
+                    {% endif %}
+
+                    {% if settings.contact_email %}
+                        <a href="mailto:{{ settings.contact_email }}"
+                           class="rounded-xl px-6 py-3 text-sm font-semibold border"
+                           style="border-color: var(--brand-primary); color: var(--brand-primary);">
+                            Email me
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 border-y border-slate-200">
+        <div class="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+                <h2 class="text-2xl font-bold" style="color: var(--brand-text);">
+                    About
+                </h2>
+
+                <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
+                    {{ settings.about_text or "Add your consultancy story in your HIVE website settings." }}
+                </p>
+            </div>
+
+            <div>
+                <h2 class="text-2xl font-bold" style="color: var(--brand-text);">
+                    Services
+                </h2>
+
+                {% if settings.services_text %}
+                    <div class="mt-4 grid gap-3">
+                        {% for service in settings.services_text.splitlines() %}
+                            {% if service.strip() %}
+                                <div class="rounded-xl bg-white border border-slate-200 p-4">
+                                    <p class="font-semibold text-slate-800">
+                                        {{ service.strip() }}
+                                    </p>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-slate-600 mt-4">
+                        Add your services in your HIVE website settings.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+                <h2 class="text-2xl font-bold" style="color: var(--brand-text);">
+                    Sector experience
+                </h2>
+
+                {% if settings.sectors_text %}
+                    <div class="mt-4 flex flex-wrap gap-3">
+                        {% for sector in settings.sectors_text.splitlines() %}
+                            {% if sector.strip() %}
+                                <span class="rounded-full px-4 py-2 text-sm font-semibold"
+                                      style="background-color: var(--brand-accent); color: #111827;">
+                                    {{ sector.strip() }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-slate-600 mt-4">
+                        Add your sector experience in your HIVE website settings.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="rounded-3xl p-8 text-white"
+                 style="background-color: var(--brand-primary);">
+                <h2 class="text-2xl font-bold">
+                    Ready to talk?
+                </h2>
+
+                <p class="mt-4 text-white/85 leading-7">
+                    Get in touch to discuss how {{ settings.business_name }} can support your organisation.
+                </p>
+
+                <div class="mt-6 space-y-2 text-sm">
+                    {% if settings.contact_email %}
+                        <p>Email: {{ settings.contact_email }}</p>
+                    {% endif %}
+
+                    {% if settings.contact_phone %}
+                        <p>Phone: {{ settings.contact_phone }}</p>
+                    {% endif %}
+
+                    {% if settings.linkedin_url %}
+                        <p>
+                            <a href="{{ settings.linkedin_url }}" class="underline">
+                                LinkedIn
+                            </a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="border-t border-slate-200">
+        <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-slate-500">
+            <p>
+                © {{ settings.business_name }}
+            </p>
+
+            <p>
+                Powered by The HIVE
+            </p>
+        </div>
+    </footer>
+</div>
+
+{% if not request.endpoint == "website_preview" %}
+</body>
+</html>
+{% endif %}
