@@ -23,6 +23,7 @@ from consultant_profile_routes import consultant_profiles_bp
 from public_directory_routes import public_directory_bp
 from directory_enquiry_routes import directory_enquiries_bp
 from matching_routes import matching_bp
+from notification_routes import notifications_bp
 
 from extensions import db, migrate, login_manager, csrf
 from forms import (
@@ -71,6 +72,7 @@ def create_app():
     app.register_blueprint(public_directory_bp)
     app.register_blueprint(directory_enquiries_bp)
     app.register_blueprint(matching_bp)
+    app.register_blueprint(notifications_bp)
 
     register_routes(app)
 
