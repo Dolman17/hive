@@ -14,6 +14,7 @@
         rel="stylesheet"
     >
 
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/hive_favicon_512.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
@@ -33,9 +34,9 @@
             <div class="flex items-center justify-between gap-4">
                 <a href="{{ url_for('home') }}" class="flex items-center gap-3 group">
                     <img
-                        src="{{ url_for('static', filename='img/hive-mark.svg') }}"
+                        src="{{ url_for('static', filename='img/07_favicon_app_icon.png') }}"
                         alt="The Hive"
-                        class="h-11 w-11 rounded-2xl shadow-lg shadow-amber-900/20"
+                        class="h-11 w-11 rounded-2xl shadow-lg shadow-amber-900/20 object-contain"
                     >
 
                     <span>
