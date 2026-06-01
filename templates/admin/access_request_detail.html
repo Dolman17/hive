@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Access Request · The Hive{% endblock %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="hive-page-kicker">Admin · Consultant Access</p>
+        <h1 class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ access_request.consultancy_name }}</h1>
+        <p class="mt-2 text-slate-600">{{ access_request.contact_name }} · {{ access_request.contact_email }}</p>
+    </div>
+
+    <a href="{{ url_for('public_directory.admin_access_requests') }}" class="hive-button hive-button-secondary">Back to Requests</a>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 space-y-6">
+        <div class="hive-card p-6">
+            <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">Request Details</h2>
+
+            <dl class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-5 text-sm">
+                <div><dt class="font-black text-slate-700">Consultant name</dt><dd class="mt-1 text-slate-600">{{ access_request.contact_name }}</dd></div>
+                <div><dt class="font-black text-slate-700">Consultancy</dt><dd class="mt-1 text-slate-600">{{ access_request.consultancy_name }}</dd></div>
+                <div><dt class="font-black text-slate-700">Email</dt><dd class="mt-1 text-slate-600">{{ access_request.contact_email }}</dd></div>
+                <div><dt class="font-black text-slate-700">Phone</dt><dd class="mt-1 text-slate-600">{{ access_request.contact_phone or 'Not provided' }}</dd></div>
+                <div><dt class="font-black text-slate-700">Location</dt><dd class="mt-1 text-slate-600">{{ access_request.location or 'Not provided' }}</dd></div>
+                <div><dt class="font-black text-slate-700">Remote availability</dt><dd class="mt-1 text-slate-600">{{ access_request.remote_work or 'Not provided' }}</dd></div>
+            </dl>
+        </div>
+
+        <div class="hive-card p-6">
+            <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">Specialisms</h2>
+            <p class="mt-4 text-slate-600 leading-7 whitespace-pre-line">{{ access_request.specialisms or 'No specialisms provided.' }}</p>
+        </div>
+
+        <div class="hive-card p-6">
+            <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">Interested In</h2>
+            <p class="mt-4 text-slate-600 leading-7">{{ access_request.interested_in or 'Not specified.' }}</p>
+        </div>
+
+        <div class="hive-card p-6">
+            <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">Additional Notes</h2>
+            <p class="mt-4 text-slate-600 leading-7 whitespace-pre-line">{{ access_request.notes or 'No notes provided.' }}</p>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="hive-card p-6">
+            <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">Status</h2>
+
+            <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-black
+                {% if access_request.status == 'new' %}bg-amber-100 text-amber-800{% elif access_request.status in ['reviewing', 'approved'] %}bg-teal-100 text-teal-800{% elif access_request.status == 'rejected' %}bg-red-100 text-red-800{% else %}bg-slate-100 text-slate-700{% endif %}">
+                {{ access_request.status|replace('_', ' ')|title }}
+            </span>
+
+            <div class="mt-5 text-sm text-slate-600 space-y-2">
+                <p>Submitted: {{ access_request.created_at.strftime('%d/%m/%Y %H:%M') if access_request.created_at else 'Unknown' }}</p>
+                {% if access_request.approved_at %}<p>Approved: {{ access_request.approved_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+                {% if access_request.rejected_at %}<p>Rejected: {{ access_request.rejected_at.strftime('%d/%m/%Y %H:%M') }}</p>{% endif %}
+                {% if access_request.created_user %}<p>User created: {{ access_request.created_user.email }}</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="hive-card p-6">
+            <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">Admin Action</h2>
+
+            <form method="POST" class="mt-5 space-y-5">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div>
+                    <label for="admin_notes" class="block text-sm font-black text-slate-700 mb-2">Admin notes</label>
+                    <textarea id="admin_notes" name="admin_notes" rows="5" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400">{{ access_request.admin_notes or '' }}</textarea>
+                </div>
+
+                {% if access_request.status not in ['approved', 'rejected'] %}
+                    <div>
+                        <label for="temp_password" class="block text-sm font-black text-slate-700 mb-2">Initial account key</label>
+                        <input id="temp_password" name="temp_password" type="text" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Required before approval">
+                    </div>
+                {% endif %}
+
+                <div class="flex flex-col gap-3">
+                    <button type="submit" name="action" value="save" class="hive-button hive-button-secondary cursor-pointer">Save Notes</button>
+                    {% if access_request.status == 'new' %}<button type="submit" name="action" value="mark_reviewing" class="hive-button hive-button-secondary cursor-pointer">Mark Reviewing</button>{% endif %}
+                    {% if access_request.status not in ['approved', 'rejected'] %}
+                        <button type="submit" name="action" value="approve" class="hive-button hive-button-primary cursor-pointer">Approve and Create User</button>
+                        <button type="submit" name="action" value="reject" class="rounded-xl bg-red-600 text-white px-5 py-3 text-sm font-black hover:bg-red-700 cursor-pointer">Reject Request</button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
