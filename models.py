@@ -78,6 +78,12 @@ class User(db.Model, UserMixin):
         cascade="all, delete-orphan"
     )
 
+    approved_access_requests = db.relationship(
+        "ConsultantAccessRequest",
+        backref="created_user",
+        foreign_keys="ConsultantAccessRequest.created_user_id"
+    )
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -115,6 +121,36 @@ class ConsultantProfile(db.Model):
     is_public = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ConsultantAccessRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
+    contact_name = db.Column(db.String(255), nullable=False)
+    consultancy_name = db.Column(db.String(255), nullable=False)
+    contact_email = db.Column(db.String(255), nullable=False, index=True)
+    contact_phone = db.Column(db.String(100))
+
+    specialisms = db.Column(db.Text)
+    location = db.Column(db.String(255))
+    remote_work = db.Column(db.String(100))
+    interested_in = db.Column(db.Text)
+    notes = db.Column(db.Text)
+
+    status = db.Column(db.String(50), default="new", nullable=False, index=True)
+    admin_notes = db.Column(db.Text)
+
+    created_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+
+    approved_at = db.Column(db.DateTime)
+    rejected_at = db.Column(db.DateTime)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
 
 
 class TenantSettings(db.Model):
