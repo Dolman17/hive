@@ -1,10 +1,22 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, redirect, render_template, request, url_for
+from flask_login import current_user
 from sqlalchemy import or_
 
 from models import ConsultantProfile, User
 
 
 public_directory_bp = Blueprint("public_directory", __name__)
+
+
+@public_directory_bp.route("/")
+def landing():
+    if current_user.is_authenticated:
+        if current_user.role == "admin":
+            return redirect(url_for("admin_dashboard"))
+
+        return redirect(url_for("dashboard"))
+
+    return render_template("public_landing.html")
 
 
 @public_directory_bp.route("/directory")
