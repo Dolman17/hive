@@ -6,27 +6,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <style>
-        body { font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
     </style>
 </head>
+
 <body class="hive-shell">
 
 {% if current_user.is_authenticated %}
 <header class="hive-topbar">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="py-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+
             <div class="flex items-center justify-between gap-4">
                 <a href="{{ url_for('home') }}" class="flex items-center gap-3 group">
-                    <img src="{{ url_for('static', filename='img/hive-mark.svg') }}" alt="The HIVE" class="h-11 w-11 rounded-2xl shadow-lg shadow-amber-900/20">
+                    <img
+                        src="{{ url_for('static', filename='img/hive-mark.svg') }}"
+                        alt="The Hive"
+                        class="h-11 w-11 rounded-2xl shadow-lg shadow-amber-900/20"
+                    >
+
                     <span>
-                        <span class="block text-white text-[1.35rem] font-black tracking-[-0.045em] leading-none">The Hive</span>
-                        <span class="block text-[0.68rem] text-teal-300 mt-1 font-extrabold tracking-[0.16em] uppercase">Supporting consultants to thrive</span>
+                        <span class="block text-white text-[1.35rem] font-black tracking-[-0.045em] leading-none">
+                            The Hive
+                        </span>
+                        <span class="block text-[0.68rem] text-teal-300 mt-1 font-extrabold tracking-[0.16em] uppercase">
+                            Supporting consultants to thrive
+                        </span>
                     </span>
                 </a>
 
@@ -62,22 +80,30 @@
                     <a href="{{ url_for('billing.billing_home') }}" class="hive-nav-link">Billing</a>
                 {% endif %}
 
-                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-nav-link hive-nav-link--primary">Directory</a>
+                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-nav-link hive-nav-link--primary">
+                    Directory
+                </a>
 
                 <a href="{{ url_for('notifications.notification_list') }}" class="hive-nav-link relative">
                     Notifications
                     {% if unread_notification_count and unread_notification_count > 0 %}
-                        <span class="hive-notification-badge">{{ unread_notification_count }}</span>
+                        <span class="hive-notification-badge">
+                            {{ unread_notification_count }}
+                        </span>
                     {% endif %}
                 </a>
 
                 <div class="hidden xl:block h-6 w-px bg-white/10 mx-1"></div>
 
-                <span class="hidden xl:inline text-sm text-slate-400">{{ current_user.name }}</span>
+                <span class="hidden xl:inline text-sm text-slate-400">
+                    {{ current_user.name }}
+                </span>
 
                 <form method="POST" action="{{ url_for('logout') }}" class="inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="hive-nav-link">Logout</button>
+                    <button type="submit" class="hive-nav-link">
+                        Logout
+                    </button>
                 </form>
             </nav>
         </div>
@@ -99,7 +125,8 @@
                             bg-amber-50 text-amber-900 border border-amber-200
                         {% else %}
                             bg-white text-slate-800 border border-slate-200
-                        {% endif %}">
+                        {% endif %}
+                    ">
                         {{ message }}
                     </div>
                 {% endfor %}
