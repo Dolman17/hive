@@ -13,12 +13,12 @@
             <div class="flex justify-center">
                 <div class="inline-flex rounded-[1.75rem] bg-white p-5 shadow-2xl shadow-black/20">
                     <img
-            src="{{ url_for('static', filename='img/01_primary_logo_horizontal_light.png') }}"
-            alt="The Hive"
-            class="h-32 w-auto max-w-full object-contain"
-                >
-        </div>
-    </div>
+                        src="{{ url_for('static', filename='img/01_primary_logo_horizontal_light.png') }}"
+                        alt="The Hive"
+                        class="h-32 w-auto max-w-full object-contain"
+                    >
+                </div>
+            </div>
 
             <p class="mt-8 text-amber-300 text-xs font-black uppercase tracking-[0.18em]">
                 Consultant growth · delivery · continuity
@@ -68,7 +68,7 @@
                     {{ form.email.label(class="block text-sm font-bold text-slate-700 mb-2") }}
                     {{ form.email(
                         class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400",
-                        placeholder="admin@example.com"
+                        placeholder="Email address"
                     ) }}
 
                     {% for error in form.email.errors %}
@@ -80,7 +80,7 @@
                     {{ form.password.label(class="block text-sm font-bold text-slate-700 mb-2") }}
                     {{ form.password(
                         class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400",
-                        placeholder="password123"
+                        placeholder="Password"
                     ) }}
 
                     {% for error in form.password.errors %}
@@ -92,12 +92,6 @@
                     class="w-full hive-button hive-button-primary py-4 cursor-pointer"
                 ) }}
             </form>
-
-            <div class="mt-7 rounded-2xl bg-amber-50 border border-amber-200 p-5 text-sm text-amber-950">
-                <p class="font-black mb-2">Demo accounts</p>
-                <p><span class="font-semibold">Admin:</span> admin@example.com / password123</p>
-                <p><span class="font-semibold">Consultant:</span> consultant@example.com / password123</p>
-            </div>
         </div>
     </section>
 </div>
