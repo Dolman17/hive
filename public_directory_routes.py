@@ -19,6 +19,17 @@ def landing():
     return render_template("public_landing.html")
 
 
+@public_directory_bp.route("/join")
+def join():
+    if current_user.is_authenticated:
+        if current_user.role == "admin":
+            return redirect(url_for("admin_dashboard"))
+
+        return redirect(url_for("dashboard"))
+
+    return render_template("consultant_join.html")
+
+
 @public_directory_bp.route("/directory")
 def directory_index():
     q = request.args.get("q", "").strip()
