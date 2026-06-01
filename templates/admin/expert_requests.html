@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Help Requests · The Hive{% endblock %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="hive-page-kicker">Admin · Expert Help</p>
+        <h1 class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">Expert Help Requests</h1>
+        <p class="mt-2 text-slate-600">Review consultant escalation requests and manage specialist responses.</p>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ url_for('admin_expert_requests') }}" class="hive-button {% if not selected_status %}hive-button-primary{% else %}hive-button-secondary{% endif %}">All</a>
+        <a href="{{ url_for('admin_expert_requests', status='new') }}" class="hive-button {% if selected_status == 'new' %}hive-button-primary{% else %}hive-button-secondary{% endif %}">New</a>
+        <a href="{{ url_for('admin_expert_requests', status='reviewing') }}" class="hive-button {% if selected_status == 'reviewing' %}hive-button-primary{% else %}hive-button-secondary{% endif %}">Reviewing</a>
+        <a href="{{ url_for('admin_expert_requests', status='responded') }}" class="hive-button {% if selected_status == 'responded' %}hive-button-primary{% else %}hive-button-secondary{% endif %}">Responded</a>
+        <a href="{{ url_for('admin_expert_requests', status='closed') }}" class="hive-button {% if selected_status == 'closed' %}hive-button-primary{% else %}hive-button-secondary{% endif %}">Closed</a>
+    </div>
+</div>
+
+<div class="hive-card overflow-hidden">
+    <div class="divide-y divide-slate-200">
+        {% for request in expert_requests %}
+            <div class="p-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h2 class="text-lg font-black text-slate-950 truncate">{{ request.subject }}</h2>
+                        <span class="hive-pill
+                            {% if request.status == 'new' %}hive-pill-gold{% elif request.status in ['reviewing', 'assigned', 'responded'] %}hive-pill-teal{% else %}{% endif %}">
+                            {{ request.status|replace('_', ' ')|title }}
+                        </span>
+                    </div>
+
+                    <p class="mt-2 text-sm text-slate-600">
+                        {{ request.consultant.name if request.consultant else 'Unknown consultant' }} · {{ request.category }} · Urgency: {{ request.urgency|title }}
+                    </p>
+
+                    <p class="mt-3 text-sm text-slate-500 line-clamp-2">
+                        {{ request.summary or 'No summary added.' }}
+                    </p>
+
+                    <p class="mt-3 text-xs text-slate-400">
+                        Created: {{ request.created_at.strftime('%d/%m/%Y %H:%M') if request.created_at else 'Unknown' }}
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3 shrink-0">
+                    <a href="{{ url_for('admin_expert_request_detail', request_id=request.id) }}" class="hive-button hive-button-primary">Review</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-8 text-center">
+                <h2 class="text-xl font-black tracking-[-0.04em] text-slate-950">No expert help requests found</h2>
+                <p class="mt-2 text-slate-600">Requests will appear here when consultants submit expert help escalations.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
