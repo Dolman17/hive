@@ -1,0 +1,286 @@
+:root {
+    --hive-ink: #0f172a;
+    --hive-navy: #111827;
+    --hive-slate: #475569;
+    --hive-muted: #64748b;
+    --hive-line: #e2e8f0;
+    --hive-bg: #f7f4ee;
+    --hive-card: #ffffff;
+    --hive-gold: #d89b2b;
+    --hive-gold-soft: #fff3d8;
+    --hive-teal: #0f766e;
+    --hive-teal-soft: #e6fffb;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background:
+        radial-gradient(circle at top left, rgba(216, 155, 43, 0.14), transparent 34rem),
+        radial-gradient(circle at top right, rgba(15, 118, 110, 0.10), transparent 32rem),
+        var(--hive-bg);
+    color: var(--hive-ink);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+.hive-shell {
+    min-height: 100vh;
+}
+
+.hive-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(18px);
+    background: rgba(15, 23, 42, 0.94);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 60px rgba(15, 23, 42, 0.22);
+}
+
+.hive-brand-mark {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 1rem;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, var(--hive-gold), #f6d98b);
+    color: #111827;
+    font-weight: 900;
+    letter-spacing: -0.06em;
+    box-shadow: 0 12px 30px rgba(216, 155, 43, 0.35);
+}
+
+.hive-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.48rem 0.75rem;
+    color: rgba(255, 255, 255, 0.74);
+    font-size: 0.875rem;
+    font-weight: 650;
+    line-height: 1;
+    transition: all 180ms ease;
+    white-space: nowrap;
+}
+
+.hive-nav-link:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.hive-nav-link--primary {
+    color: #111827;
+    background: var(--hive-gold);
+}
+
+.hive-nav-link--primary:hover {
+    color: #111827;
+    background: #f2c968;
+}
+
+.hive-notification-badge {
+    min-width: 1.15rem;
+    height: 1.15rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 0 0.32rem;
+}
+
+.hive-page {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+}
+
+@media (min-width: 768px) {
+    .hive-page {
+        padding: 2.5rem 2rem 5rem;
+    }
+}
+
+.hive-page-kicker {
+    color: var(--hive-gold);
+    font-size: 0.78rem;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.hive-page-title {
+    color: var(--hive-ink);
+    font-size: clamp(2rem, 4vw, 3.75rem);
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+    font-weight: 900;
+}
+
+.hive-page-subtitle {
+    color: var(--hive-slate);
+    font-size: 1.05rem;
+    line-height: 1.75;
+    max-width: 46rem;
+}
+
+.hive-card {
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 1.35rem;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+}
+
+.hive-card--dark {
+    background: linear-gradient(135deg, #111827, #020617);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    box-shadow: 0 26px 70px rgba(15, 23, 42, 0.25);
+}
+
+.hive-stat-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 1.35rem;
+    padding: 1.25rem;
+    box-shadow: 0 16px 42px rgba(15, 23, 42, 0.06);
+}
+
+.hive-stat-label {
+    color: var(--hive-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.hive-stat-value {
+    color: var(--hive-ink);
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin-top: 0.55rem;
+}
+
+.hive-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-radius: 0.95rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 800;
+    transition: all 180ms ease;
+}
+
+.hive-button-primary {
+    background: var(--hive-ink);
+    color: #ffffff;
+}
+
+.hive-button-primary:hover {
+    transform: translateY(-1px);
+    background: #020617;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.20);
+}
+
+.hive-button-gold {
+    background: var(--hive-gold);
+    color: #111827;
+}
+
+.hive-button-gold:hover {
+    transform: translateY(-1px);
+    background: #f2c968;
+    box-shadow: 0 14px 28px rgba(216, 155, 43, 0.22);
+}
+
+.hive-button-secondary {
+    background: #ffffff;
+    color: var(--hive-ink);
+    border: 1px solid var(--hive-line);
+}
+
+.hive-button-secondary:hover {
+    transform: translateY(-1px);
+    background: #f8fafc;
+}
+
+.hive-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.38rem 0.7rem;
+    font-size: 0.74rem;
+    font-weight: 800;
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.hive-pill-gold {
+    background: var(--hive-gold-soft);
+    color: #92400e;
+}
+
+.hive-pill-teal {
+    background: var(--hive-teal-soft);
+    color: #0f766e;
+}
+
+.hive-input,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+    border-radius: 0.95rem !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: var(--hive-ink) !important;
+    outline: none !important;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--hive-gold) !important;
+    box-shadow: 0 0 0 4px rgba(216, 155, 43, 0.18) !important;
+}
+
+.hive-flash {
+    border-radius: 1rem;
+    padding: 0.9rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 650;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.07);
+}
+
+.hive-section-heading {
+    font-size: 1.2rem;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    color: var(--hive-ink);
+}
+
+.hive-muted {
+    color: var(--hive-muted);
+}
+
+.hive-link {
+    color: var(--hive-teal);
+    font-weight: 800;
+}
+
+.hive-link:hover {
+    color: #115e59;
+}
