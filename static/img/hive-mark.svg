@@ -1,17 +1,7 @@
-<<<<<<< HEAD
 <svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-<rect width="256" height="256" rx="56" fill="#0D1B2A"/>
-<path d="M128 32 L204 76 V164 L128 224 L52 164 V76 Z" fill="none" stroke="#D4A017" stroke-width="10" stroke-linejoin="round"/>
-<path d="M84 178 L108 72" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
-<path d="M138 178 L162 72" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
-<path d="M94 125 H153" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <rect width="256" height="256" rx="56" fill="#0D1B2A"/>
+  <path d="M128 32 L204 76 V164 L128 224 L52 164 V76 Z" fill="none" stroke="#D4A017" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M84 178 L108 72" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <path d="M138 178 L162 72" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
+  <path d="M94 125 H153" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"/>
 </svg>
-=======
-<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-  <rect width="96" height="96" rx="24" fill="#0D1B2A"/>
-  <path d="M48 13 L78 30 V66 L48 83 L18 66 V30 Z" fill="none" stroke="#D89B2B" stroke-width="5" stroke-linejoin="round"/>
-  <path d="M32 68 L42 28" stroke="#F8FAFC" stroke-width="5" stroke-linecap="round"/>
-  <path d="M54 68 L64 28" stroke="#F8FAFC" stroke-width="5" stroke-linecap="round"/>
-  <path d="M36 49 H61" stroke="#F8FAFC" stroke-width="5" stroke-linecap="round"/>
-</svg>
->>>>>>> origin/main
