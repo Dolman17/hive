@@ -1,67 +1,131 @@
 {% extends "base.html" %}
 
+{% block title %}Consultant Dashboard · The HIVE{% endblock %}
+
 {% block content %}
 
-<div class="mb-8">
-    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Consultant Portal</p>
-    <h1 class="text-3xl font-bold text-slate-950 mt-2">Welcome, {{ current_user.name }}</h1>
-    <p class="text-slate-600 mt-2">This is your HIVE consultant dashboard.</p>
-</div>
+<section class="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
+    <div class="xl:col-span-2 hive-card--dark rounded-[1.75rem] p-8 overflow-hidden relative">
+        <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-400/20 blur-3xl"></div>
+        <div class="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-teal-400/10 blur-3xl"></div>
 
-<div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm mb-8 text-white">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <p class="text-sm text-slate-400">Current membership</p>
-            <h2 class="text-2xl font-bold mt-1">{{ tier_label }}</h2>
-            <p class="text-sm text-slate-400 mt-2">Status: {{ subscription.status|replace('_', ' ')|title }}</p>
-        </div>
-        <div class="text-sm text-slate-300">
-            <p>Starter: Website + Toolkit</p>
-            <p>Professional: Apps + Leads</p>
-            <p>Covered: Cover requests</p>
-            <p>Boutique: Expert Help</p>
+        <div class="relative">
+            <p class="text-amber-300 text-xs font-black uppercase tracking-[0.18em]">Consultant operating hub</p>
+            <h1 class="mt-4 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-white">
+                Welcome back, {{ current_user.name }}.
+            </h1>
+            <p class="mt-5 text-slate-300 max-w-2xl leading-7">
+                Manage leads, client continuity, expert escalation and delivery tools from one HIVE workspace.
+            </p>
+
+            <div class="mt-7 flex flex-wrap gap-3">
+                <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="hive-button hive-button-gold">View Enquiries</a>
+                <a href="{{ url_for('cover_list') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Request Cover</a>
+                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button bg-white text-slate-950 hover:bg-slate-100">Public Directory</a>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h2 class="text-xl font-bold text-slate-950">Your Consultant Website</h2>
-            <p class="text-sm text-slate-600 mt-2">Manage your branded one-page website hosted by The HIVE.</p>
-            <p class="text-sm text-slate-500 mt-2">URL: <span class="font-mono">/consultants/{{ settings.tenant_slug }}</span></p>
+    <div class="hive-card rounded-[1.75rem] p-6">
+        <p class="hive-page-kicker">Membership</p>
+        <h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ tier_label }}</h2>
+        <p class="mt-2 text-sm text-slate-500">Status: {{ subscription.status|replace('_', ' ')|title }}</p>
+
+        <div class="mt-6 space-y-3 text-sm text-slate-600">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><span>Website + Toolkit</span><span class="hive-pill hive-pill-teal">Starter</span></div>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><span>Apps + Leads</span><span class="hive-pill hive-pill-teal">Pro</span></div>
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><span>Cover workflow</span><span class="hive-pill hive-pill-gold">Covered</span></div>
+            <div class="flex items-center justify-between"><span>Expert escalation</span><span class="hive-pill hive-pill-gold">Boutique</span></div>
         </div>
-        <div class="flex flex-wrap gap-3">
+
+        <a href="{{ url_for('billing.billing_home') }}" class="mt-6 hive-button hive-button-primary w-full">Manage Billing</a>
+    </div>
+</section>
+
+<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div>
+            <p class="hive-page-kicker">Your public presence</p>
+            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Consultant website and directory profile</h2>
+            <p class="mt-2 text-slate-600 max-w-3xl">
+                Keep your HIVE profile sharp so SMEs, admins and matching workflows can understand what you offer.
+            </p>
+            <p class="mt-3 text-sm text-slate-500">Website URL: <span class="font-mono text-slate-700">/consultants/{{ settings.tenant_slug }}</span></p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
             {% if settings.is_published %}
-                <span class="inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-semibold">Published</span>
+                <span class="hive-pill hive-pill-teal">Published</span>
             {% else %}
-                <span class="inline-flex items-center rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-semibold">Draft</span>
+                <span class="hive-pill hive-pill-gold">Draft</span>
             {% endif %}
-            <a href="{{ url_for('website_settings') }}" class="inline-flex items-center rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Edit Website</a>
-            <a href="{{ url_for('website_preview') }}" class="inline-flex items-center rounded-xl bg-white border border-slate-300 text-slate-800 px-4 py-2 text-sm font-semibold hover:bg-slate-50">Preview</a>
-            <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="inline-flex items-center rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-sm font-semibold hover:bg-amber-300">View Public Page</a>
+            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-button hive-button-secondary">Profile</a>
+            <a href="{{ url_for('website_settings') }}" class="hive-button hive-button-primary">Edit Website</a>
+            <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="hive-button hive-button-gold">View Public Page</a>
         </div>
     </div>
-</div>
+</section>
 
-<div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-9 gap-6 mb-8">
-    <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm text-white"><p class="text-sm text-slate-400">Active apps</p><p class="text-3xl font-bold mt-2">{{ active_apps_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Requested apps</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ requested_apps_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Toolkit</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ active_resources_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Cover requests</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ cover_requests_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Cover queue</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ submitted_cover_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Signal leads</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ assigned_leads_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Active leads</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ active_leads_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Expert requests</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ expert_requests_count }}</p></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><p class="text-sm text-slate-500">Open expert help</p><p class="text-3xl font-bold text-slate-950 mt-2">{{ open_expert_requests_count }}</p></div>
-</div>
+<section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+    <div class="hive-stat-card"><p class="hive-stat-label">Active apps</p><p class="hive-stat-value">{{ active_apps_count }}</p></div>
+    <div class="hive-stat-card"><p class="hive-stat-label">Toolkit items</p><p class="hive-stat-value">{{ active_resources_count }}</p></div>
+    <div class="hive-stat-card"><p class="hive-stat-label">Cover requests</p><p class="hive-stat-value">{{ cover_requests_count }}</p></div>
+    <div class="hive-stat-card"><p class="hive-stat-label">Signal leads</p><p class="hive-stat-value">{{ assigned_leads_count }}</p></div>
+    <div class="hive-stat-card"><p class="hive-stat-label">Active leads</p><p class="hive-stat-value">{{ active_leads_count }}</p></div>
+    <div class="hive-stat-card"><p class="hive-stat-label">Expert help</p><p class="hive-stat-value">{{ open_expert_requests_count }}</p></div>
+</section>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><h2 class="text-lg font-bold text-slate-950">Apps</h2><p class="text-sm text-slate-600 mt-2">Access PayScope, RecruitFlow AI, ResolvHR, People Signal and LMS modules.</p><div class="mt-5"><a href="{{ url_for('apps_index') }}" class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Manage Apps</a></div></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><h2 class="text-lg font-bold text-slate-950">Toolkit</h2><p class="text-sm text-slate-600 mt-2">Access consultant-ready templates, workflows and delivery resources.</p><div class="mt-5"><a href="{{ url_for('resources_list') }}" class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Open Toolkit</a></div></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><h2 class="text-lg font-bold text-slate-950">HIVE Covered</h2><p class="text-sm text-slate-600 mt-2">Request holiday, sickness, overflow or emergency cover.</p><div class="mt-5"><a href="{{ url_for('cover_list') }}" class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Manage Cover</a></div></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><h2 class="text-lg font-bold text-slate-950">PeopleSignal Leads</h2><p class="text-sm text-slate-600 mt-2">View PeopleSignal opportunities assigned to your consultancy.</p><div class="mt-5"><a href="{{ url_for('leads_list') }}" class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">View Leads</a></div></div>
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm"><h2 class="text-lg font-bold text-slate-950">Expert Help</h2><p class="text-sm text-slate-600 mt-2">Request specialist HR, recruitment, ER, TUPE, reward or escalation support.</p><div class="mt-5"><a href="{{ url_for('expert_help_list') }}" class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Manage Expert Help</a></div></div>
-</div>
+<section>
+    <div class="mb-5 flex items-end justify-between gap-4">
+        <div>
+            <p class="hive-page-kicker">Workspace</p>
+            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Operate your consultancy</h2>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div class="hive-card p-6">
+            <span class="hive-pill hive-pill-teal">Tools</span>
+            <h3 class="mt-4 hive-section-heading">App access</h3>
+            <p class="mt-2 text-sm text-slate-600 leading-6">Access PayScope, RecruitFlow AI, ResolvHR, People Signal and LMS modules.</p>
+            <a href="{{ url_for('apps_index') }}" class="mt-5 hive-button hive-button-primary">Manage Apps</a>
+        </div>
+
+        <div class="hive-card p-6">
+            <span class="hive-pill hive-pill-teal">Delivery</span>
+            <h3 class="mt-4 hive-section-heading">Toolkit</h3>
+            <p class="mt-2 text-sm text-slate-600 leading-6">Consultant-ready templates, workflows, playbooks and delivery resources.</p>
+            <a href="{{ url_for('resources_list') }}" class="mt-5 hive-button hive-button-primary">Open Toolkit</a>
+        </div>
+
+        <div class="hive-card p-6">
+            <span class="hive-pill hive-pill-gold">Continuity</span>
+            <h3 class="mt-4 hive-section-heading">HIVE Covered</h3>
+            <p class="mt-2 text-sm text-slate-600 leading-6">Request holiday, sickness, overflow or emergency cover for client continuity.</p>
+            <a href="{{ url_for('cover_list') }}" class="mt-5 hive-button hive-button-primary">Manage Cover</a>
+        </div>
+
+        <div class="hive-card p-6">
+            <span class="hive-pill hive-pill-gold">Growth</span>
+            <h3 class="mt-4 hive-section-heading">PeopleSignal Leads</h3>
+            <p class="mt-2 text-sm text-slate-600 leading-6">Review opportunities assigned to your consultancy and progress them quickly.</p>
+            <a href="{{ url_for('leads_list') }}" class="mt-5 hive-button hive-button-primary">View Leads</a>
+        </div>
+
+        <div class="hive-card p-6">
+            <span class="hive-pill hive-pill-gold">Risk</span>
+            <h3 class="mt-4 hive-section-heading">Expert Help</h3>
+            <p class="mt-2 text-sm text-slate-600 leading-6">Request specialist HR, ER, TUPE, reward, recruitment or escalation support.</p>
+            <a href="{{ url_for('expert_help_list') }}" class="mt-5 hive-button hive-button-primary">Manage Expert Help</a>
+        </div>
+
+        <div class="hive-card p-6">
+            <span class="hive-pill hive-pill-teal">Marketplace</span>
+            <h3 class="mt-4 hive-section-heading">Directory Enquiries</h3>
+            <p class="mt-2 text-sm text-slate-600 leading-6">Manage enquiries generated from your public HIVE directory profile.</p>
+            <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="mt-5 hive-button hive-button-primary">View Enquiries</a>
+        </div>
+    </div>
+</section>
 
 {% endblock %}
