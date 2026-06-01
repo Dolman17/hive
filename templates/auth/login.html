@@ -1,61 +1,103 @@
 {% extends "base.html" %}
 
+{% block title %}Sign in · The Hive{% endblock %}
+
 {% block content %}
 
-<div class="min-h-[80vh] flex items-center justify-center">
-    <div class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-        <div class="mb-8 text-center">
-            <div class="mx-auto h-14 w-14 rounded-2xl bg-amber-400 flex items-center justify-center text-slate-950 font-black text-2xl">
-                H
+<div class="min-h-[82vh] grid grid-cols-1 xl:grid-cols-2 gap-8 items-center">
+    <section class="hive-card--dark rounded-[2rem] p-8 md:p-12 overflow-hidden relative min-h-[560px] flex flex-col justify-between">
+        <div class="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-amber-400/20 blur-3xl"></div>
+        <div class="absolute -left-28 -bottom-28 w-96 h-96 rounded-full bg-teal-400/10 blur-3xl"></div>
+
+        <div class="relative">
+            <div class="inline-flex rounded-[1.75rem] bg-white p-5 shadow-2xl shadow-black/20">
+                <img
+                    src="{{ url_for('static', filename='img/hive-logo-horizontal.svg') }}"
+                    alt="The Hive"
+                    class="h-28 w-auto max-w-full"
+                >
             </div>
 
-            <h1 class="mt-5 text-2xl font-bold text-slate-950">
-                Sign in to The HIVE
+            <p class="mt-8 text-amber-300 text-xs font-black uppercase tracking-[0.18em]">
+                Consultant growth · delivery · continuity
+            </p>
+
+            <h1 class="mt-4 text-4xl md:text-6xl font-black tracking-[-0.065em] leading-none text-white">
+                The operating platform for independent HR and recruitment consultants.
             </h1>
 
-            <p class="mt-2 text-sm text-slate-500">
-                Consultant growth, delivery and continuity platform.
+            <p class="mt-6 text-slate-300 max-w-2xl leading-8 text-lg">
+                Win work, deliver confidently, escalate risk and protect client continuity through one connected HIVE workspace.
             </p>
         </div>
 
-        <form method="POST" class="space-y-5">
-            {{ form.hidden_tag() }}
-
-            <div>
-                {{ form.email.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.email(
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400",
-                    placeholder="admin@example.com"
-                ) }}
-
-                {% for error in form.email.errors %}
-                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                {% endfor %}
+        <div class="relative grid grid-cols-1 sm:grid-cols-3 gap-3 mt-10">
+            <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Win work</p>
+                <p class="text-white font-bold mt-2">Directory and lead flow</p>
             </div>
-
-            <div>
-                {{ form.password.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.password(
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400",
-                    placeholder="password123"
-                ) }}
-
-                {% for error in form.password.errors %}
-                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                {% endfor %}
+            <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Deliver</p>
+                <p class="text-white font-bold mt-2">Toolkit and apps</p>
             </div>
-
-            {{ form.submit(
-                class="w-full rounded-xl bg-slate-950 text-white font-semibold py-3 hover:bg-slate-800 cursor-pointer"
-            ) }}
-        </form>
-
-        <div class="mt-6 rounded-xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-600">
-            <p class="font-semibold text-slate-800 mb-2">Demo accounts</p>
-            <p>Admin: admin@example.com / password123</p>
-            <p>Consultant: consultant@example.com / password123</p>
+            <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Protect</p>
+                <p class="text-white font-bold mt-2">HIVE Covered</p>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section class="w-full max-w-xl mx-auto">
+        <div class="hive-card rounded-[2rem] p-8 md:p-10">
+            <div class="mb-8">
+                <p class="hive-page-kicker">Secure access</p>
+                <h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950">
+                    Sign in to The Hive
+                </h2>
+                <p class="mt-3 text-slate-600 leading-7">
+                    Access your consultant portal, admin command centre, toolkit, lead workflows and continuity support.
+                </p>
+            </div>
+
+            <form method="POST" class="space-y-5">
+                {{ form.hidden_tag() }}
+
+                <div>
+                    {{ form.email.label(class="block text-sm font-bold text-slate-700 mb-2") }}
+                    {{ form.email(
+                        class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400",
+                        placeholder="admin@example.com"
+                    ) }}
+
+                    {% for error in form.email.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-semibold">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    {{ form.password.label(class="block text-sm font-bold text-slate-700 mb-2") }}
+                    {{ form.password(
+                        class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400",
+                        placeholder="password123"
+                    ) }}
+
+                    {% for error in form.password.errors %}
+                        <p class="mt-2 text-sm text-red-600 font-semibold">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                {{ form.submit(
+                    class="w-full hive-button hive-button-primary py-4 cursor-pointer"
+                ) }}
+            </form>
+
+            <div class="mt-7 rounded-2xl bg-amber-50 border border-amber-200 p-5 text-sm text-amber-950">
+                <p class="font-black mb-2">Demo accounts</p>
+                <p><span class="font-semibold">Admin:</span> admin@example.com / password123</p>
+                <p><span class="font-semibold">Consultant:</span> consultant@example.com / password123</p>
+            </div>
+        </div>
+    </section>
 </div>
 
 {% endblock %}
