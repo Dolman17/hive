@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Request Submitted · The Hive{% endblock %}
+
+{% block content %}
+
+<section class="min-h-[76vh] flex items-center justify-center">
+    <div class="hive-card rounded-[2rem] p-8 md:p-12 max-w-2xl text-center">
+        <img
+            src="{{ url_for('static', filename='img/hive_logo_top_corner.png') }}"
+            alt="The Hive"
+            class="mx-auto h-20 w-20 object-contain"
+        >
+
+        <p class="mt-8 hive-page-kicker">Request submitted</p>
+
+        <h1 class="mt-3 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-slate-950">
+            Thanks for your interest in The Hive.
+        </h1>
+
+        <p class="mt-5 text-slate-600 leading-8 text-lg">
+            Your consultant access request has been received. The HIVE team will review the details and follow up if the fit looks right.
+        </p>
+
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <a href="{{ url_for('public_directory.landing') }}" class="hive-button hive-button-primary">
+                Back to Home
+            </a>
+            <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button hive-button-secondary">
+                View Directory
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
