@@ -21,6 +21,10 @@
         body {
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
+
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
     </style>
 </head>
 
@@ -58,27 +62,81 @@
             <nav class="flex flex-wrap items-center gap-2">
                 {% if current_user.role == "admin" %}
                     <a href="{{ url_for('admin_dashboard') }}" class="hive-nav-link">Admin</a>
-                    <a href="{{ url_for('admin_apps') }}" class="hive-nav-link">Apps</a>
-                    <a href="{{ url_for('admin_resources') }}" class="hive-nav-link">Toolkit</a>
-                    <a href="{{ url_for('admin_cover') }}" class="hive-nav-link">Covered</a>
-                    <a href="{{ url_for('admin_leads') }}" class="hive-nav-link">PeopleSignal</a>
-                    <a href="{{ url_for('admin_expert_requests') }}" class="hive-nav-link">Expert Help</a>
-                    <a href="{{ url_for('admin_subscriptions') }}" class="hive-nav-link">Subscriptions</a>
-                    <a href="{{ url_for('consultant_profiles.admin_consultants') }}" class="hive-nav-link">Consultants</a>
-                    <a href="{{ url_for('directory_enquiries.admin_directory_enquiries') }}" class="hive-nav-link">Enquiries</a>
-                    <a href="{{ url_for('billing.admin_billing') }}" class="hive-nav-link">Billing</a>
-                    <a href="{{ url_for('notifications.admin_notifications') }}" class="hive-nav-link">Log</a>
+
+                    <details class="relative">
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">
+                            Manage <span class="text-xs opacity-70">▾</span>
+                        </summary>
+                        <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
+                            <a href="{{ url_for('admin_apps') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Apps</a>
+                            <a href="{{ url_for('admin_resources') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Toolkit</a>
+                            <a href="{{ url_for('consultant_profiles.admin_consultants') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Consultants</a>
+                            <a href="{{ url_for('admin_subscriptions') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Subscriptions</a>
+                            <a href="{{ url_for('billing.admin_billing') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Billing</a>
+                        </div>
+                    </details>
+
+                    <details class="relative">
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">
+                            Workflows <span class="text-xs opacity-70">▾</span>
+                        </summary>
+                        <div class="absolute left-0 mt-2 w-60 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
+                            <a href="{{ url_for('admin_cover') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">HIVE Covered</a>
+                            <a href="{{ url_for('admin_leads') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">PeopleSignal</a>
+                            <a href="{{ url_for('admin_expert_requests') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Expert Help</a>
+                            <a href="{{ url_for('directory_enquiries.admin_directory_enquiries') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Directory Enquiries</a>
+                        </div>
+                    </details>
+
+                    <details class="relative">
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">
+                            Activity <span class="text-xs opacity-70">▾</span>
+                        </summary>
+                        <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
+                            <a href="{{ url_for('notifications.admin_notifications') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Notification Log</a>
+                            <a href="{{ url_for('notifications.notification_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">
+                                My Notifications
+                                {% if unread_notification_count and unread_notification_count > 0 %}
+                                    <span class="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-black text-white">{{ unread_notification_count }}</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                    </details>
                 {% else %}
                     <a href="{{ url_for('dashboard') }}" class="hive-nav-link">Dashboard</a>
-                    <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-nav-link">Profile</a>
-                    <a href="{{ url_for('website_settings') }}" class="hive-nav-link">Website</a>
-                    <a href="{{ url_for('apps_index') }}" class="hive-nav-link">Apps</a>
-                    <a href="{{ url_for('resources_list') }}" class="hive-nav-link">Toolkit</a>
-                    <a href="{{ url_for('cover_list') }}" class="hive-nav-link">Covered</a>
-                    <a href="{{ url_for('leads_list') }}" class="hive-nav-link">Leads</a>
-                    <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="hive-nav-link">Enquiries</a>
-                    <a href="{{ url_for('expert_help_list') }}" class="hive-nav-link">Expert Help</a>
-                    <a href="{{ url_for('billing.billing_home') }}" class="hive-nav-link">Billing</a>
+
+                    <details class="relative">
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">
+                            Business <span class="text-xs opacity-70">▾</span>
+                        </summary>
+                        <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
+                            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Profile</a>
+                            <a href="{{ url_for('website_settings') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Website</a>
+                            <a href="{{ url_for('billing.billing_home') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Billing</a>
+                        </div>
+                    </details>
+
+                    <details class="relative">
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">
+                            Tools <span class="text-xs opacity-70">▾</span>
+                        </summary>
+                        <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
+                            <a href="{{ url_for('apps_index') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Apps</a>
+                            <a href="{{ url_for('resources_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Toolkit</a>
+                        </div>
+                    </details>
+
+                    <details class="relative">
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">
+                            Workflows <span class="text-xs opacity-70">▾</span>
+                        </summary>
+                        <div class="absolute left-0 mt-2 w-60 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
+                            <a href="{{ url_for('cover_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">HIVE Covered</a>
+                            <a href="{{ url_for('leads_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">PeopleSignal Leads</a>
+                            <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Directory Enquiries</a>
+                            <a href="{{ url_for('expert_help_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Expert Help</a>
+                        </div>
+                    </details>
                 {% endif %}
 
                 <a href="{{ url_for('public_directory.directory_index') }}" class="hive-nav-link hive-nav-link--primary">
