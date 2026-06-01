@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Join The Hive · Consultant Portal{% endblock %}
+
+{% block content %}
+
+<section class="min-h-[82vh] flex flex-col justify-center">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-7xl mx-auto w-full items-stretch">
+        <article class="hive-card--dark rounded-[2rem] p-8 md:p-12 overflow-hidden relative flex flex-col justify-between">
+            <div class="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-amber-400/20 blur-3xl"></div>
+            <div class="absolute -left-28 -bottom-28 w-96 h-96 rounded-full bg-teal-400/10 blur-3xl"></div>
+
+            <div class="relative">
+                <a href="{{ url_for('public_directory.landing') }}" class="inline-flex items-center gap-4">
+                    <img
+                        src="{{ url_for('static', filename='img/hive_logo_top_corner.png') }}"
+                        alt="The Hive"
+                        class="h-16 w-16 object-contain"
+                    >
+                    <span>
+                        <span class="block text-white text-2xl font-black tracking-[-0.05em]">The Hive</span>
+                        <span class="block text-teal-300 text-xs font-black uppercase tracking-[0.18em] mt-1">Consultant Portal</span>
+                    </span>
+                </a>
+
+                <p class="mt-10 text-amber-300 text-xs font-black uppercase tracking-[0.18em]">
+                    For independent HR and recruitment consultants
+                </p>
+
+                <h1 class="mt-4 text-4xl md:text-6xl font-black tracking-[-0.065em] leading-none text-white">
+                    Grow your consultancy with the right support around you.
+                </h1>
+
+                <p class="mt-6 text-slate-300 leading-8 text-lg max-w-2xl">
+                    The Hive gives consultants a practical operating base: directory visibility, lead flow, tools, expert escalation and continuity support when client delivery needs protecting.
+                </p>
+            </div>
+
+            <div class="relative mt-10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                    <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Visibility</p>
+                    <p class="text-white font-bold mt-2">A public consultant profile and directory presence.</p>
+                </div>
+                <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                    <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Support</p>
+                    <p class="text-white font-bold mt-2">Toolkit resources, apps and expert escalation.</p>
+                </div>
+                <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                    <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Continuity</p>
+                    <p class="text-white font-bold mt-2">HIVE Covered for holiday, sickness and overflow cover.</p>
+                </div>
+                <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                    <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Growth</p>
+                    <p class="text-white font-bold mt-2">PeopleSignal leads and profile-driven opportunities.</p>
+                </div>
+            </div>
+        </article>
+
+        <article class="hive-card rounded-[2rem] p-8 md:p-10 flex flex-col justify-between">
+            <div>
+                <p class="hive-page-kicker">Request access</p>
+                <h2 class="mt-3 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-slate-950">
+                    Interested in joining The Hive?
+                </h2>
+
+                <p class="mt-5 text-slate-600 leading-8 text-lg">
+                    Send an access request and include a short note about your consultancy, specialisms and what you want from the platform.
+                </p>
+
+                <div class="mt-8 rounded-2xl bg-slate-50 border border-slate-200 p-6">
+                    <h3 class="text-xl font-black tracking-[-0.04em] text-slate-950">What to include</h3>
+                    <ul class="mt-4 space-y-3 text-slate-600 leading-7">
+                        <li>• Your name and consultancy name</li>
+                        <li>• Your HR or recruitment specialisms</li>
+                        <li>• Your location and whether you work remotely</li>
+                        <li>• Whether you are interested in leads, toolkit access, HIVE Covered or expert support</li>
+                    </ul>
+                </div>
+
+                <div class="mt-6 rounded-2xl bg-amber-50 border border-amber-200 p-6">
+                    <h3 class="text-xl font-black tracking-[-0.04em] text-amber-950">Current access route</h3>
+                    <p class="mt-3 text-amber-950 leading-7">
+                        New consultant access is currently handled by the HIVE admin team. This keeps the directory curated and ensures each consultant profile is set up correctly.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex flex-wrap gap-3">
+                <a
+                    href="mailto:hello@thehive.local?subject=Join%20The%20Hive%20Consultant%20Portal&body=Hello%20The%20Hive%20team,%0D%0A%0D%0AI%20would%20like%20to%20request%20access%20to%20The%20Hive%20Consultant%20Portal.%0D%0A%0D%0AName:%0D%0AConsultancy:%0D%0ASpecialisms:%0D%0ALocation:%0D%0AInterested%20in:%0D%0A%0D%0AThanks"
+                    class="hive-button hive-button-primary"
+                >
+                    Request Access
+                </a>
+
+                <a href="{{ url_for('login') }}" class="hive-button hive-button-secondary">
+                    Existing Member Login
+                </a>
+
+                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button hive-button-secondary">
+                    View Directory
+                </a>
+            </div>
+        </article>
+    </div>
+</section>
+
+{% endblock %}
