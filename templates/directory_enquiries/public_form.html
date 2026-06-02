@@ -1,14 +1,82 @@
 {% extends "base.html" %}
 {% block content %}
-<h1 class="text-3xl font-bold text-slate-950 mb-6">Contact request</h1>
-<form method="POST" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input name="company_name" placeholder="Company name" class="w-full rounded-xl border border-slate-300 px-4 py-3" required>
-    <input name="contact_name" placeholder="Contact name" class="w-full rounded-xl border border-slate-300 px-4 py-3" required>
-    <input type="email" name="contact_email" placeholder="Contact email" class="w-full rounded-xl border border-slate-300 px-4 py-3" required>
-    <input name="contact_phone" placeholder="Contact phone" class="w-full rounded-xl border border-slate-300 px-4 py-3">
-    <select name="urgency" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
-    <textarea name="support_needed" placeholder="Support needed" class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32"></textarea>
-    <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Submit</button>
-</form>
+
+{% set consultant_name = profile.business_name or profile.user.name %}
+{% set settings = profile.user.tenant_settings %}
+{% set primary_colour = settings.primary_colour if settings and settings.primary_colour else '#0D1B2A' %}
+{% set accent_colour = settings.accent_colour if settings and settings.accent_colour else '#D4A017' %}
+
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-wide" style="color: {{ accent_colour }};">Directory Enquiry</p>
+            <h1 class="text-4xl md:text-5xl font-black tracking-[-0.06em] text-slate-950 mt-2">Contact {{ consultant_name }}</h1>
+            <p class="text-slate-600 mt-3 max-w-3xl leading-7">Tell us what support you need. Your enquiry will be linked to this consultant and visible to The Hive admin team.</p>
+        </div>
+        <a href="{{ url_for('public_directory.directory_profile', profile_id=profile.id) }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back to Profile</a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form method="POST" class="lg:col-span-2 bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm space-y-5">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-black text-slate-700 mb-2">Company name</label>
+                    <input name="company_name" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-black text-slate-700 mb-2">Contact name</label>
+                    <input name="contact_name" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" required>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-black text-slate-700 mb-2">Contact email</label>
+                    <input type="email" name="contact_email" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-black text-slate-700 mb-2">Contact phone</label>
+                    <input name="contact_phone" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-black text-slate-700 mb-2">Urgency</label>
+                <select name="urgency" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <option value="low">Low - exploratory</option>
+                    <option value="medium" selected>Medium - support needed soon</option>
+                    <option value="high">High - urgent support needed</option>
+                    <option value="critical">Critical - immediate risk/issue</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-sm font-black text-slate-700 mb-2">What support do you need?</label>
+                <textarea name="support_needed" class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-40 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Briefly describe the HR/recruitment issue, timescale, sector and any important context."></textarea>
+            </div>
+
+            <button type="submit" class="rounded-xl text-white px-6 py-4 text-sm font-black hover:opacity-90" style="background: {{ primary_colour }};">Submit Enquiry</button>
+        </form>
+
+        <aside class="space-y-6">
+            <div class="rounded-[2rem] text-white p-8 shadow-sm" style="background: {{ primary_colour }};">
+                <p class="text-sm font-black uppercase tracking-widest opacity-80">Selected consultant</p>
+                <h2 class="mt-3 text-2xl font-black tracking-[-0.04em]">{{ consultant_name }}</h2>
+                <p class="mt-4 text-slate-200 leading-7">{{ profile.location or 'UK-wide' }} · {{ 'Remote available' if profile.remote_available else 'Remote not listed' }}</p>
+            </div>
+
+            <div class="rounded-[2rem] bg-white border border-slate-200 p-8 shadow-sm">
+                <h2 class="text-xl font-black text-slate-950">What happens next?</h2>
+                <ol class="mt-5 space-y-4 text-sm text-slate-600 leading-6">
+                    <li><span class="font-black text-slate-950">1.</span> Your enquiry is logged in The Hive.</li>
+                    <li><span class="font-black text-slate-950">2.</span> The consultant and admin team are notified.</li>
+                    <li><span class="font-black text-slate-950">3.</span> The consultant can review and follow up with you.</li>
+                </ol>
+            </div>
+        </aside>
+    </div>
+</div>
+
 {% endblock %}
