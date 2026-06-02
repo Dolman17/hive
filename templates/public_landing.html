@@ -1,109 +1,178 @@
 {% extends "base.html" %}
 
-{% block title %}The Hive · Consultant Portal and HR Directory{% endblock %}
+{% block title %}The Hive · Find HR and Recruitment Consultants{% endblock %}
 
 {% block content %}
 
-<section class="min-h-[82vh] flex flex-col justify-center">
-    <div class="text-center max-w-4xl mx-auto mb-10">
-        <img
-            src="{{ url_for('static', filename='img/01_primary_logo_horizontal_light.png') }}"
-            alt="The Hive"
-            class="mx-auto h-28 md:h-36 w-auto object-contain"
-        >
+<section class="relative overflow-hidden rounded-[2.5rem] bg-slate-950 text-white border border-white/10 shadow-2xl">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(212,160,23,0.32),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(47,164,169,0.24),transparent_38%)]"></div>
+    <div class="relative max-w-7xl mx-auto px-6 py-8 md:px-10 md:py-10">
+        <header class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between mb-12">
+            <a href="{{ url_for('public_directory.landing') }}" class="inline-flex items-center gap-4">
+                <img src="{{ url_for('static', filename='img/hive_logo_top_corner.png') }}" alt="The Hive" class="h-16 w-16 object-contain">
+                <span>
+                    <span class="block text-2xl font-black tracking-[-0.05em]">The Hive</span>
+                    <span class="block text-xs uppercase tracking-[0.22em] text-teal-300 font-black mt-1">HR consultant directory</span>
+                </span>
+            </a>
 
-        <p class="mt-6 hive-page-kicker">Growth · Delivery · Continuity</p>
+            <nav class="flex flex-wrap items-center gap-3 text-sm font-bold">
+                <a href="{{ url_for('public_directory.directory_index') }}" class="rounded-full bg-white/10 px-4 py-2 hover:bg-white/15">Find a Consultant</a>
+                <a href="#how-it-works" class="rounded-full bg-white/10 px-4 py-2 hover:bg-white/15">How it works</a>
+                <a href="#for-consultants" class="rounded-full bg-white/10 px-4 py-2 hover:bg-white/15">Join as Consultant</a>
+                <a href="{{ url_for('login') }}" class="rounded-full bg-amber-400 px-4 py-2 text-slate-950 hover:bg-amber-300">Login</a>
+            </nav>
+        </header>
 
-        <h1 class="mt-4 hive-page-title">
-            One platform. Two ways to connect.
-        </h1>
-
-        <p class="mt-5 hive-page-subtitle mx-auto">
-            The Hive helps independent HR and recruitment consultants grow, deliver and stay supported — while giving businesses a simple route to find trusted people support.
-        </p>
-    </div>
-
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 max-w-7xl mx-auto w-full">
-        <article class="hive-card--dark rounded-[2rem] p-8 md:p-10 overflow-hidden relative min-h-[520px] flex flex-col justify-between">
-            <div class="absolute -right-24 -top-24 w-96 h-96 rounded-full bg-amber-400/20 blur-3xl"></div>
-            <div class="absolute -left-28 -bottom-28 w-96 h-96 rounded-full bg-teal-400/10 blur-3xl"></div>
-
-            <div class="relative">
-                <span class="hive-pill hive-pill-gold">For consultants</span>
-
-                <h2 class="mt-6 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-white">
-                    Join the Hive consultant portal.
-                </h2>
-
-                <p class="mt-5 text-slate-300 leading-8 text-lg">
-                    Build your profile, access practical tools, manage leads, request expert help and protect client continuity with HIVE Covered.
-                </p>
-
-                <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
-                        <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Grow</p>
-                        <p class="text-white font-bold mt-2">Directory profile and PeopleSignal lead flow</p>
-                    </div>
-                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
-                        <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Deliver</p>
-                        <p class="text-white font-bold mt-2">Toolkit, apps and expert support</p>
-                    </div>
-                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
-                        <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Protect</p>
-                        <p class="text-white font-bold mt-2">Cover support when you need time away</p>
-                    </div>
-                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
-                        <p class="text-amber-300 text-xs font-bold uppercase tracking-wide">Operate</p>
-                        <p class="text-white font-bold mt-2">One clear place to manage your consultancy</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="relative mt-8 flex flex-wrap gap-3">
-                <a href="{{ url_for('public_directory.join') }}" class="hive-button hive-button-gold">Request Access</a>
-                <a href="{{ url_for('login') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Member Login</a>
-            </div>
-        </article>
-
-        <article class="hive-card rounded-[2rem] p-8 md:p-10 min-h-[520px] flex flex-col justify-between">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-10 items-center">
             <div>
-                <span class="hive-pill hive-pill-teal">For businesses</span>
-
-                <h2 class="mt-6 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-slate-950">
-                    Find trusted HR and recruitment support.
-                </h2>
-
-                <p class="mt-5 text-slate-600 leading-8 text-lg">
-                    Browse independent consultants, review their specialist areas and send an enquiry when you find the right fit for your business.
+                <p class="inline-flex rounded-full bg-amber-400/15 border border-amber-300/30 px-4 py-2 text-sm font-black uppercase tracking-[0.18em] text-amber-200">
+                    Find trusted people support
                 </p>
 
-                <div class="mt-8 space-y-4">
-                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-                        <p class="font-black text-slate-950">Search the directory</p>
-                        <p class="mt-2 text-sm text-slate-600 leading-6">Filter by expertise, sector, location or remote availability.</p>
+                <h1 class="mt-7 text-5xl md:text-7xl font-black tracking-[-0.075em] leading-[0.92]">
+                    Find HR and recruitment consultants near you.
+                </h1>
+
+                <p class="mt-7 text-xl text-slate-300 leading-9 max-w-2xl">
+                    Search independent HR and recruitment consultants by location, sector and specialism. Compare profiles, review services and make an enquiry when you find the right fit.
+                </p>
+
+                <div class="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl">
+                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                        <p class="text-3xl font-black text-white">01</p>
+                        <p class="mt-2 text-sm text-slate-300 font-bold">Search by need</p>
                     </div>
-                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-                        <p class="font-black text-slate-950">Review consultant profiles</p>
-                        <p class="mt-2 text-sm text-slate-600 leading-6">Understand each consultant’s services, experience and areas of focus.</p>
+                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                        <p class="text-3xl font-black text-white">02</p>
+                        <p class="mt-2 text-sm text-slate-300 font-bold">Compare profiles</p>
                     </div>
-                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-                        <p class="font-black text-slate-950">Send an enquiry</p>
-                        <p class="mt-2 text-sm text-slate-600 leading-6">Submit a direct enquiry from a consultant profile and start the conversation.</p>
+                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4">
+                        <p class="text-3xl font-black text-white">03</p>
+                        <p class="mt-2 text-sm text-slate-300 font-bold">Send enquiry</p>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-8 flex flex-wrap gap-3">
-                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button hive-button-primary">Find a Consultant</a>
-                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button hive-button-secondary">Browse Directory</a>
+            <div class="rounded-[2rem] bg-white p-6 md:p-8 text-slate-950 shadow-2xl border border-white/50">
+                <div class="mb-6">
+                    <p class="text-sm font-black text-amber-600 uppercase tracking-[0.18em]">Start your search</p>
+                    <h2 class="mt-2 text-3xl font-black tracking-[-0.055em]">What support do you need?</h2>
+                    <p class="mt-2 text-slate-600">Use the quick search to open the consultant directory with matching results.</p>
+                </div>
+
+                <form method="GET" action="{{ url_for('public_directory.directory_index') }}" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-2">Specialism, sector or name</label>
+                        <input name="q" placeholder="Employee relations, recruitment, care sector..." class="w-full rounded-2xl border border-slate-300 px-5 py-4 focus:outline-none focus:ring-4 focus:ring-amber-300/40">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-black text-slate-700 mb-2">Location</label>
+                        <input name="location" placeholder="Manchester, Birmingham, London..." class="w-full rounded-2xl border border-slate-300 px-5 py-4 focus:outline-none focus:ring-4 focus:ring-amber-300/40">
+                    </div>
+                    <label class="flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                        <input type="checkbox" name="remote" value="yes" class="h-4 w-4 rounded border-slate-300">
+                        <span class="text-sm font-bold text-slate-700">Show consultants who work remotely</span>
+                    </label>
+                    <button type="submit" class="w-full rounded-2xl bg-slate-950 text-white px-6 py-4 text-base font-black hover:bg-slate-800">
+                        Find a Consultant
+                    </button>
+                </form>
+
+                <div class="mt-5 grid grid-cols-2 gap-3 text-xs font-black text-slate-600">
+                    <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-2 text-center">HR advice</span>
+                    <span class="rounded-full bg-teal-100 text-teal-800 px-3 py-2 text-center">Recruitment</span>
+                    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-2 text-center">Employee relations</span>
+                    <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-2 text-center">Workforce planning</span>
+                </div>
             </div>
-        </article>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="max-w-7xl mx-auto px-2 py-16">
+    <div class="text-center max-w-3xl mx-auto">
+        <p class="hive-page-kicker">How it works</p>
+        <h2 class="mt-3 text-4xl md:text-5xl font-black tracking-[-0.06em] text-slate-950">A simpler way to find HR support.</h2>
+        <p class="mt-4 text-lg text-slate-600 leading-8">The landing page is now built around the same flow as a lead-generating directory: search, compare and enquire.</p>
     </div>
 
-    <div class="mt-10 text-center">
-        <p class="text-sm text-slate-500">
-            Already a member? <a href="{{ url_for('login') }}" class="hive-link">Sign in here</a>.
-        </p>
+    <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="hive-card p-7">
+            <div class="h-12 w-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-black text-xl">1</div>
+            <h3 class="mt-5 text-2xl font-black text-slate-950 tracking-[-0.04em]">Search</h3>
+            <p class="mt-3 text-slate-600 leading-7">Filter by specialism, location, sector or remote availability to narrow down relevant consultants.</p>
+        </div>
+        <div class="hive-card p-7">
+            <div class="h-12 w-12 rounded-2xl bg-teal-100 text-teal-700 flex items-center justify-center font-black text-xl">2</div>
+            <h3 class="mt-5 text-2xl font-black text-slate-950 tracking-[-0.04em]">Compare</h3>
+            <p class="mt-3 text-slate-600 leading-7">Review consultant profiles, services, sector experience and contact details before making contact.</p>
+        </div>
+        <div class="hive-card p-7">
+            <div class="h-12 w-12 rounded-2xl bg-slate-100 text-slate-800 flex items-center justify-center font-black text-xl">3</div>
+            <h3 class="mt-5 text-2xl font-black text-slate-950 tracking-[-0.04em]">Enquire</h3>
+            <p class="mt-3 text-slate-600 leading-7">Contact the consultant directly from their profile and start the conversation with context.</p>
+        </div>
+    </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-2 pb-16">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        <div class="hive-card p-8 md:p-10">
+            <p class="hive-page-kicker">For businesses</p>
+            <h2 class="mt-3 text-4xl font-black tracking-[-0.06em] text-slate-950">Find the right consultant for the issue in front of you.</h2>
+            <p class="mt-5 text-slate-600 leading-8">Whether you need complex ER support, recruitment improvement, HR compliance, culture work or workforce planning, The Hive gives you a direct route to independent specialists.</p>
+            <div class="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <span class="rounded-2xl bg-slate-50 border border-slate-200 p-4 font-bold text-slate-800">Employee relations</span>
+                <span class="rounded-2xl bg-slate-50 border border-slate-200 p-4 font-bold text-slate-800">Recruitment strategy</span>
+                <span class="rounded-2xl bg-slate-50 border border-slate-200 p-4 font-bold text-slate-800">HR compliance</span>
+                <span class="rounded-2xl bg-slate-50 border border-slate-200 p-4 font-bold text-slate-800">Workforce planning</span>
+            </div>
+            <a href="{{ url_for('public_directory.directory_index') }}" class="mt-8 inline-flex hive-button hive-button-primary">Browse Directory</a>
+        </div>
+
+        <div id="for-consultants" class="hive-card--dark rounded-[2rem] p-8 md:p-10 relative overflow-hidden">
+            <div class="absolute -right-24 -top-24 w-80 h-80 rounded-full bg-amber-400/20 blur-3xl"></div>
+            <div class="relative">
+                <p class="hive-page-kicker text-amber-300">For consultants</p>
+                <h2 class="mt-3 text-4xl font-black tracking-[-0.06em] text-white">Join the consultant portal.</h2>
+                <p class="mt-5 text-slate-300 leading-8">Create a public profile, publish a simple branded website, access toolkit resources, manage leads and request expert support when needed.</p>
+                <div class="mt-7 space-y-3">
+                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4 text-white font-bold">Directory profile and branded consultant page</div>
+                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4 text-white font-bold">Toolkit, apps and delivery support</div>
+                    <div class="rounded-2xl bg-white/8 border border-white/10 p-4 text-white font-bold">HIVE Covered and expert support options</div>
+                </div>
+                <div class="mt-8 flex flex-wrap gap-3">
+                    <a href="{{ url_for('public_directory.join') }}" class="hive-button hive-button-gold">Request Access</a>
+                    <a href="{{ url_for('login') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Member Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="max-w-7xl mx-auto px-2 pb-20">
+    <div class="rounded-[2rem] bg-white border border-slate-200 shadow-sm p-8 md:p-10">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div>
+                <p class="hive-page-kicker">FAQs</p>
+                <h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950">Common questions.</h2>
+            </div>
+            <div class="lg:col-span-2 space-y-4">
+                <details class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+                    <summary class="cursor-pointer font-black text-slate-950">How do I find the right consultant?</summary>
+                    <p class="mt-3 text-slate-600 leading-7">Start with your issue: ER, recruitment, compliance, culture, workforce planning or sector experience. Then filter by location or remote availability.</p>
+                </details>
+                <details class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+                    <summary class="cursor-pointer font-black text-slate-950">Can I contact consultants directly?</summary>
+                    <p class="mt-3 text-slate-600 leading-7">Yes. Public profiles show consultant details and enquiry routes so you can start a direct conversation.</p>
+                </details>
+                <details class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+                    <summary class="cursor-pointer font-black text-slate-950">Can consultants join The Hive?</summary>
+                    <p class="mt-3 text-slate-600 leading-7">Yes. Consultants can request access and, once approved, build their profile and publish their directory listing.</p>
+                </details>
+            </div>
+        </div>
     </div>
 </section>
 
