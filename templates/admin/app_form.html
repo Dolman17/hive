@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Admin · App Management</p>
+        <h1 class="text-3xl font-bold text-slate-950 mt-2">{{ page_title }}</h1>
+        <p class="text-slate-600 mt-2">Create or update a HIVE app module.</p>
+    </div>
+
+    <a href="{{ url_for('admin_apps') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back to Apps</a>
+</div>
+
+<form method="POST" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 max-w-4xl space-y-6">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="name" class="block text-sm font-black text-slate-700 mb-2">App name</label>
+            <input id="name" name="name" type="text" value="{{ app_module.name or '' }}" required class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="RecruitFlow AI">
+        </div>
+
+        <div>
+            <label for="slug" class="block text-sm font-black text-slate-700 mb-2">Slug</label>
+            <input id="slug" name="slug" type="text" value="{{ app_module.slug or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="recruitflow-ai">
+            <p class="text-xs text-slate-500 mt-2">Leave blank to generate from the app name.</p>
+        </div>
+    </div>
+
+    <div>
+        <label for="description" class="block text-sm font-black text-slate-700 mb-2">Description</label>
+        <textarea id="description" name="description" rows="4" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="Briefly explain what this app does.">{{ app_module.description or '' }}</textarea>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+            <label for="required_tier" class="block text-sm font-black text-slate-700 mb-2">Required tier</label>
+            <select id="required_tier" name="required_tier" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                {% for value, label in tier_options %}
+                    <option value="{{ value }}" {% if app_module.required_tier == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label for="icon" class="block text-sm font-black text-slate-700 mb-2">Icon</label>
+            <input id="icon" name="icon" type="text" value="{{ app_module.icon or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="⚡ or app icon name">
+        </div>
+
+        <div>
+            <label for="launch_url" class="block text-sm font-black text-slate-700 mb-2">Launch URL</label>
+            <input id="launch_url" name="launch_url" type="text" value="{{ app_module.launch_url or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="/apps/recruitflow-ai">
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <label class="flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+            <input type="checkbox" name="is_active" class="h-4 w-4 rounded border-slate-300" {% if app_module.is_active %}checked{% endif %}>
+            <span>
+                <span class="block font-black text-slate-700">Active</span>
+                <span class="block text-xs text-slate-500 mt-1">Visible/available in the app module list.</span>
+            </span>
+        </label>
+
+        <label class="flex items-center gap-3 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+            <input type="checkbox" name="is_core" class="h-4 w-4 rounded border-slate-300" {% if app_module.is_core %}checked{% endif %}>
+            <span>
+                <span class="block font-black text-slate-700">Core app</span>
+                <span class="block text-xs text-slate-500 mt-1">Useful for marking apps that are part of the core HIVE offer.</span>
+            </span>
+        </label>
+    </div>
+
+    <div class="flex flex-wrap gap-3 pt-2">
+        <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Save App</button>
+        <a href="{{ url_for('admin_apps') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}
