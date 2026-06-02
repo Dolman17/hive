@@ -31,6 +31,19 @@
     </form>
 </div>
 
+{% set sample_logos = {
+    'Bennett ER Solutions': 'bennett_er_solutions_horizontal_transparent.png',
+    'Carter People Solutions': 'carter_people_solutions_horizontal_transparent.png',
+    'Evans HR & Culture': 'evans_hr_and_culture_horizontal_transparent.png',
+    'Grant Workforce Strategy': 'grant_workforce_strategy_horizontal_transparent.png',
+    'Hughes Recruitment Partners': 'hughes_recruitment_partners_horizontal_transparent.png',
+    'Khan People Advisory': 'khan_people_advisory_horizontal_transparent.png',
+    'Mitchell HR Advisory': 'mitchell_hr_advisory_horizontal_transparent.png',
+    'Robinson Workplace HR': 'robinson_workplace_hr_horizontal_transparent.png',
+    'Shah HR Consultancy': 'shah_hr_consultancy_horizontal_transparent.png',
+    'Williams Talent Consulting': 'williams_talent_consulting_horizontal_transparent.png'
+} %}
+
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
     {% for profile in profiles %}
         {% set settings = profile.user.tenant_settings %}
@@ -39,6 +52,7 @@
         {% set text_colour = settings.text_colour if settings and settings.text_colour else '#1f2937' %}
         {% set business_name = profile.business_name or profile.user.name %}
         {% set logo_path = settings.logo_path if settings and settings.logo_path else '' %}
+        {% set sample_logo = sample_logos.get(business_name) %}
 
         <article
             class="group relative overflow-hidden rounded-[2rem] border shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
@@ -52,8 +66,10 @@
                 </p>
 
                 <div class="mt-5 h-32 w-32 rounded-[2rem] bg-white/95 border border-white/70 shadow-2xl flex items-center justify-center p-4">
-                    {% if logo_path %}
-                        {% if logo_path.startswith('logos/') %}
+                    {% if sample_logo or logo_path %}
+                        {% if sample_logo %}
+                            {% set logo_src = url_for('static', filename='img/' ~ sample_logo) %}
+                        {% elif logo_path.startswith('logos/') %}
                             {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
                         {% elif logo_path.startswith('static/') %}
                             {% set logo_src = url_for('static', filename=logo_path.replace('static/', '', 1)) %}
@@ -69,7 +85,11 @@
                             src="{{ logo_src }}"
                             alt="{{ business_name }} logo"
                             class="max-h-24 max-w-24 object-contain"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
                         >
+                        <div class="h-24 w-24 rounded-3xl hidden items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">
+                            {{ business_name[:1] }}
+                        </div>
                     {% else %}
                         <div class="h-24 w-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">
                             {{ business_name[:1] }}
