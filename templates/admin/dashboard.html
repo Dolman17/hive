@@ -91,7 +91,10 @@
             <span class="hive-pill hive-pill-teal">Tools</span>
             <h3 class="mt-4 hive-section-heading">App modules</h3>
             <p class="mt-2 text-sm text-slate-600 leading-6">Manage PayScope, RecruitFlow AI, ResolvHR, PeopleSignal and LMS access.</p>
-            <a href="{{ url_for('admin_apps') }}" class="mt-5 hive-button hive-button-primary">Manage Apps</a>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <a href="{{ url_for('admin_apps') }}" class="hive-button hive-button-primary">Manage Apps</a>
+                <a href="{{ url_for('notifications.admin_connected_apps') }}" class="hive-button hive-button-secondary">Connected Apps</a>
+            </div>
         </div>
 
         <div class="hive-card p-6">
