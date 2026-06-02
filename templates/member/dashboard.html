@@ -4,6 +4,18 @@
 
 {% block content %}
 
+{% set profile = current_user.consultant_profile %}
+{% set checklist = namespace(total=8, done=0) %}
+{% if profile %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if profile and profile.bio %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if profile and profile.specialisms %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if profile and profile.sectors %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if settings.logo_path %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if settings.website_intro and settings.about_text and settings.services_text %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if settings.contact_email or settings.contact_phone or settings.linkedin_url %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% if settings.is_published and profile and profile.is_public %}{% set checklist.done = checklist.done + 1 %}{% endif %}
+{% set completion = ((checklist.done / checklist.total) * 100)|round(0, 'floor')|int %}
+
 <section class="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
     <div class="xl:col-span-2 hive-card--dark rounded-[1.75rem] p-8 overflow-hidden relative">
         <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-400/20 blur-3xl"></div>
@@ -15,12 +27,12 @@
                 Welcome back, {{ current_user.name }}.
             </h1>
             <p class="mt-5 text-slate-300 max-w-2xl leading-7">
-                Manage leads, client continuity, expert escalation and delivery tools from one HIVE workspace.
+                Manage your public profile, directory enquiries, toolkit resources, app access and HIVE support workflows from one workspace.
             </p>
 
             <div class="mt-7 flex flex-wrap gap-3">
                 <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="hive-button hive-button-gold">View Enquiries</a>
-                <a href="{{ url_for('cover_list') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Request Cover</a>
+                <a href="{{ url_for('website_settings') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Complete Profile</a>
                 <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button bg-white text-slate-950 hover:bg-slate-100">Public Directory</a>
             </div>
         </div>
@@ -42,31 +54,103 @@
     </div>
 </section>
 
-<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div>
-            <p class="hive-page-kicker">Your public presence</p>
-            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Consultant website and directory profile</h2>
-            <p class="mt-2 text-slate-600 max-w-3xl">
-                Keep your HIVE profile sharp so SMEs, admins and matching workflows can understand what you offer.
-            </p>
-            <p class="mt-3 text-sm text-slate-500">Website URL: <span class="font-mono text-slate-700">/consultants/{{ settings.tenant_slug }}</span></p>
+<section class="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <div class="xl:col-span-2 hive-card rounded-[1.75rem] p-6 md:p-7">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            <div class="max-w-3xl">
+                <p class="hive-page-kicker">Launch checklist</p>
+                <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Get your consultant profile ready for enquiries</h2>
+                <p class="mt-2 text-slate-600">
+                    Complete these steps to make your public directory listing and branded consultant page stronger.
+                </p>
+            </div>
+
+            <div class="min-w-[180px] rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Profile completion</p>
+                <p class="mt-2 text-4xl font-black tracking-[-0.06em] text-slate-950">{{ completion }}%</p>
+                <div class="mt-3 h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div class="h-full rounded-full bg-amber-400" style="width: {{ completion }}%;"></div>
+                </div>
+            </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3">
-            {% if settings.is_published %}
-                <span class="hive-pill hive-pill-teal">Published</span>
-            {% else %}
-                <span class="hive-pill hive-pill-gold">Draft</span>
-            {% endif %}
-            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-button hive-button-secondary">Profile</a>
-            <a href="{{ url_for('website_settings') }}" class="hive-button hive-button-primary">Edit Website</a>
-            <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="hive-button hive-button-gold">View Public Page</a>
+        <div class="mt-7 grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="rounded-2xl border p-4 {% if profile %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if profile %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile else '○' }} Profile record created</p>
+                <p class="mt-1 text-sm text-slate-600">Your core consultant record exists.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if profile and profile.bio %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if profile and profile.bio %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile and profile.bio else '○' }} Add a strong bio</p>
+                <p class="mt-1 text-sm text-slate-600">Explain who you help and what problems you solve.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if profile and profile.specialisms %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if profile and profile.specialisms %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile and profile.specialisms else '○' }} Add specialisms</p>
+                <p class="mt-1 text-sm text-slate-600">List HR, ER, recruitment or people areas you support.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if profile and profile.sectors %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if profile and profile.sectors %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile and profile.sectors else '○' }} Add sector experience</p>
+                <p class="mt-1 text-sm text-slate-600">Help businesses understand where you have context.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if settings.logo_path %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if settings.logo_path %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.logo_path else '○' }} Upload logo</p>
+                <p class="mt-1 text-sm text-slate-600">Your logo is used on cards, profiles and your branded page.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if settings.website_intro and settings.about_text and settings.services_text %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if settings.website_intro and settings.about_text and settings.services_text %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.website_intro and settings.about_text and settings.services_text else '○' }} Website content</p>
+                <p class="mt-1 text-sm text-slate-600">Complete intro, about and services sections.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if settings.contact_email or settings.contact_phone or settings.linkedin_url %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if settings.contact_email or settings.contact_phone or settings.linkedin_url %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.contact_email or settings.contact_phone or settings.linkedin_url else '○' }} Contact details</p>
+                <p class="mt-1 text-sm text-slate-600">Add email, phone or LinkedIn for public trust.</p>
+            </div>
+            <div class="rounded-2xl border p-4 {% if settings.is_published and profile and profile.is_public %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
+                <p class="font-black {% if settings.is_published and profile and profile.is_public %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.is_published and profile and profile.is_public else '○' }} Publish profile</p>
+                <p class="mt-1 text-sm text-slate-600">Your website and directory profile both need to be live.</p>
+            </div>
         </div>
+
+        <div class="mt-7 flex flex-wrap gap-3">
+            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-button hive-button-secondary">Edit Directory Profile</a>
+            <a href="{{ url_for('website_settings') }}" class="hive-button hive-button-primary">Edit Website Settings</a>
+            <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="hive-button hive-button-gold">Preview Public Page</a>
+        </div>
+    </div>
+
+    <div class="hive-card rounded-[1.75rem] p-6 md:p-7">
+        <p class="hive-page-kicker">Go-live status</p>
+        <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Public presence</h2>
+
+        <div class="mt-6 space-y-4">
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Branded website</p>
+                <div class="mt-2 flex items-center justify-between gap-3">
+                    <span class="font-black text-slate-950">/consultants/{{ settings.tenant_slug }}</span>
+                    {% if settings.is_published %}<span class="hive-pill hive-pill-teal">Live</span>{% else %}<span class="hive-pill hive-pill-gold">Draft</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Directory listing</p>
+                <div class="mt-2 flex items-center justify-between gap-3">
+                    <span class="font-black text-slate-950">Searchable profile</span>
+                    {% if profile and profile.is_public %}<span class="hive-pill hive-pill-teal">Visible</span>{% else %}<span class="hive-pill hive-pill-gold">Hidden</span>{% endif %}
+                </div>
+            </div>
+
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Enquiries</p>
+                <div class="mt-2 flex items-center justify-between gap-3">
+                    <span class="font-black text-slate-950">Directory inbox</span>
+                    <span class="text-2xl font-black text-slate-950">{{ assigned_leads_count + active_leads_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="mt-6 hive-button hive-button-primary w-full">View Directory Enquiries</a>
     </div>
 </section>
 
-<section class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+<section class="mb-8 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
     <div class="hive-stat-card"><p class="hive-stat-label">Active apps</p><p class="hive-stat-value">{{ active_apps_count }}</p></div>
     <div class="hive-stat-card"><p class="hive-stat-label">Toolkit items</p><p class="hive-stat-value">{{ active_resources_count }}</p></div>
     <div class="hive-stat-card"><p class="hive-stat-label">Cover requests</p><p class="hive-stat-value">{{ cover_requests_count }}</p></div>
