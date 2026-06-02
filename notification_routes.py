@@ -1,11 +1,14 @@
 from datetime import datetime
 from functools import wraps
+import os
+from urllib.parse import urlencode
 
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
+from itsdangerous import URLSafeTimedSerializer
 
 from extensions import db
-from models import User
+from models import AppModule, ConsultantAppAccess, User
 
 
 notifications_bp = Blueprint("notifications", __name__)
@@ -33,6 +36,18 @@ def admin_required(view_func):
         if current_user.role != "admin":
             flash("You do not have permission to access that page.", "danger")
             return redirect(url_for("dashboard"))
+        return view_func(*args, **kwargs)
+    return wrapped_view
+
+
+def consultant_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for("login"))
+        if current_user.role != "consultant":
+            flash("You do not have permission to access that page.", "danger")
+            return redirect(url_for("home"))
         return view_func(*args, **kwargs)
     return wrapped_view
 
@@ -76,9 +91,74 @@ def unread_notification_count(user):
     return Notification.query.filter_by(recipient_user_id=user.id, is_read=False).count()
 
 
+def _required_env(name):
+    value = (os.getenv(name) or "").strip()
+    if not value:
+        raise RuntimeError(f"{name} is not configured")
+    return value
+
+
+def _build_hive_sso_token(app_slug):
+    if app_slug != "payscope":
+        raise RuntimeError("SSO launch is not configured for that app yet.")
+
+    serializer = URLSafeTimedSerializer(
+        secret_key=_required_env("HIVE_SSO_PAYSCOPE_SECRET"),
+        salt=os.getenv("HIVE_SSO_SALT", "hive-sso-launch"),
+    )
+
+    payload = {
+        "iss": os.getenv("HIVE_SSO_ISSUER", "hive"),
+        "aud": "payscope",
+        "hive_user_id": current_user.id,
+        "email": current_user.email,
+        "name": current_user.name,
+        "role": current_user.role,
+        "iat": int(datetime.utcnow().timestamp()),
+    }
+
+    return serializer.dumps(payload)
+
+
+def _build_hive_sso_callback_url(app_slug):
+    if app_slug != "payscope":
+        raise RuntimeError("SSO launch is not configured for that app yet.")
+
+    return f'{_required_env("PAYSCOPE_BASE_URL").rstrip("/")}/auth/hive/callback'
+
+
 @notifications_bp.app_context_processor
 def inject_notification_count():
     return {"unread_notification_count": unread_notification_count(current_user)}
+
+
+@notifications_bp.route("/apps/<app_slug>/hive-sso-launch")
+@login_required
+@consultant_required
+def hive_sso_launch(app_slug):
+    app_module = AppModule.query.filter_by(slug=app_slug, is_active=True).first()
+    if not app_module:
+        flash("That app is not currently available.", "danger")
+        return redirect(url_for("apps_index"))
+
+    access = ConsultantAppAccess.query.filter_by(
+        consultant_id=current_user.id,
+        app_module_id=app_module.id,
+        status="active",
+    ).first()
+
+    if not access:
+        flash(f"You do not currently have access to {app_module.name}.", "danger")
+        return redirect(url_for("apps_index"))
+
+    try:
+        token = _build_hive_sso_token(app_slug)
+        callback_url = _build_hive_sso_callback_url(app_slug)
+    except RuntimeError as exc:
+        flash(str(exc), "danger")
+        return redirect(url_for("apps_index"))
+
+    return redirect(f"{callback_url}?{urlencode({'token': token})}")
 
 
 @notifications_bp.route("/notifications")
