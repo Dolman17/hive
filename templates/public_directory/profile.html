@@ -2,125 +2,189 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ profile.business_name or profile.user.name }}</title>
+    <title>{{ profile.business_name or profile.user.name }} · The Hive Directory</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-950">
 
 {% set consultant_name = profile.business_name or profile.user.name %}
 {% set initials = consultant_name[:2].upper() %}
+{% set settings = profile.user.tenant_settings %}
+{% set primary_colour = settings.primary_colour if settings and settings.primary_colour else '#0D1B2A' %}
+{% set accent_colour = settings.accent_colour if settings and settings.accent_colour else '#D4A017' %}
+{% set text_colour = settings.text_colour if settings and settings.text_colour else '#1F2937' %}
+{% set logo_path = settings.logo_path if settings and settings.logo_path else '' %}
+{% set intro_text = settings.website_intro if settings and settings.website_intro else profile.bio %}
+{% set about_text = settings.about_text if settings and settings.about_text else profile.bio %}
+{% set services_text = settings.services_text if settings and settings.services_text else profile.specialisms %}
+{% set sectors_text = settings.sectors_text if settings and settings.sectors_text else profile.sectors %}
+{% set cta_label = settings.cta_label if settings and settings.cta_label else 'Contact Consultant' %}
 
-<header class="bg-white border-b border-slate-200">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between gap-4">
+<body class="min-h-screen bg-slate-50" style="color: {{ text_colour }};">
+
+<header class="bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <a href="{{ url_for('public_directory.directory_index') }}" class="flex items-center gap-3">
-            <div class="h-11 w-11 rounded-2xl bg-slate-950 text-white flex items-center justify-center text-sm font-black">
+            <div class="h-12 w-12 rounded-2xl text-white flex items-center justify-center text-sm font-black" style="background: {{ primary_colour }}; border: 3px solid {{ accent_colour }};">
                 {{ initials }}
             </div>
             <div>
-                <p class="text-base font-black text-slate-950">{{ consultant_name }}</p>
-                <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Consultant profile</p>
+                <p class="text-base font-black" style="color: {{ primary_colour }};">{{ consultant_name }}</p>
+                <p class="text-xs font-bold uppercase tracking-widest text-slate-500">The Hive consultant directory</p>
             </div>
         </a>
 
-        <a href="{{ url_for('directory_enquiries.public_directory_enquiry', profile_id=profile.id) }}" class="rounded-full bg-slate-950 text-white px-5 py-3 text-sm font-black hover:bg-slate-800">
-            Contact
-        </a>
+        <nav class="flex flex-wrap gap-3 text-sm font-black">
+            <a href="{{ url_for('public_directory.directory_index') }}" class="rounded-full bg-slate-100 text-slate-700 px-4 py-2 hover:bg-slate-200">Back to Directory</a>
+            <a href="#expertise" class="rounded-full bg-slate-100 text-slate-700 px-4 py-2 hover:bg-slate-200">Expertise</a>
+            <a href="{{ url_for('directory_enquiries.public_directory_enquiry', profile_id=profile.id) }}" class="rounded-full px-5 py-2 text-white hover:opacity-90" style="background: {{ primary_colour }};">Enquire</a>
+        </nav>
     </div>
 </header>
 
 <main>
-    <section class="bg-white">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-                <div class="lg:col-span-2">
-                    <div class="flex flex-wrap gap-3 mb-6">
+    <section class="relative overflow-hidden text-white" style="background: {{ primary_colour }};">
+        <div class="absolute inset-0 opacity-30" style="background: radial-gradient(circle at top left, {{ accent_colour }} 0%, transparent 32%), radial-gradient(circle at bottom right, #ffffff 0%, transparent 24%);"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                <div class="lg:col-span-7">
+                    <div class="flex flex-wrap gap-3 mb-7">
                         {% if profile.remote_available %}
-                            <span class="rounded-full bg-teal-50 text-teal-800 border border-teal-200 px-4 py-2 text-xs font-black uppercase tracking-widest">Remote available</span>
+                            <span class="rounded-full bg-white/12 text-white border border-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest">Remote available</span>
                         {% endif %}
                         {% if profile.location %}
-                            <span class="rounded-full bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2 text-xs font-black uppercase tracking-widest">{{ profile.location }}</span>
+                            <span class="rounded-full bg-white/12 text-white border border-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest">{{ profile.location }}</span>
+                        {% endif %}
+                        {% if profile.insurance_verified %}
+                            <span class="rounded-full bg-white/12 text-white border border-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest">Insurance verified</span>
                         {% endif %}
                     </div>
 
-                    <p class="text-sm font-black uppercase tracking-widest text-amber-700">Independent consultant</p>
-                    <h1 class="mt-5 text-5xl md:text-7xl font-black tracking-tight leading-none text-slate-950">
+                    <p class="text-sm font-black uppercase tracking-[0.22em]" style="color: {{ accent_colour }};">Independent HR consultant</p>
+                    <h1 class="mt-5 text-5xl md:text-7xl font-black tracking-[-0.075em] leading-[0.92] text-white">
                         {{ consultant_name }}
                     </h1>
-                    <p class="mt-7 text-xl leading-9 text-slate-600 max-w-3xl">
-                        {{ profile.bio[:260] ~ ('...' if profile.bio and profile.bio|length > 260 else '') if profile.bio else 'Practical support for organisations that need clear, experienced guidance.' }}
+
+                    {% if settings and settings.strapline %}
+                        <p class="mt-5 text-2xl font-black text-white/90">{{ settings.strapline }}</p>
+                    {% endif %}
+
+                    <p class="mt-7 text-xl leading-9 text-slate-200 max-w-3xl">
+                        {{ intro_text[:320] ~ ('...' if intro_text and intro_text|length > 320 else '') if intro_text else 'Practical HR and recruitment support for organisations that need clear, experienced guidance.' }}
                     </p>
 
                     <div class="mt-9 flex flex-wrap gap-3">
-                        <a href="{{ url_for('directory_enquiries.public_directory_enquiry', profile_id=profile.id) }}" class="rounded-2xl bg-slate-950 text-white px-6 py-4 text-sm font-black hover:bg-slate-800">
-                            Contact Consultant
+                        <a href="{{ url_for('directory_enquiries.public_directory_enquiry', profile_id=profile.id) }}" class="rounded-2xl px-6 py-4 text-sm font-black text-slate-950 hover:opacity-90" style="background: {{ accent_colour }};">
+                            {{ cta_label }}
                         </a>
-                        <a href="#expertise" class="rounded-2xl bg-white border border-slate-300 text-slate-800 px-6 py-4 text-sm font-black hover:bg-slate-50">
+                        <a href="#expertise" class="rounded-2xl bg-white/10 border border-white/15 text-white px-6 py-4 text-sm font-black hover:bg-white/15">
                             View Expertise
                         </a>
                     </div>
                 </div>
 
-                <aside class="rounded-3xl bg-slate-950 text-white p-8">
-                    <div class="h-20 w-20 rounded-3xl bg-white text-slate-950 flex items-center justify-center text-2xl font-black">
-                        {{ initials }}
+                <aside class="lg:col-span-5">
+                    <div class="rounded-[2rem] bg-white text-slate-950 p-7 md:p-8 shadow-2xl border border-white/60">
+                        <div class="flex items-center justify-center min-h-40 rounded-[1.5rem] bg-slate-50 border border-slate-200 p-6">
+                            {% if logo_path %}
+                                {% if logo_path.startswith('logos/') %}
+                                    {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
+                                {% elif logo_path.startswith('static/') %}
+                                    {% set logo_src = url_for('static', filename=logo_path.replace('static/', '', 1)) %}
+                                {% elif logo_path.startswith('img/') %}
+                                    {% set logo_src = url_for('static', filename=logo_path) %}
+                                {% elif '/' not in logo_path %}
+                                    {% set logo_src = url_for('static', filename='img/' ~ logo_path) %}
+                                {% else %}
+                                    {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
+                                {% endif %}
+                                <img src="{{ logo_src }}" alt="{{ consultant_name }} logo" class="max-h-28 max-w-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="h-24 w-24 rounded-3xl hidden items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">{{ initials }}</div>
+                            {% else %}
+                                <div class="h-24 w-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">{{ initials }}</div>
+                            {% endif %}
+                        </div>
+
+                        <h2 class="mt-7 text-2xl font-black tracking-[-0.04em]" style="color: {{ primary_colour }};">Profile snapshot</h2>
+                        <dl class="mt-6 space-y-3 text-sm">
+                            <div class="flex justify-between gap-4 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                                <dt class="text-slate-500 font-bold">Consultant</dt>
+                                <dd class="font-black text-right">{{ profile.user.name }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                                <dt class="text-slate-500 font-bold">Location</dt>
+                                <dd class="font-black text-right">{{ profile.location or 'UK-wide' }}</dd>
+                            </div>
+                            <div class="flex justify-between gap-4 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                                <dt class="text-slate-500 font-bold">Remote</dt>
+                                <dd class="font-black text-right">{{ 'Available' if profile.remote_available else 'Not listed' }}</dd>
+                            </div>
+                        </dl>
                     </div>
-                    <h2 class="mt-7 text-2xl font-black">Profile snapshot</h2>
-                    <dl class="mt-6 space-y-4 text-sm">
-                        <div class="flex justify-between gap-4 border-b border-white/10 pb-4">
-                            <dt class="text-slate-400 font-bold">Name</dt>
-                            <dd class="font-black text-right">{{ profile.user.name }}</dd>
-                        </div>
-                        <div class="flex justify-between gap-4 border-b border-white/10 pb-4">
-                            <dt class="text-slate-400 font-bold">Location</dt>
-                            <dd class="font-black text-right">{{ profile.location or 'UK-wide' }}</dd>
-                        </div>
-                        <div class="flex justify-between gap-4">
-                            <dt class="text-slate-400 font-bold">Remote</dt>
-                            <dd class="font-black text-right">{{ 'Available' if profile.remote_available else 'Not listed' }}</dd>
-                        </div>
-                    </dl>
                 </aside>
             </div>
         </div>
     </section>
 
     <section class="py-14 lg:py-20">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-8">
-                    <article class="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm">
-                        <p class="text-xs font-black uppercase tracking-widest text-amber-700">About</p>
-                        <h2 class="mt-3 text-3xl font-black text-slate-950">How {{ consultant_name }} can help</h2>
-                        <p class="mt-6 text-slate-600 leading-8 whitespace-pre-line">{{ profile.bio or 'No profile bio added yet.' }}</p>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-8 space-y-8">
+                    <article class="rounded-[2rem] bg-white border border-slate-200 p-8 md:p-10 shadow-sm">
+                        <p class="text-xs font-black uppercase tracking-widest" style="color: {{ accent_colour }};">About</p>
+                        <h2 class="mt-3 text-3xl md:text-4xl font-black tracking-[-0.05em]" style="color: {{ primary_colour }};">How {{ consultant_name }} can help</h2>
+                        <p class="mt-6 text-slate-600 leading-8 whitespace-pre-line">{{ about_text or 'No profile bio added yet.' }}</p>
                     </article>
 
                     <div id="expertise" class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        <article class="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm">
-                            <p class="text-xs font-black uppercase tracking-widest text-amber-700">Expertise</p>
-                            <h2 class="mt-3 text-3xl font-black text-slate-950">Specialisms</h2>
-                            <p class="mt-6 text-slate-600 leading-8 whitespace-pre-line">{{ profile.specialisms or 'No specialisms listed yet.' }}</p>
+                        <article class="rounded-[2rem] bg-white border border-slate-200 p-8 shadow-sm">
+                            <p class="text-xs font-black uppercase tracking-widest" style="color: {{ accent_colour }};">Expertise</p>
+                            <h2 class="mt-3 text-3xl font-black tracking-[-0.045em]" style="color: {{ primary_colour }};">Services</h2>
+                            <p class="mt-6 text-slate-600 leading-8 whitespace-pre-line">{{ services_text or 'No specialisms listed yet.' }}</p>
                         </article>
 
-                        <article class="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm">
-                            <p class="text-xs font-black uppercase tracking-widest text-amber-700">Experience</p>
-                            <h2 class="mt-3 text-3xl font-black text-slate-950">Sector focus</h2>
-                            <p class="mt-6 text-slate-600 leading-8 whitespace-pre-line">{{ profile.sectors or 'No sector experience listed yet.' }}</p>
+                        <article class="rounded-[2rem] bg-white border border-slate-200 p-8 shadow-sm">
+                            <p class="text-xs font-black uppercase tracking-widest" style="color: {{ accent_colour }};">Experience</p>
+                            <h2 class="mt-3 text-3xl font-black tracking-[-0.045em]" style="color: {{ primary_colour }};">Sector focus</h2>
+                            <p class="mt-6 text-slate-600 leading-8 whitespace-pre-line">{{ sectors_text or 'No sector experience listed yet.' }}</p>
                         </article>
                     </div>
+
+                    <article class="rounded-[2rem] border p-8 md:p-10 shadow-sm" style="background: {{ primary_colour }}; border-color: {{ primary_colour }};">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-white">
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest opacity-70">Best for</p>
+                                <p class="mt-2 text-lg font-black">Specialist people support</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest opacity-70">Works with</p>
+                                <p class="mt-2 text-lg font-black">{{ profile.location or 'UK-wide' }} organisations</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest opacity-70">Enquiry route</p>
+                                <p class="mt-2 text-lg font-black">Through The Hive</p>
+                            </div>
+                        </div>
+                    </article>
                 </div>
 
-                <aside class="space-y-8">
-                    <div class="rounded-3xl bg-white border border-slate-200 p-8 shadow-sm sticky top-8">
-                        <h2 class="text-2xl font-black text-slate-950">Start a conversation</h2>
-                        <p class="mt-4 text-slate-600 leading-7">Share a short outline of the support you need and your preferred timescale.</p>
-                        <a href="{{ url_for('directory_enquiries.public_directory_enquiry', profile_id=profile.id) }}" class="mt-7 block w-full rounded-2xl bg-slate-950 text-white px-6 py-4 text-center text-sm font-black hover:bg-slate-800">
-                            Contact Consultant
+                <aside class="lg:col-span-4 space-y-8">
+                    <div class="rounded-[2rem] bg-white border border-slate-200 p-8 shadow-sm sticky top-28">
+                        <h2 class="text-2xl font-black tracking-[-0.04em]" style="color: {{ primary_colour }};">Start a conversation</h2>
+                        <p class="mt-4 text-slate-600 leading-7">Share a short outline of the support you need and your preferred timescale. The enquiry will be linked to this consultant profile.</p>
+                        <a href="{{ url_for('directory_enquiries.public_directory_enquiry', profile_id=profile.id) }}" class="mt-7 block w-full rounded-2xl px-6 py-4 text-center text-sm font-black text-white hover:opacity-90" style="background: {{ primary_colour }};">
+                            {{ cta_label }}
                         </a>
+                        {% if settings and settings.linkedin_url %}
+                            <a href="{{ settings.linkedin_url }}" target="_blank" rel="noopener" class="mt-3 block w-full rounded-2xl bg-white border border-slate-300 text-slate-800 px-6 py-4 text-center text-sm font-black hover:bg-slate-50">
+                                View LinkedIn
+                            </a>
+                        {% endif %}
                     </div>
 
-                    <div class="rounded-3xl bg-slate-100 border border-slate-200 p-8">
-                        <h2 class="text-xl font-black text-slate-950">Availability</h2>
+                    <div class="rounded-[2rem] bg-slate-100 border border-slate-200 p-8">
+                        <h2 class="text-xl font-black text-slate-950">Verification</h2>
                         <div class="mt-5 space-y-3 text-sm">
                             <div class="flex justify-between gap-4 rounded-2xl bg-white border border-slate-200 p-4">
                                 <span class="font-bold text-slate-700">Remote available</span>
@@ -143,9 +207,9 @@
 </main>
 
 <footer class="border-t border-slate-200 bg-white">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <p class="text-sm text-slate-500">{{ consultant_name }} · Consultant profile</p>
-        <a href="{{ url_for('public_directory.directory_index') }}" class="text-sm font-bold text-slate-700 hover:text-slate-950">Back to directory</a>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <p class="text-sm text-slate-500">{{ consultant_name }} · Listed in The Hive consultant directory</p>
+        <a href="{{ url_for('public_directory.directory_index') }}" class="text-sm font-bold hover:underline" style="color: {{ primary_colour }};">Back to directory</a>
     </div>
 </footer>
 
