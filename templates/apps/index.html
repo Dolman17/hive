@@ -66,10 +66,17 @@
 
             <div class="mt-6 flex flex-wrap gap-3">
                 {% if access and access.status == "active" %}
-                    <a href="{{ url_for('launch_app', app_slug=app_module.slug) }}"
-                       class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
-                        Launch
-                    </a>
+                    {% if app_module.slug == "payscope" %}
+                        <a href="{{ url_for('notifications.hive_sso_launch', app_slug=app_module.slug) }}"
+                           class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                            Open PayScope
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('launch_app', app_slug=app_module.slug) }}"
+                           class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
+                            Launch
+                        </a>
+                    {% endif %}
                 {% elif access and access.status == "requested" %}
                     <button type="button"
                             class="inline-flex rounded-xl bg-slate-100 text-slate-500 px-4 py-2 text-sm font-semibold cursor-not-allowed">
