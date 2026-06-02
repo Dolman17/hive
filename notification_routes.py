@@ -28,6 +28,17 @@ class Notification(db.Model):
     recipient = db.relationship("User", foreign_keys=[recipient_user_id])
 
 
+SSO_APP_CONFIG = {
+    "payscope": {
+        "label": "PayScope",
+        "audience": "payscope",
+        "secret_env": "HIVE_SSO_PAYSCOPE_SECRET",
+        "base_url_env": "PAYSCOPE_BASE_URL",
+        "callback_path": "/auth/hive/callback",
+    }
+}
+
+
 def admin_required(view_func):
     @wraps(view_func)
     def wrapped_view(*args, **kwargs):
@@ -98,10 +109,14 @@ def _required_env(name):
     return value
 
 
+def _optional_env(name):
+    return (os.getenv(name) or "").strip()
+
+
 def _normalise_external_base_url(value):
     """
-    PAYSCOPE_BASE_URL must be the app root, not /login.
-    This strips common copied login paths defensively.
+    External app base URLs must be app roots, not login pages.
+    Strip common copied login paths defensively.
     """
     base_url = (value or "").strip().rstrip("/")
     for suffix in ("/login", "/auth/login"):
@@ -111,17 +126,18 @@ def _normalise_external_base_url(value):
 
 
 def _build_hive_sso_token(app_slug):
-    if app_slug != "payscope":
+    app_config = SSO_APP_CONFIG.get(app_slug)
+    if not app_config:
         raise RuntimeError("SSO launch is not configured for that app yet.")
 
     serializer = URLSafeTimedSerializer(
-        secret_key=_required_env("HIVE_SSO_PAYSCOPE_SECRET"),
+        secret_key=_required_env(app_config["secret_env"]),
         salt=os.getenv("HIVE_SSO_SALT", "hive-sso-launch"),
     )
 
     payload = {
         "iss": os.getenv("HIVE_SSO_ISSUER", "hive"),
-        "aud": "payscope",
+        "aud": app_config["audience"],
         "hive_user_id": current_user.id,
         "email": current_user.email,
         "name": current_user.name,
@@ -133,11 +149,68 @@ def _build_hive_sso_token(app_slug):
 
 
 def _build_hive_sso_callback_url(app_slug):
-    if app_slug != "payscope":
+    app_config = SSO_APP_CONFIG.get(app_slug)
+    if not app_config:
         raise RuntimeError("SSO launch is not configured for that app yet.")
 
-    base_url = _normalise_external_base_url(_required_env("PAYSCOPE_BASE_URL"))
-    return f"{base_url}/auth/hive/callback"
+    base_url = _normalise_external_base_url(_required_env(app_config["base_url_env"]))
+    return f"{base_url}{app_config['callback_path']}"
+
+
+def _build_connected_app_rows():
+    app_modules = AppModule.query.order_by(AppModule.name.asc()).all()
+    rows = []
+
+    for app_module in app_modules:
+        sso_config = SSO_APP_CONFIG.get(app_module.slug)
+        status_counts = {
+            "active": ConsultantAppAccess.query.filter_by(app_module_id=app_module.id, status="active").count(),
+            "requested": ConsultantAppAccess.query.filter_by(app_module_id=app_module.id, status="requested").count(),
+            "inactive": ConsultantAppAccess.query.filter_by(app_module_id=app_module.id, status="inactive").count(),
+            "suspended": ConsultantAppAccess.query.filter_by(app_module_id=app_module.id, status="suspended").count(),
+        }
+        total_access = sum(status_counts.values())
+
+        sso_enabled = bool(sso_config)
+        secret_present = False
+        base_url_present = False
+        callback_url = None
+        health_status = "Standard launch"
+        health_tone = "slate"
+
+        if sso_config:
+            secret_present = bool(_optional_env(sso_config["secret_env"]))
+            base_url_raw = _optional_env(sso_config["base_url_env"])
+            base_url = _normalise_external_base_url(base_url_raw)
+            base_url_present = bool(base_url)
+            callback_url = f"{base_url}{sso_config['callback_path']}" if base_url else None
+
+            if secret_present and base_url_present:
+                health_status = "SSO ready"
+                health_tone = "green"
+            elif secret_present or base_url_present:
+                health_status = "Partial config"
+                health_tone = "amber"
+            else:
+                health_status = "Missing config"
+                health_tone = "red"
+
+        rows.append(
+            {
+                "app": app_module,
+                "is_active": app_module.is_active,
+                "sso_enabled": sso_enabled,
+                "secret_present": secret_present,
+                "base_url_present": base_url_present,
+                "callback_url": callback_url,
+                "health_status": health_status,
+                "health_tone": health_tone,
+                "status_counts": status_counts,
+                "total_access": total_access,
+            }
+        )
+
+    return rows
 
 
 @notifications_bp.app_context_processor
@@ -172,6 +245,20 @@ def hive_sso_launch(app_slug):
         return redirect(url_for("apps_index"))
 
     return redirect(f"{callback_url}?{urlencode({'token': token})}")
+
+
+@notifications_bp.route("/admin/connected-apps")
+@login_required
+@admin_required
+def admin_connected_apps():
+    rows = _build_connected_app_rows()
+    totals = {
+        "apps": len(rows),
+        "sso_ready": sum(1 for row in rows if row["health_status"] == "SSO ready"),
+        "active_users": sum(row["status_counts"]["active"] for row in rows),
+        "pending_requests": sum(row["status_counts"]["requested"] for row in rows),
+    }
+    return render_template("admin/connected_apps.html", rows=rows, totals=totals)
 
 
 @notifications_bp.route("/notifications")
