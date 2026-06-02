@@ -20,7 +20,7 @@
         <p class="mt-2 text-slate-600">Create or update admin and consultant accounts.</p>
     </div>
 
-    <a href="{{ url_for('admin_users.admin_users') }}" class="hive-button hive-button-secondary">Back to Users</a>
+    <a href="{{ url_for('public_directory.admin_users') }}" class="hive-button hive-button-secondary">Back to Users</a>
 </div>
 
 <form method="POST" class="hive-card p-8 space-y-6 max-w-4xl">
@@ -75,7 +75,7 @@
 
     <div class="flex flex-wrap gap-3">
         <button type="submit" class="hive-button hive-button-primary cursor-pointer">{{ 'Save Changes' if user else 'Create User' }}</button>
-        <a href="{{ url_for('admin_users.admin_users') }}" class="hive-button hive-button-secondary">Cancel</a>
+        <a href="{{ url_for('public_directory.admin_users') }}" class="hive-button hive-button-secondary">Cancel</a>
     </div>
 </form>
 
