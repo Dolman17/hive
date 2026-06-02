@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <div class="mb-8">
     <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">HIVE Directory</p>
     <h1 class="text-3xl font-bold text-slate-950 mt-2">Find an HR Consultant</h1>
@@ -31,6 +33,26 @@
     </form>
 </div>
 
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+    <div class="p-6 flex items-center justify-between gap-4">
+        <div>
+            <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Consultant Map</p>
+            <h2 class="text-2xl font-bold text-slate-950 mt-1">Consultants by location</h2>
+            <p class="text-sm text-slate-600 mt-1">The map uses the current search and filter results.</p>
+        </div>
+        <div class="rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700">{{ profiles|length }} shown</div>
+    </div>
+    <div id="consultantDirectoryMap" class="h-[420px] w-full border-t border-slate-200"></div>
+</div>
+
+<script id="consultantDirectoryMapData" type="application/json">[
+{% for profile in profiles %}
+{% set settings = profile.user.tenant_settings %}
+{% set business_name = profile.business_name or profile.user.name %}
+{"name":{{ business_name|tojson }},"location":{{ (profile.location or 'Remote / UK')|tojson }},"primary":{{ (settings.primary_colour if settings and settings.primary_colour else '#0D1B2A')|tojson }},"accent":{{ (settings.accent_colour if settings and settings.accent_colour else '#D4A017')|tojson }},"profileUrl":{{ url_for('public_directory.directory_profile', profile_id=profile.id)|tojson }}}{% if not loop.last %},{% endif %}
+{% endfor %}
+]</script>
+
 {% set sample_logos = {
     'Bennett ER Solutions': 'bennett_er_solutions_horizontal_transparent.png',
     'Carter People Solutions': 'carter_people_solutions_horizontal_transparent.png',
@@ -54,96 +76,40 @@
         {% set logo_path = settings.logo_path if settings and settings.logo_path else '' %}
         {% set sample_logo = sample_logos.get(business_name) %}
 
-        <article
-            class="group relative overflow-hidden rounded-[2rem] border shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
-            style="background: linear-gradient(180deg, {{ primary_colour }} 0%, {{ primary_colour }} 42%, #ffffff 42%, #ffffff 100%); border-color: {{ primary_colour }}33;"
-        >
+        <article class="group relative overflow-hidden rounded-[2rem] border shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl" style="background: linear-gradient(180deg, {{ primary_colour }} 0%, {{ primary_colour }} 42%, #ffffff 42%, #ffffff 100%); border-color: {{ primary_colour }}33;">
             <div class="absolute inset-x-0 top-0 h-40 opacity-20" style="background: radial-gradient(circle at top right, {{ accent_colour }} 0%, transparent 42%);"></div>
-
             <div class="relative p-6 pb-0 min-h-[210px] flex flex-col items-center text-center">
-                <p class="text-xs font-black uppercase tracking-[0.18em]" style="color: {{ accent_colour }};">
-                    {{ profile.location or 'Remote / UK' }}
-                </p>
-
+                <p class="text-xs font-black uppercase tracking-[0.18em]" style="color: {{ accent_colour }};">{{ profile.location or 'Remote / UK' }}</p>
                 <div class="mt-5 h-32 w-32 rounded-[2rem] bg-white/95 border border-white/70 shadow-2xl flex items-center justify-center p-4">
-                    {% if logo_path or sample_logo %}
-                        {% if logo_path %}
-                            {% if logo_path.startswith('logos/') %}
-                                {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
-                            {% elif logo_path.startswith('static/') %}
-                                {% set logo_src = url_for('static', filename=logo_path.replace('static/', '', 1)) %}
-                            {% elif logo_path.startswith('img/') %}
-                                {% set logo_src = url_for('static', filename=logo_path) %}
-                            {% elif '/' not in logo_path %}
-                                {% set logo_src = url_for('static', filename='img/' ~ logo_path) %}
-                            {% else %}
-                                {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
-                            {% endif %}
-                        {% else %}
-                            {% set logo_src = url_for('static', filename='img/' ~ sample_logo) %}
-                        {% endif %}
-
-                        <img
-                            src="{{ logo_src }}"
-                            alt="{{ business_name }} logo"
-                            class="max-h-24 max-w-24 object-contain"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                        >
-                        <div class="h-24 w-24 rounded-3xl hidden items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">
-                            {{ business_name[:1] }}
-                        </div>
+                    {% if logo_path %}
+                        {% if logo_path.startswith('logos/') %}{% set logo_src = url_for('uploaded_file', filename=logo_path) %}{% elif logo_path.startswith('static/') %}{% set logo_src = url_for('static', filename=logo_path.replace('static/', '', 1)) %}{% elif logo_path.startswith('img/') %}{% set logo_src = url_for('static', filename=logo_path) %}{% elif '/' not in logo_path %}{% set logo_src = url_for('static', filename='img/' ~ logo_path) %}{% else %}{% set logo_src = url_for('uploaded_file', filename=logo_path) %}{% endif %}
+                        <img src="{{ logo_src }}" alt="{{ business_name }} logo" class="max-h-24 max-w-24 object-contain">
+                    {% elif sample_logo %}
+                        <img src="{{ url_for('static', filename='img/' ~ sample_logo) }}" alt="{{ business_name }} logo" class="max-h-24 max-w-24 object-contain">
                     {% else %}
-                        <div class="h-24 w-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">
-                            {{ business_name[:1] }}
-                        </div>
+                        <div class="h-24 w-24 rounded-3xl flex items-center justify-center text-3xl font-black text-white" style="background: {{ primary_colour }}; border: 4px solid {{ accent_colour }};">{{ business_name[:1] }}</div>
                     {% endif %}
                 </div>
             </div>
-
             <div class="relative p-6 pt-8 text-center">
                 <div class="mx-auto mb-4 h-1.5 w-20 rounded-full" style="background: {{ accent_colour }};"></div>
-
-                <h2 class="text-xl font-black tracking-[-0.035em]" style="color: {{ text_colour }};">
-                    {{ business_name }}
-                </h2>
-
-                {% if settings and settings.strapline %}
-                    <p class="mt-2 text-sm font-semibold" style="color: {{ primary_colour }};">
-                        {{ settings.strapline }}
-                    </p>
-                {% endif %}
-
-                <p class="text-sm text-slate-600 mt-4 leading-6">
-                    {{ profile.bio[:170] if profile.bio else 'Independent HR consultant profile.' }}{% if profile.bio and profile.bio|length > 170 %}...{% endif %}
-                </p>
-
+                <h2 class="text-xl font-black tracking-[-0.035em]" style="color: {{ text_colour }};">{{ business_name }}</h2>
+                {% if settings and settings.strapline %}<p class="mt-2 text-sm font-semibold" style="color: {{ primary_colour }};">{{ settings.strapline }}</p>{% endif %}
+                <p class="text-sm text-slate-600 mt-4 leading-6">{{ profile.bio[:170] if profile.bio else 'Independent HR consultant profile.' }}{% if profile.bio and profile.bio|length > 170 %}...{% endif %}</p>
                 <div class="mt-5 flex flex-wrap justify-center gap-2 text-xs font-bold">
-                    {% if profile.remote_available %}
-                        <span class="rounded-full px-3 py-1" style="background: {{ accent_colour }}22; color: {{ primary_colour }};">Remote</span>
-                    {% endif %}
-                    {% if profile.insurance_verified %}
-                        <span class="rounded-full px-3 py-1" style="background: {{ primary_colour }}12; color: {{ primary_colour }};">Insurance verified</span>
-                    {% endif %}
-                    {% if profile.qualifications_verified %}
-                        <span class="rounded-full px-3 py-1" style="background: {{ primary_colour }}12; color: {{ primary_colour }};">Qualifications verified</span>
-                    {% endif %}
+                    {% if profile.remote_available %}<span class="rounded-full px-3 py-1" style="background: {{ accent_colour }}22; color: {{ primary_colour }};">Remote</span>{% endif %}
+                    {% if profile.insurance_verified %}<span class="rounded-full px-3 py-1" style="background: {{ primary_colour }}12; color: {{ primary_colour }};">Insurance verified</span>{% endif %}
+                    {% if profile.qualifications_verified %}<span class="rounded-full px-3 py-1" style="background: {{ primary_colour }}12; color: {{ primary_colour }};">Qualifications verified</span>{% endif %}
                 </div>
-
-                <a
-                    href="{{ url_for('public_directory.directory_profile', profile_id=profile.id) }}"
-                    class="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-black text-white transition hover:opacity-90"
-                    style="background: {{ primary_colour }}; box-shadow: 0 10px 24px {{ primary_colour }}22;"
-                >
-                    View Profile
-                </a>
+                <a href="{{ url_for('public_directory.directory_profile', profile_id=profile.id) }}" class="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-black text-white transition hover:opacity-90" style="background: {{ primary_colour }}; box-shadow: 0 10px 24px {{ primary_colour }}22;">View Profile</a>
             </div>
         </article>
     {% else %}
-        <div class="md:col-span-2 xl:col-span-3 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-            <h2 class="text-xl font-bold text-slate-950">No consultants found</h2>
-            <p class="text-slate-600 mt-2">Try changing your search filters.</p>
-        </div>
+        <div class="md:col-span-2 xl:col-span-3 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm"><h2 class="text-xl font-bold text-slate-950">No consultants found</h2><p class="text-slate-600 mt-2">Try changing your search filters.</p></div>
     {% endfor %}
 </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='js/directory_map.js') }}"></script>
 
 {% endblock %}
