@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Users · The Hive{% endblock %}
+
+{% block content %}
+
+<div class="mb-8 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+    <div>
+        <p class="hive-page-kicker">Admin · User Management</p>
+        <h1 class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">Users</h1>
+        <p class="mt-2 text-slate-600">Create admins and consultants, manage roles, and update account access.</p>
+    </div>
+
+    <a href="{{ url_for('admin_users.admin_user_new') }}" class="hive-button hive-button-primary">Add User</a>
+</div>
+
+<div class="hive-card p-5 mb-6">
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input name="q" value="{{ q }}" placeholder="Search name or email" class="rounded-xl border border-slate-300 px-4 py-3">
+
+        <select name="role" class="rounded-xl border border-slate-300 px-4 py-3 bg-white">
+            <option value="" {% if not selected_role %}selected{% endif %}>All roles</option>
+            <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admins</option>
+            <option value="consultant" {% if selected_role == 'consultant' %}selected{% endif %}>Consultants</option>
+        </select>
+
+        <select name="status" class="rounded-xl border border-slate-300 px-4 py-3 bg-white">
+            <option value="" {% if not selected_status %}selected{% endif %}>All statuses</option>
+            <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+
+        <button type="submit" class="hive-button hive-button-secondary cursor-pointer">Filter</button>
+    </form>
+</div>
+
+<div class="hive-card overflow-hidden">
+    <div class="divide-y divide-slate-200">
+        {% for user in users %}
+            <div class="p-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-5">
+                <div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <h2 class="text-lg font-black text-slate-950">{{ user.name }}</h2>
+                        <span class="rounded-full px-3 py-1 text-xs font-black {% if user.role == 'admin' %}bg-amber-100 text-amber-800{% else %}bg-teal-100 text-teal-800{% endif %}">
+                            {{ user.role|title }}
+                        </span>
+                        <span class="rounded-full px-3 py-1 text-xs font-black {% if user.is_active %}bg-green-100 text-green-800{% else %}bg-slate-100 text-slate-600{% endif %}">
+                            {{ 'Active' if user.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+
+                    <p class="mt-2 text-sm text-slate-600">{{ user.email }}</p>
+                    <p class="mt-2 text-xs text-slate-400">Created: {{ user.created_at.strftime('%d/%m/%Y %H:%M') if user.created_at else 'Unknown' }}</p>
+                </div>
+
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ url_for('admin_users.admin_user_edit', user_id=user.id) }}" class="hive-button hive-button-secondary">Edit</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="p-8 text-center">
+                <h2 class="text-xl font-black text-slate-950">No users found</h2>
+                <p class="mt-2 text-slate-600">Create your first user from the Add User button.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
