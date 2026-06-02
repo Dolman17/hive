@@ -1,11 +1,12 @@
 from datetime import datetime
 from functools import wraps
+import re
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import Subscription, User
+from models import AppModule, ConsultantAppAccess, Subscription, User
 
 
 billing_bp = Blueprint("billing", __name__)
@@ -46,6 +47,16 @@ TIER_CARDS = [
         "strapline": "Full HIVE support layer.",
         "features": ["Everything in Covered", "Expert Help", "Escalation support", "Premium consultant support workflow"],
     },
+]
+
+
+APP_TIER_OPTIONS = [
+    ("free", "Free"),
+    ("starter", "Starter"),
+    ("professional", "Professional"),
+    ("covered", "Covered"),
+    ("boutique", "Boutique"),
+    ("admin", "Admin"),
 ]
 
 
@@ -125,6 +136,110 @@ def parse_date_or_none(value):
         return datetime.strptime(value, "%Y-%m-%d")
     except ValueError:
         return None
+
+
+def app_slug_from_name(value):
+    value = (value or "app").lower().strip()
+    value = re.sub(r"[^a-z0-9\s-]", "", value)
+    value = re.sub(r"[\s-]+", "-", value)
+    value = value.strip("-")
+    return value or "app"
+
+
+def populate_app_module_from_form(app_module):
+    app_module.name = request.form.get("name", "").strip()
+    requested_slug = request.form.get("slug", "").strip().lower()
+    app_module.slug = app_slug_from_name(requested_slug or app_module.name)
+    app_module.description = request.form.get("description", "").strip() or None
+    app_module.required_tier = request.form.get("required_tier", "professional").strip() or "professional"
+    app_module.icon = request.form.get("icon", "").strip() or None
+    app_module.launch_url = request.form.get("launch_url", "").strip() or None
+    app_module.is_active = request.form.get("is_active") == "on"
+    app_module.is_core = request.form.get("is_core") == "on"
+
+
+@billing_bp.route("/admin/apps/new", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_app_new():
+    if request.method == "POST":
+        app_module = AppModule()
+        populate_app_module_from_form(app_module)
+
+        if not app_module.name:
+            flash("App name is required.", "danger")
+            return render_template("admin/app_form.html", app_module=app_module, tier_options=APP_TIER_OPTIONS, page_title="Add App")
+
+        existing_slug = AppModule.query.filter_by(slug=app_module.slug).first()
+        if existing_slug:
+            flash("That app slug is already in use. Please choose another.", "danger")
+            return render_template("admin/app_form.html", app_module=app_module, tier_options=APP_TIER_OPTIONS, page_title="Add App")
+
+        db.session.add(app_module)
+        db.session.commit()
+        flash("App module created.", "success")
+        return redirect(url_for("admin_apps"))
+
+    app_module = AppModule(required_tier="professional", is_active=True, is_core=False)
+    return render_template("admin/app_form.html", app_module=app_module, tier_options=APP_TIER_OPTIONS, page_title="Add App")
+
+
+@billing_bp.route("/admin/apps/<int:app_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_app_edit(app_id):
+    app_module = AppModule.query.get_or_404(app_id)
+
+    if request.method == "POST":
+        old_slug = app_module.slug
+        populate_app_module_from_form(app_module)
+
+        if not app_module.name:
+            flash("App name is required.", "danger")
+            app_module.slug = old_slug
+            return render_template("admin/app_form.html", app_module=app_module, tier_options=APP_TIER_OPTIONS, page_title="Edit App")
+
+        existing_slug = AppModule.query.filter(AppModule.slug == app_module.slug, AppModule.id != app_module.id).first()
+        if existing_slug:
+            flash("That app slug is already in use. Please choose another.", "danger")
+            app_module.slug = old_slug
+            return render_template("admin/app_form.html", app_module=app_module, tier_options=APP_TIER_OPTIONS, page_title="Edit App")
+
+        db.session.commit()
+        flash("App module updated.", "success")
+        return redirect(url_for("admin_apps"))
+
+    return render_template("admin/app_form.html", app_module=app_module, tier_options=APP_TIER_OPTIONS, page_title="Edit App")
+
+
+@billing_bp.route("/admin/apps/<int:app_id>/toggle", methods=["POST"])
+@login_required
+@admin_required
+def admin_app_toggle(app_id):
+    app_module = AppModule.query.get_or_404(app_id)
+    app_module.is_active = not app_module.is_active
+    db.session.commit()
+    flash(f"{app_module.name} is now {'active' if app_module.is_active else 'inactive'}.", "success")
+    return redirect(url_for("admin_apps"))
+
+
+@billing_bp.route("/admin/apps/<int:app_id>/delete", methods=["POST"])
+@login_required
+@admin_required
+def admin_app_delete(app_id):
+    app_module = AppModule.query.get_or_404(app_id)
+
+    access_count = ConsultantAppAccess.query.filter_by(app_module_id=app_module.id).count()
+    if access_count > 0:
+        flash("This app has consultant access records, so it has been marked inactive instead of deleted.", "warning")
+        app_module.is_active = False
+        db.session.commit()
+        return redirect(url_for("admin_apps"))
+
+    db.session.delete(app_module)
+    db.session.commit()
+    flash("App module deleted.", "success")
+    return redirect(url_for("admin_apps"))
 
 
 @billing_bp.route("/billing")
