@@ -11,7 +11,7 @@
         <p class="mt-2 text-slate-600">Create admins and consultants, manage roles, and update account access.</p>
     </div>
 
-    <a href="{{ url_for('admin_users.admin_user_new') }}" class="hive-button hive-button-primary">Add User</a>
+    <a href="{{ url_for('public_directory.admin_user_new') }}" class="hive-button hive-button-primary">Add User</a>
 </div>
 
 <div class="hive-card p-5 mb-6">
@@ -54,7 +54,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-3">
-                    <a href="{{ url_for('admin_users.admin_user_edit', user_id=user.id) }}" class="hive-button hive-button-secondary">Edit</a>
+                    <a href="{{ url_for('public_directory.admin_user_edit', user_id=user.id) }}" class="hive-button hive-button-secondary">Edit</a>
                 </div>
             </div>
         {% else %}
