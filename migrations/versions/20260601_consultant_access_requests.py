@@ -1,13 +1,13 @@
 """add consultant access requests
 
-Revision ID: 20260601_consultant_access_requests
+Revision ID: 20260601_access_reqs
 Revises: 20260529_enquiry_timeline
 """
 from alembic import op
 import sqlalchemy as sa
 
 
-revision = "20260601_consultant_access_requests"
+revision = "20260601_access_reqs"
 down_revision = "20260529_enquiry_timeline"
 branch_labels = None
 depends_on = None
