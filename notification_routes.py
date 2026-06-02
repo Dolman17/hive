@@ -98,6 +98,18 @@ def _required_env(name):
     return value
 
 
+def _normalise_external_base_url(value):
+    """
+    PAYSCOPE_BASE_URL must be the app root, not /login.
+    This strips common copied login paths defensively.
+    """
+    base_url = (value or "").strip().rstrip("/")
+    for suffix in ("/login", "/auth/login"):
+        if base_url.endswith(suffix):
+            base_url = base_url[: -len(suffix)]
+    return base_url.rstrip("/")
+
+
 def _build_hive_sso_token(app_slug):
     if app_slug != "payscope":
         raise RuntimeError("SSO launch is not configured for that app yet.")
@@ -124,7 +136,8 @@ def _build_hive_sso_callback_url(app_slug):
     if app_slug != "payscope":
         raise RuntimeError("SSO launch is not configured for that app yet.")
 
-    return f'{_required_env("PAYSCOPE_BASE_URL").rstrip("/")}/auth/hive/callback'
+    base_url = _normalise_external_base_url(_required_env("PAYSCOPE_BASE_URL"))
+    return f"{base_url}/auth/hive/callback"
 
 
 @notifications_bp.app_context_processor
