@@ -150,7 +150,7 @@ def admin_user_new():
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         role = request.form.get("role", "consultant").strip()
-        password = request.form.get("password", "").strip()
+        access_key = request.form.get("access_key", "").strip()
         is_active = request.form.get("is_active") == "on"
         business_name = request.form.get("business_name", "").strip()
         tier = request.form.get("tier", "boutique").strip()
@@ -158,8 +158,8 @@ def admin_user_new():
         if role not in [option[0] for option in ROLE_OPTIONS]:
             role = "consultant"
 
-        if not name or not email or not password:
-            flash("Name, email and password are required.", "danger")
+        if not name or not email or not access_key:
+            flash("Name, email and access key are required.", "danger")
             return render_template(
                 "admin/user_form.html",
                 user=None,
@@ -186,7 +186,7 @@ def admin_user_new():
             role=role,
             is_active=is_active,
         )
-        user.set_password(password)
+        user.set_password(access_key)
         db.session.add(user)
         db.session.flush()
 
@@ -225,7 +225,7 @@ def admin_user_edit(user_id):
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip().lower()
         role = request.form.get("role", user.role).strip()
-        password = request.form.get("password", "").strip()
+        access_key = request.form.get("access_key", "").strip()
         is_active = request.form.get("is_active") == "on"
         business_name = request.form.get("business_name", "").strip()
         tier = request.form.get("tier", "boutique").strip()
@@ -252,8 +252,8 @@ def admin_user_edit(user_id):
         user.role = role
         user.is_active = is_active
 
-        if password:
-            user.set_password(password)
+        if access_key:
+            user.set_password(access_key)
 
         if role == "consultant":
             ensure_consultant_setup(user, business_name=business_name or name, tier=tier)
