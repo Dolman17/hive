@@ -38,6 +38,7 @@
         {% set accent_colour = settings.accent_colour if settings and settings.accent_colour else '#D4A017' %}
         {% set text_colour = settings.text_colour if settings and settings.text_colour else '#1f2937' %}
         {% set business_name = profile.business_name or profile.user.name %}
+        {% set logo_path = settings.logo_path if settings and settings.logo_path else '' %}
 
         <article
             class="group relative overflow-hidden rounded-[2rem] border shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl"
@@ -51,9 +52,21 @@
                 </p>
 
                 <div class="mt-5 h-32 w-32 rounded-[2rem] bg-white/95 border border-white/70 shadow-2xl flex items-center justify-center p-4">
-                    {% if settings and settings.logo_path %}
+                    {% if logo_path %}
+                        {% if logo_path.startswith('logos/') %}
+                            {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
+                        {% elif logo_path.startswith('static/') %}
+                            {% set logo_src = url_for('static', filename=logo_path.replace('static/', '', 1)) %}
+                        {% elif logo_path.startswith('img/') %}
+                            {% set logo_src = url_for('static', filename=logo_path) %}
+                        {% elif '/' not in logo_path %}
+                            {% set logo_src = url_for('static', filename='img/' ~ logo_path) %}
+                        {% else %}
+                            {% set logo_src = url_for('uploaded_file', filename=logo_path) %}
+                        {% endif %}
+
                         <img
-                            src="{{ url_for('uploaded_file', filename=settings.logo_path) }}"
+                            src="{{ logo_src }}"
                             alt="{{ business_name }} logo"
                             class="max-h-24 max-w-24 object-contain"
                         >
