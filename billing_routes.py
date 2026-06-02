@@ -1,12 +1,13 @@
 from datetime import datetime
 from functools import wraps
+import os
 import re
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
-from extensions import db
-from models import AppModule, ConsultantAppAccess, Subscription, User
+from extensions import db, csrf
+from models import AppModule, ConsultantAppAccess, Lead, Subscription, User
 
 
 billing_bp = Blueprint("billing", __name__)
@@ -146,16 +147,150 @@ def app_slug_from_name(value):
     return value or "app"
 
 
-def populate_app_module_from_form(app_module):
-    app_module.name = request.form.get("name", "").strip()
-    requested_slug = request.form.get("slug", "").strip().lower()
-    app_module.slug = app_slug_from_name(requested_slug or app_module.name)
-    app_module.description = request.form.get("description", "").strip() or None
-    app_module.required_tier = request.form.get("required_tier", "professional").strip() or "professional"
-    app_module.icon = request.form.get("icon", "").strip() or None
-    app_module.launch_url = request.form.get("launch_url", "").strip() or None
-    app_module.is_active = request.form.get("is_active") == "on"
-    app_module.is_core = request.form.get("is_core") == "on"
+def get_people_signal_token_from_header():
+    auth_header = request.headers.get("Authorization", "").strip()
+
+    if not auth_header.lower().startswith("bearer "):
+        return ""
+
+    return auth_header.split(" ", 1)[1].strip()
+
+
+def build_people_signal_notes(payload):
+    parts = []
+
+    fields = [
+        ("Title", payload.get("title")),
+        ("PeopleSignal source", payload.get("signal_source") or payload.get("source")),
+        ("Signal type", payload.get("signal_type")),
+        ("Likely HR need", payload.get("likely_hr_need")),
+        ("Outreach angle", payload.get("outreach_angle")),
+        ("Source URL", payload.get("source_url")),
+        ("Detected at", payload.get("detected_at")),
+    ]
+
+    for label, value in fields:
+        if value:
+            parts.append(f"{label}: {value}")
+
+    summary = payload.get("summary")
+    if summary:
+        parts.append("")
+        parts.append("Summary:")
+        parts.append(str(summary))
+
+    raw_text = payload.get("raw_text")
+    if raw_text:
+        parts.append("")
+        parts.append("Raw PeopleSignal text:")
+        parts.append(str(raw_text)[:4000])
+
+    return "\n".join(parts).strip()
+
+
+def normalise_urgency(value):
+    if value is None or value == "":
+        return "medium"
+
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        lowered = str(value).strip().lower()
+        if lowered in ["low", "medium", "high", "urgent"]:
+            return lowered
+        return "medium"
+
+    if score >= 8:
+        return "urgent"
+    if score >= 6:
+        return "high"
+    if score >= 3:
+        return "medium"
+    return "low"
+
+
+def normalise_score(value):
+    if value is None or value == "":
+        return None
+
+    try:
+        return int(round(float(value)))
+    except (TypeError, ValueError):
+        return None
+
+
+@billing_bp.route("/api/people-signal/leads", methods=["POST"])
+@csrf.exempt
+def import_people_signal_lead():
+    expected_token = os.getenv("PEOPLE_SIGNAL_IMPORT_TOKEN", "").strip()
+
+    if not expected_token:
+        return jsonify({"ok": False, "error": "PeopleSignal import token is not configured."}), 500
+
+    supplied_token = get_people_signal_token_from_header()
+
+    if supplied_token != expected_token:
+        return jsonify({"ok": False, "error": "Unauthorized."}), 401
+
+    payload = request.get_json(silent=True) or {}
+
+    external_signal_id = payload.get("external_signal_id") or payload.get("signal_id")
+    company_name = (payload.get("company_name") or "").strip()
+
+    if not external_signal_id:
+        return jsonify({"ok": False, "error": "external_signal_id is required."}), 400
+
+    if not company_name:
+        return jsonify({"ok": False, "error": "company_name is required."}), 400
+
+    source_reference = f"people_signal:{external_signal_id}"
+
+    existing_lead = Lead.query.filter_by(
+        source="people_signal",
+        source_reference=source_reference,
+    ).first()
+
+    if existing_lead:
+        return jsonify(
+            {
+                "ok": True,
+                "created": False,
+                "lead_id": existing_lead.id,
+                "message": "Lead already exists.",
+            }
+        ), 200
+
+    lead = Lead(
+        source="people_signal",
+        source_reference=source_reference,
+        company_name=company_name[:255],
+        contact_name=(payload.get("contact_name") or None),
+        contact_email=(payload.get("contact_email") or None),
+        contact_phone=(payload.get("contact_phone") or None),
+        sector=(payload.get("sector") or None),
+        employee_count=(payload.get("employee_count") or None),
+        location=(payload.get("location") or None),
+        signal_type=(payload.get("signal_type") or payload.get("signal_source") or None),
+        signal_summary=(payload.get("summary") or payload.get("title") or None),
+        support_needed=(payload.get("likely_hr_need") or None),
+        urgency=normalise_urgency(payload.get("urgency_score") or payload.get("urgency")),
+        people_signal_score=normalise_score(payload.get("confidence_score")),
+        risk_level=payload.get("risk_level") or None,
+        status="new",
+        admin_notes=build_people_signal_notes(payload),
+    )
+
+    db.session.add(lead)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "ok": True,
+            "created": True,
+            "lead_id": lead.id,
+            "message": "Lead imported successfully.",
+        }
+    ), 201
 
 
 @billing_bp.route("/admin/apps/new", methods=["GET", "POST"])
