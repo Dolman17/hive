@@ -33,6 +33,7 @@ jobs:
       HIVE_PATHLY_SSO_SECRET: ci-pathly-secret
       HIVE_PATHLYHIRE_SSO_SECRET: ci-pathlyhire-secret
       HIVE_ELLIPSECRM_SSO_SECRET: ci-ellipsecrm-secret
+      HIVE_RESOLVHR_EVENT_TOKEN: ci-resolvhr-event-token
 
     steps:
       - name: Checkout
@@ -66,6 +67,9 @@ jobs:
         run: |
           python - <<'PY'
           from app import app
+          from extensions import db
+          from integration_models import AppIntegration
+          from models import AppModule
 
           rules = {rule.rule for rule in app.url_map.iter_rules()}
           required = {
@@ -78,8 +82,55 @@ jobs:
           missing = required - rules
           assert not missing, f'Missing integration routes: {sorted(missing)}'
 
+          with app.app_context():
+              app_module = AppModule(
+                  name='ResolvHR CI',
+                  slug='resolvhr-ci',
+                  description='CI integration fixture',
+                  required_tier='professional',
+                  icon='ShieldCheck',
+                  launch_url='',
+                  is_active=True,
+              )
+              db.session.add(app_module)
+              db.session.flush()
+              integration = AppIntegration(
+                  app_module_id=app_module.id,
+                  service_key='resolvhr',
+                  base_url='https://example.invalid',
+                  sso_path='/auth/hive-sso',
+                  sso_audience='resolvhr',
+                  event_token_env='HIVE_RESOLVHR_EVENT_TOKEN',
+                  summary_path='/api/v1/summary',
+                  health_path='/api/v1/health',
+                  is_enabled=True,
+              )
+              db.session.add(integration)
+              db.session.commit()
+
           client = app.test_client()
-          response = client.post('/api/integrations/v1/events', json={})
+          payload = {
+              'app': 'resolvhr',
+              'external_event_id': 'ci-event-1',
+              'event_type': 'case.created',
+              'title': 'CI event',
+          }
+
+          response = client.post('/api/integrations/v1/events', json=payload)
           assert response.status_code == 401, response.get_data(as_text=True)
+
+          response = client.post(
+              '/api/integrations/v1/events',
+              json=payload,
+              headers={'Authorization': 'Bearer wrong-token'},
+          )
+          assert response.status_code == 401, response.get_data(as_text=True)
+
+          response = client.post(
+              '/api/integrations/v1/events',
+              json=payload,
+              headers={'Authorization': 'Bearer ci-resolvhr-event-token'},
+          )
+          assert response.status_code == 201, response.get_data(as_text=True)
           print('HIVE integration route smoke test passed')
           PY
