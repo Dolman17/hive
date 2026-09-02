@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Action Centre · The HIVE{% endblock %}
+
+{% block content %}
+<section class="mb-8">
+    <p class="hive-page-kicker">Cross-product workspace</p>
+    <div class="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <h1 class="text-3xl font-black tracking-[-0.05em] text-slate-950">Action Centre</h1>
+            <p class="mt-2 max-w-3xl text-slate-600">Important work from your connected HIVE products, collected in one place.</p>
+        </div>
+        <a href="{{ url_for('apps_index') }}" class="hive-button hive-button-secondary">Manage Apps</a>
+    </div>
+</section>
+
+<section class="hive-card rounded-[1.75rem] p-5 md:p-7">
+    <div class="mb-5 flex items-center justify-between gap-4">
+        <div>
+            <p class="hive-page-kicker">Needs attention</p>
+            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">{{ events|length }} open action{{ '' if events|length == 1 else 's' }}</h2>
+        </div>
+    </div>
+
+    {% if events %}
+        <div class="space-y-3">
+            {% for event in events %}
+                {% set priority_class = 'border-red-200 bg-red-50' if event.priority == 'urgent' else 'border-amber-200 bg-amber-50' if event.priority == 'high' else 'border-slate-200 bg-white' %}
+                <article class="rounded-2xl border p-4 md:p-5 {{ priority_class }}">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="hive-pill hive-pill-teal">{{ event.app_integration.app_module.name }}</span>
+                                <span class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{{ event.event_type|replace('.', ' · ') }}</span>
+                                {% if event.priority in ['high', 'urgent'] %}<span class="hive-pill hive-pill-gold">{{ event.priority|title }}</span>{% endif %}
+                            </div>
+                            <h3 class="mt-3 text-lg font-black text-slate-950">{{ event.title }}</h3>
+                            {% if event.description %}<p class="mt-1 text-sm leading-6 text-slate-600">{{ event.description }}</p>{% endif %}
+                            <p class="mt-3 text-xs text-slate-500">{{ event.occurred_at.strftime('%d %b %Y · %H:%M') }}</p>
+                        </div>
+                        <div class="flex shrink-0 flex-wrap gap-2">
+                            {% if event.target_url %}<a href="{{ event.target_url }}" class="hive-button hive-button-primary">Open</a>{% endif %}
+                            <form method="POST" action="{{ url_for('billing.integration_action_resolve', event_id=event.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="hive-button hive-button-secondary" type="submit">Resolve</button>
+                            </form>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+            <h3 class="font-black text-slate-950">Nothing needs attention</h3>
+            <p class="mt-2 text-sm text-slate-600">Connected products will surface important actions here as they occur.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
