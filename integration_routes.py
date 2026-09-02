@@ -12,7 +12,7 @@ from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import and_, or_
 
 from extensions import csrf, db
-from integration_models import AppIntegration, HiveIdentity, IntegrationEvent
+from integration_models import AppIntegration, HiveIdentity, HiveTenant, IntegrationEvent
 from models import AppModule, ConsultantAppAccess, TenantSettings, User
 
 
@@ -34,20 +34,38 @@ def _consultant_allowed() -> bool:
     return bool(current_user.is_authenticated and current_user.role == "consultant")
 
 
+def _get_or_create_hive_tenant(user: User) -> HiveTenant:
+    tenant_settings = TenantSettings.query.filter_by(user_id=user.id).first()
+    if tenant_settings:
+        existing = HiveTenant.query.filter_by(tenant_settings_id=tenant_settings.id).first()
+        if existing:
+            return existing
+
+    identity = HiveIdentity.query.filter_by(user_id=user.id).first()
+    if identity and identity.tenant:
+        tenant = identity.tenant
+        if tenant_settings and tenant.tenant_settings_id is None:
+            tenant.tenant_settings_id = tenant_settings.id
+            db.session.commit()
+        return tenant
+
+    tenant = HiveTenant(
+        tenant_settings_id=tenant_settings.id if tenant_settings else None,
+    )
+    db.session.add(tenant)
+    db.session.flush()
+    return tenant
+
+
 def get_or_create_hive_identity(user: User) -> HiveIdentity:
     identity = HiveIdentity.query.filter_by(user_id=user.id).first()
     if identity:
-        if not identity.tenant_settings_id:
-            tenant_settings = TenantSettings.query.filter_by(user_id=user.id).first()
-            if tenant_settings:
-                identity.tenant_settings_id = tenant_settings.id
-                db.session.commit()
         return identity
 
-    tenant_settings = TenantSettings.query.filter_by(user_id=user.id).first()
+    tenant = _get_or_create_hive_tenant(user)
     identity = HiveIdentity(
         user_id=user.id,
-        tenant_settings_id=tenant_settings.id if tenant_settings else None,
+        tenant_id=tenant.id,
     )
     db.session.add(identity)
     db.session.commit()
@@ -70,6 +88,11 @@ def _integration_token_env_name(integration: AppIntegration) -> str:
         return integration.event_token_env
     service_key = integration.service_key.upper().replace("-", "_")
     return f"HIVE_{service_key}_EVENT_TOKEN"
+
+
+def _sso_secret_env_name(integration: AppIntegration) -> str:
+    service_key = integration.service_key.upper().replace("-", "_")
+    return f"HIVE_{service_key}_SSO_SECRET"
 
 
 def _event_visible_to_user(event: IntegrationEvent, identity: HiveIdentity):
@@ -162,16 +185,17 @@ def register_integration_routes(bp):
             flash(f"{app_module.name} is not connected to HIVE SSO yet.", "warning")
             return redirect(url_for("apps_index"))
 
-        signing_secret = os.getenv("HIVE_SSO_SIGNING_SECRET", "").strip()
+        secret_env = _sso_secret_env_name(integration)
+        signing_secret = os.getenv(secret_env, "").strip()
         if not signing_secret:
-            current_app.logger.error("HIVE_SSO_SIGNING_SECRET is not configured")
+            current_app.logger.error("%s is not configured", secret_env)
             flash("HIVE SSO is not configured yet. Please contact the HIVE administrator.", "danger")
             return redirect(url_for("apps_index"))
 
         identity = get_or_create_hive_identity(current_user)
         serializer = URLSafeTimedSerializer(
             signing_secret,
-            salt="hive-product-sso-v1",
+            salt=f"hive-product-sso-v1:{integration.service_key}",
         )
         payload = {
             "sub": identity.hive_user_id,
@@ -185,7 +209,11 @@ def register_integration_routes(bp):
             "iat": datetime.utcnow().isoformat() + "Z",
         }
         token = serializer.dumps(payload)
-        target = f"{_normalise_base_url(integration.base_url)}{_normalise_path(integration.sso_path, '/auth/hive-sso')}?token={quote(token)}"
+        target = (
+            f"{_normalise_base_url(integration.base_url)}"
+            f"{_normalise_path(integration.sso_path, '/auth/hive-sso')}"
+            f"?token={quote(token)}"
+        )
         return redirect(target)
 
     @bp.route("/api/integrations/v1/actions")
@@ -247,6 +275,14 @@ def register_integration_routes(bp):
         if not external_event_id or not event_type or not title:
             return jsonify({"ok": False, "error": "external_event_id, event_type and title are required."}), 400
 
+        hive_tenant_id = str(payload.get("hive_tenant_id") or "").strip()
+        hive_user_id = str(payload.get("hive_user_id") or "").strip()
+        identity = HiveIdentity.query.filter_by(hive_user_id=hive_user_id).first() if hive_user_id else None
+        if identity and hive_tenant_id and identity.hive_tenant_id != hive_tenant_id:
+            return jsonify({"ok": False, "error": "HIVE user and tenant do not match."}), 403
+        if hive_tenant_id and not HiveTenant.query.filter_by(hive_tenant_id=hive_tenant_id).first():
+            return jsonify({"ok": False, "error": "Unknown HIVE tenant."}), 404
+
         existing = IntegrationEvent.query.filter_by(
             app_integration_id=integration.id,
             external_event_id=external_event_id,
@@ -254,21 +290,14 @@ def register_integration_routes(bp):
         if existing:
             return jsonify({"ok": True, "created": False, "event_id": existing.id}), 200
 
-        consultant_id = None
-        hive_user_id = str(payload.get("hive_user_id") or "").strip()
-        if hive_user_id:
-            identity = HiveIdentity.query.filter_by(hive_user_id=hive_user_id).first()
-            if identity:
-                consultant_id = identity.user_id
-
         priority = str(payload.get("priority") or "normal").strip().lower()
         if priority not in VALID_PRIORITIES:
             priority = "normal"
 
         event = IntegrationEvent(
             app_integration_id=integration.id,
-            consultant_id=consultant_id,
-            hive_tenant_id=(str(payload.get("hive_tenant_id") or "").strip() or None),
+            consultant_id=identity.user_id if identity else None,
+            hive_tenant_id=hive_tenant_id or (identity.hive_tenant_id if identity else None),
             external_event_id=external_event_id,
             event_type=event_type[:150],
             title=title[:255],
