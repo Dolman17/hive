@@ -17,22 +17,35 @@ depends_on = None
 
 def upgrade():
     op.create_table(
-        "hive_identity",
+        "hive_tenant",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("tenant_settings_id", sa.Integer(), nullable=True),
-        sa.Column("hive_user_id", sa.String(length=64), nullable=False),
         sa.Column("hive_tenant_id", sa.String(length=64), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(["tenant_settings_id"], ["tenant_settings.id"]),
-        sa.ForeignKeyConstraint(["user_id"], ["user.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("tenant_settings_id"),
+        sa.UniqueConstraint("hive_tenant_id"),
+    )
+    op.create_index(op.f("ix_hive_tenant_hive_tenant_id"), "hive_tenant", ["hive_tenant_id"], unique=True)
+    op.create_index(op.f("ix_hive_tenant_tenant_settings_id"), "hive_tenant", ["tenant_settings_id"], unique=True)
+
+    op.create_table(
+        "hive_identity",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.Integer(), nullable=False),
+        sa.Column("tenant_id", sa.Integer(), nullable=False),
+        sa.Column("hive_user_id", sa.String(length=64), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["tenant_id"], ["hive_tenant.id"]),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"]),
+        sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id"),
     )
-    op.create_index(op.f("ix_hive_identity_hive_tenant_id"), "hive_identity", ["hive_tenant_id"], unique=False)
     op.create_index(op.f("ix_hive_identity_hive_user_id"), "hive_identity", ["hive_user_id"], unique=True)
+    op.create_index(op.f("ix_hive_identity_tenant_id"), "hive_identity", ["tenant_id"], unique=False)
     op.create_index(op.f("ix_hive_identity_user_id"), "hive_identity", ["user_id"], unique=True)
 
     op.create_table(
@@ -102,6 +115,10 @@ def downgrade():
     op.drop_table("app_integration")
 
     op.drop_index(op.f("ix_hive_identity_user_id"), table_name="hive_identity")
+    op.drop_index(op.f("ix_hive_identity_tenant_id"), table_name="hive_identity")
     op.drop_index(op.f("ix_hive_identity_hive_user_id"), table_name="hive_identity")
-    op.drop_index(op.f("ix_hive_identity_hive_tenant_id"), table_name="hive_identity")
     op.drop_table("hive_identity")
+
+    op.drop_index(op.f("ix_hive_tenant_tenant_settings_id"), table_name="hive_tenant")
+    op.drop_index(op.f("ix_hive_tenant_hive_tenant_id"), table_name="hive_tenant")
+    op.drop_table("hive_tenant")
