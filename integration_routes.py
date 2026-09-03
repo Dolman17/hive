@@ -164,7 +164,7 @@ def _dashboard_product_summary(service_key: str):
     summary_url = (
         f"{_normalise_base_url(integration.base_url)}"
         f"{_normalise_path(integration.summary_path, '/api/v1/summary')}"
-        f"?{urlencode({'hive_tenant_id': identity.hive_tenant_id})}"
+        f"?{urlencode({'hive_tenant_id': identity.hive_tenant_id, 'hive_user_id': identity.hive_user_id})}"
     )
     summary_request = Request(
         summary_url,
@@ -212,11 +212,13 @@ def register_integration_routes(bp):
                 "resolvhr_summary": None,
                 "pathlyhire_summary": None,
                 "pathly_summary": None,
+                "ellipsecrm_summary": None,
             }
         return {
             "resolvhr_summary": _dashboard_product_summary("resolvhr"),
             "pathlyhire_summary": _dashboard_product_summary("pathlyhire"),
             "pathly_summary": _dashboard_product_summary("pathly"),
+            "ellipsecrm_summary": _dashboard_product_summary("ellipsecrm"),
         }
 
     @bp.route("/integrations/action-centre")
