@@ -1,0 +1,42 @@
+{% if ellipsecrm_summary %}
+<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+        <div>
+            <div class="flex items-center gap-3">
+                <p class="hive-page-kicker">Connected app</p>
+                <span class="hive-pill hive-pill-teal">EllipseCRM</span>
+            </div>
+            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Client & case workload</h2>
+            <p class="mt-2 text-slate-600">Live user-scoped CRM counts for your linked EllipseCRM account.</p>
+        </div>
+        <a href="{{ url_for('launch_app', app_slug=ellipsecrm_summary.app_slug) }}" class="hive-button hive-button-primary">Open EllipseCRM</a>
+    </div>
+
+    {% if ellipsecrm_summary.available %}
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Active clients</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ ellipsecrm_summary.summary.get('active_clients', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Open cases</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ ellipsecrm_summary.summary.get('open_cases', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-950 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Urgent cases</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-white">{{ ellipsecrm_summary.summary.get('urgent_cases', 0) }}</p>
+        </div>
+    </div>
+    {% elif ellipsecrm_summary.link_required %}
+    <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <p class="font-black text-amber-900">Connect your EllipseCRM account</p>
+        <p class="mt-1 text-sm leading-6 text-amber-800">Open EllipseCRM once from HIVE to confirm your existing account link. Your personal CRM workload will appear here afterwards.</p>
+    </div>
+    {% else %}
+    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p class="font-black text-slate-900">EllipseCRM summary temporarily unavailable</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600">Your EllipseCRM access remains active. Open the app normally while HIVE retries the summary on your next dashboard visit.</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
