@@ -1,59 +1,142 @@
 {% extends "base.html" %}
 
-{% block title %}Action Centre · The HIVE{% endblock %}
+{% block title %}Action Centre · HIVE{% endblock %}
 
 {% block content %}
-<section class="mb-8">
-    <p class="hive-page-kicker">Cross-product workspace</p>
-    <div class="mt-2 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-            <h1 class="text-3xl font-black tracking-[-0.05em] text-slate-950">Action Centre</h1>
-            <p class="mt-2 max-w-3xl text-slate-600">Important work from your connected HIVE products, collected in one place.</p>
-        </div>
-        <a href="{{ url_for('apps_index') }}" class="hive-button hive-button-secondary">Manage Apps</a>
-    </div>
-</section>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase2.css') }}">
 
-<section class="hive-card rounded-[1.75rem] p-5 md:p-7">
-    <div class="mb-5 flex items-center justify-between gap-4">
-        <div>
-            <p class="hive-page-kicker">Needs attention</p>
-            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">{{ events|length }} open action{{ '' if events|length == 1 else 's' }}</h2>
-        </div>
-    </div>
+{% set urgent_events = events|selectattr('priority', 'equalto', 'urgent')|list %}
+{% set high_events = events|selectattr('priority', 'equalto', 'high')|list %}
+{% set standard_events = events|rejectattr('priority', 'in', ['urgent', 'high'])|list %}
+{% set product_names = namespace(items=[]) %}
+{% for event in events %}
+    {% set service_key = event.app_integration.service_key %}
+    {% if service_key not in product_names.items %}
+        {% set product_names.items = product_names.items + [service_key] %}
+    {% endif %}
+{% endfor %}
 
-    {% if events %}
-        <div class="space-y-3">
-            {% for event in events %}
-                {% set priority_class = 'border-red-200 bg-red-50' if event.priority == 'urgent' else 'border-amber-200 bg-amber-50' if event.priority == 'high' else 'border-slate-200 bg-white' %}
-                <article class="rounded-2xl border p-4 md:p-5 {{ priority_class }}">
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div class="min-w-0">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <span class="hive-pill hive-pill-teal">{{ event.app_integration.app_module.name }}</span>
-                                <span class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{{ event.event_type|replace('.', ' · ') }}</span>
-                                {% if event.priority in ['high', 'urgent'] %}<span class="hive-pill hive-pill-gold">{{ event.priority|title }}</span>{% endif %}
-                            </div>
-                            <h3 class="mt-3 text-lg font-black text-slate-950">{{ event.title }}</h3>
-                            {% if event.description %}<p class="mt-1 text-sm leading-6 text-slate-600">{{ event.description }}</p>{% endif %}
-                            <p class="mt-3 text-xs text-slate-500">{{ event.occurred_at.strftime('%d %b %Y · %H:%M') }}</p>
-                        </div>
-                        <div class="flex shrink-0 flex-wrap gap-2">
-                            {% if event.target_url %}<a href="{{ event.target_url }}" class="hive-button hive-button-primary">Open</a>{% endif %}
-                            <form method="POST" action="{{ url_for('billing.integration_action_resolve', event_id=event.id) }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button class="hive-button hive-button-secondary" type="submit">Resolve</button>
-                            </form>
-                        </div>
-                    </div>
-                </article>
+<div class="hive-action-page" id="hiveActionCentre">
+    <section class="hive-phase2-page-head">
+        <div class="hive-phase2-page-head-copy">
+            <h1>Action Centre</h1>
+            <p>Important work from your connected HIVE products, collected into one operational queue.</p>
+        </div>
+        <div class="hive-action-header-stats" aria-label="Action Centre summary">
+            <div class="hive-action-header-stat"><strong>{{ events|length }}</strong><span>Open</span></div>
+            <div class="hive-action-header-stat"><strong>{{ urgent_events|length }}</strong><span>Urgent</span></div>
+            <div class="hive-action-header-stat"><strong>{{ high_events|length }}</strong><span>High priority</span></div>
+        </div>
+    </section>
+
+    <section class="hive-action-tools" aria-label="Action filters">
+        <div class="hive-action-filters" role="group" aria-label="Filter actions">
+            <button type="button" class="hive-action-filter is-active" data-action-filter="all">All</button>
+            {% if urgent_events %}<button type="button" class="hive-action-filter" data-action-filter="priority:urgent">Urgent</button>{% endif %}
+            {% if high_events %}<button type="button" class="hive-action-filter" data-action-filter="priority:high">High priority</button>{% endif %}
+            {% for service_key in product_names.items %}
+                {% set matching = events|selectattr('app_integration.service_key', 'equalto', service_key)|list %}
+                {% if matching %}
+                    <button type="button" class="hive-action-filter" data-action-filter="product:{{ service_key }}">{{ matching[0].app_integration.app_module.name }}</button>
+                {% endif %}
             {% endfor %}
         </div>
+        <span class="hive-action-sync">Connected products refresh when this page opens.</span>
+    </section>
+
+    {% if events %}
+        {% macro action_group(title, group_events, group_key) %}
+            {% if group_events %}
+            <section class="hive-action-group" data-action-group="{{ group_key }}">
+                <div class="hive-action-group-head">
+                    <h2>{{ title }}</h2>
+                    <span>{{ group_events|length }} item{{ '' if group_events|length == 1 else 's' }}</span>
+                </div>
+                <div class="hive-action-list">
+                    {% for event in group_events %}
+                    <article class="hive-action-row" data-action-row data-product="{{ event.app_integration.service_key }}" data-priority="{{ event.priority }}">
+                        <div class="hive-action-product">{{ event.app_integration.app_module.name }}</div>
+                        <div class="hive-action-copy">
+                            <strong>{{ event.title }}</strong>
+                            {% if event.description %}<span>{{ event.description }}</span>{% endif %}
+                        </div>
+                        <div class="hive-action-priority{% if event.priority == 'urgent' %} is-urgent{% elif event.priority == 'high' %} is-high{% endif %}">{{ event.priority|title }}</div>
+                        <time class="hive-action-time" datetime="{{ event.occurred_at.isoformat() }}">Surfaced {{ event.occurred_at.strftime('%d %b %Y') }}</time>
+                        <div class="hive-action-row-actions">
+                            {% if event.target_url %}<a href="{{ event.target_url }}" class="hive-phase2-btn hive-phase2-btn--primary">Open</a>{% endif %}
+                            <form method="POST" action="{{ url_for('billing.integration_action_resolve', event_id=event.id) }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="hive-phase2-btn" type="submit">Resolve</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        {% endmacro %}
+
+        {{ action_group('Urgent', urgent_events, 'urgent') }}
+        {{ action_group('High priority', high_events, 'high') }}
+        {{ action_group('Other actions', standard_events, 'standard') }}
+
+        <section class="hive-phase2-empty" id="hiveActionFilteredEmpty" hidden>
+            <h3>No actions match this filter</h3>
+            <p>Choose another filter to see the rest of your open queue.</p>
+            <div class="hive-phase2-empty-actions"><button type="button" class="hive-phase2-btn" id="hiveActionClearFilter">Show all</button></div>
+        </section>
     {% else %}
-        <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-            <h3 class="font-black text-slate-950">Nothing needs attention</h3>
-            <p class="mt-2 text-sm text-slate-600">Connected products will surface important actions here as they occur.</p>
-        </div>
+        <section class="hive-phase2-empty">
+            <h3>You’re all caught up</h3>
+            <p>No connected products currently have outstanding actions.</p>
+            <div class="hive-phase2-empty-actions">
+                <a href="{{ url_for('apps_index') }}" class="hive-phase2-btn">Open Apps</a>
+                <a href="{{ url_for('leads_list') }}" class="hive-phase2-btn">Review Opportunities</a>
+            </div>
+        </section>
     {% endif %}
-</section>
+</div>
+
+{% if events %}
+<script>
+(function () {
+    const root = document.getElementById('hiveActionCentre');
+    if (!root) return;
+
+    const buttons = Array.from(root.querySelectorAll('[data-action-filter]'));
+    const rows = Array.from(root.querySelectorAll('[data-action-row]'));
+    const groups = Array.from(root.querySelectorAll('[data-action-group]'));
+    const empty = document.getElementById('hiveActionFilteredEmpty');
+    const clear = document.getElementById('hiveActionClearFilter');
+
+    function applyFilter(value) {
+        let visibleCount = 0;
+        rows.forEach((row) => {
+            let show = true;
+            if (value.startsWith('priority:')) show = row.dataset.priority === value.split(':')[1];
+            if (value.startsWith('product:')) show = row.dataset.product === value.split(':')[1];
+            row.hidden = !show;
+            if (show) visibleCount += 1;
+        });
+
+        groups.forEach((group) => {
+            const hasVisible = Array.from(group.querySelectorAll('[data-action-row]')).some((row) => !row.hidden);
+            group.hidden = !hasVisible;
+        });
+
+        buttons.forEach((button) => {
+            const active = button.dataset.actionFilter === value;
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        if (empty) empty.hidden = visibleCount !== 0;
+    }
+
+    buttons.forEach((button) => button.addEventListener('click', () => applyFilter(button.dataset.actionFilter)));
+    if (clear) clear.addEventListener('click', () => applyFilter('all'));
+    applyFilter('all');
+})();
+</script>
+{% endif %}
 {% endblock %}

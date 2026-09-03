@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Consultant Dashboard · The HIVE{% endblock %}
+{% block title %}Today · HIVE{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase2.css') }}">
 
 {% set profile = current_user.consultant_profile %}
 {% set checklist = namespace(total=8, done=0) %}
@@ -16,292 +17,217 @@
 {% if settings.is_published and profile and profile.is_public %}{% set checklist.done = checklist.done + 1 %}{% endif %}
 {% set completion = ((checklist.done / checklist.total) * 100)|round(0, 'floor')|int %}
 
-<section class="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
-    <div class="xl:col-span-2 hive-card--dark rounded-[1.75rem] p-8 overflow-hidden relative">
-        <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-400/20 blur-3xl"></div>
-        <div class="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-teal-400/10 blur-3xl"></div>
-
-        <div class="relative">
-            <p class="text-amber-300 text-xs font-black uppercase tracking-[0.18em]">Consultant operating hub</p>
-            <h1 class="mt-4 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-white">
-                Welcome back, {{ current_user.name }}.
-            </h1>
-            <p class="mt-5 text-slate-300 max-w-2xl leading-7">
-                Manage your public profile, directory enquiries, toolkit resources, app access and HIVE support workflows from one workspace.
+<div class="hive-today">
+    <section class="hive-today-brief">
+        <div class="hive-today-brief-copy">
+            <h1>Good {% if now_hour is defined and now_hour < 12 %}morning{% elif now_hour is defined and now_hour < 18 %}afternoon{% else %}day{% endif %}, {{ current_user.name.split(' ')[0] if current_user.name else 'there' }}</h1>
+            <p class="hive-today-lead">
+                {% if hive_open_action_count|default(0) > 0 %}
+                    You have <strong>{{ hive_open_action_count }} action{{ '' if hive_open_action_count == 1 else 's' }}</strong> requiring attention.
+                    {% if hive_overdue_action_count|default(0) > 0 %}<strong>{{ hive_overdue_action_count }}</strong> {{ 'is' if hive_overdue_action_count == 1 else 'are' }} overdue.{% endif %}
+                {% else %}
+                    No connected-product actions are currently waiting for you.
+                {% endif %}
+                {% if active_leads_count > 0 %} You also have <strong>{{ active_leads_count }} active opportunit{{ 'y' if active_leads_count == 1 else 'ies' }}</strong>.{% endif %}
             </p>
-
-            <div class="mt-7 flex flex-wrap gap-3">
-                <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="hive-button hive-button-gold">View Enquiries</a>
-                <a href="{{ url_for('website_settings') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Complete Profile</a>
-                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-button bg-white text-slate-950 hover:bg-slate-100">Public Directory</a>
-            </div>
         </div>
-    </div>
+        <div class="hive-phase2-page-actions">
+            <a href="{{ url_for('billing.integration_action_centre') }}" class="hive-phase2-btn hive-phase2-btn--primary">Review actions</a>
+            <a href="{{ url_for('leads_list') }}" class="hive-phase2-btn">View opportunities</a>
+        </div>
+    </section>
 
-    <div class="hive-card rounded-[1.75rem] p-6">
-        <p class="hive-page-kicker">Membership</p>
-        <h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ tier_label }}</h2>
-        <p class="mt-2 text-sm text-slate-500">Status: {{ subscription.status|replace('_', ' ')|title }}</p>
+    <section class="hive-phase2-section" aria-label="Today summary">
+        <div class="hive-today-metrics">
+            <a class="hive-today-metric" href="{{ url_for('billing.integration_action_centre') }}">
+                <span class="hive-today-metric-label">Open actions</span>
+                <strong class="hive-today-metric-value">{{ hive_open_action_count|default(0) }}</strong>
+                <span class="hive-today-metric-foot">Across connected products</span>
+            </a>
+            <a class="hive-today-metric" href="{{ url_for('billing.integration_action_centre') }}">
+                <span class="hive-today-metric-label">Overdue</span>
+                <strong class="hive-today-metric-value">{{ hive_overdue_action_count|default(0) }}</strong>
+                <span class="hive-today-metric-foot{% if hive_overdue_action_count|default(0) > 0 %} is-danger{% endif %}">{{ 'Needs attention' if hive_overdue_action_count|default(0) > 0 else 'Nothing overdue' }}</span>
+            </a>
+            <a class="hive-today-metric" href="{{ url_for('leads_list') }}">
+                <span class="hive-today-metric-label">Active opportunities</span>
+                <strong class="hive-today-metric-value">{{ active_leads_count }}</strong>
+                <span class="hive-today-metric-foot">PeopleSignal opportunities in progress</span>
+            </a>
+            <a class="hive-today-metric" href="{{ url_for('apps_index') }}">
+                <span class="hive-today-metric-label">Connected apps</span>
+                <strong class="hive-today-metric-value">{{ active_apps_count }}</strong>
+                <span class="hive-today-metric-foot">Active for your consultancy</span>
+            </a>
+        </div>
+    </section>
 
-        <div class="mt-6 space-y-3 text-sm text-slate-600">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><span>Website + Toolkit</span><span class="hive-pill hive-pill-teal">Starter</span></div>
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><span>Apps + Leads</span><span class="hive-pill hive-pill-teal">Pro</span></div>
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><span>Cover workflow</span><span class="hive-pill hive-pill-gold">Covered</span></div>
-            <div class="flex items-center justify-between"><span>Expert escalation</span><span class="hive-pill hive-pill-gold">Boutique</span></div>
+    <section class="hive-phase2-section">
+        <div class="hive-phase2-section-head">
+            <div>
+                <h2>Needs your attention</h2>
+                <p>Highest-priority work already surfaced by your connected products.</p>
+            </div>
+            <a class="hive-phase2-text-link" href="{{ url_for('billing.integration_action_centre') }}">View all actions</a>
         </div>
 
-        <a href="{{ url_for('billing.billing_home') }}" class="mt-6 hive-button hive-button-primary w-full">Manage Billing</a>
-    </div>
-</section>
-
-<section class="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <div class="xl:col-span-2 hive-card rounded-[1.75rem] p-6 md:p-7">
-        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div class="max-w-3xl">
-                <p class="hive-page-kicker">Launch checklist</p>
-                <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Get your consultant profile ready for enquiries</h2>
-                <p class="mt-2 text-slate-600">
-                    Complete these steps to make your public directory listing and branded consultant page stronger.
-                </p>
+        {% if hive_dashboard_actions %}
+            <div class="hive-today-action-list">
+                {% for event in hive_dashboard_actions %}
+                    <div class="hive-today-action-row">
+                        <span class="hive-today-product">{{ event.app_integration.app_module.name }}</span>
+                        <div class="hive-today-action-copy">
+                            <strong>{{ event.title }}</strong>
+                            {% if event.description %}<span>{{ event.description }}</span>{% endif %}
+                        </div>
+                        <span class="hive-today-action-priority{% if event.priority == 'urgent' %} is-urgent{% elif event.priority == 'high' %} is-high{% endif %}">{{ event.priority|title }}</span>
+                        {% if event.target_url %}<a href="{{ event.target_url }}" class="hive-phase2-btn hive-phase2-btn--quiet">Open</a>{% endif %}
+                    </div>
+                {% endfor %}
             </div>
-
-            <div class="min-w-[180px] rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Profile completion</p>
-                <p class="mt-2 text-4xl font-black tracking-[-0.06em] text-slate-950">{{ completion }}%</p>
-                <div class="mt-3 h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div class="h-full rounded-full bg-amber-400" style="width: {{ completion }}%;"></div>
+        {% else %}
+            <div class="hive-phase2-empty">
+                <h3>You’re all caught up</h3>
+                <p>No connected products currently have actions requiring attention.</p>
+                <div class="hive-phase2-empty-actions">
+                    <a href="{{ url_for('apps_index') }}" class="hive-phase2-btn">Open Apps</a>
+                    <a href="{{ url_for('leads_list') }}" class="hive-phase2-btn">Review Opportunities</a>
                 </div>
             </div>
+        {% endif %}
+    </section>
+
+    <section class="hive-phase2-section">
+        <div class="hive-phase2-section-head">
+            <div>
+                <h2>Connected products</h2>
+                <p>Live operational summaries without leaving HIVE.</p>
+            </div>
+            <a class="hive-phase2-text-link" href="{{ url_for('apps_index') }}">Manage apps</a>
         </div>
 
-        <div class="mt-7 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div class="rounded-2xl border p-4 {% if profile %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if profile %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile else '○' }} Profile record created</p>
-                <p class="mt-1 text-sm text-slate-600">Your core consultant record exists.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if profile and profile.bio %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if profile and profile.bio %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile and profile.bio else '○' }} Add a strong bio</p>
-                <p class="mt-1 text-sm text-slate-600">Explain who you help and what problems you solve.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if profile and profile.specialisms %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if profile and profile.specialisms %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile and profile.specialisms else '○' }} Add specialisms</p>
-                <p class="mt-1 text-sm text-slate-600">List HR, ER, recruitment or people areas you support.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if profile and profile.sectors %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if profile and profile.sectors %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if profile and profile.sectors else '○' }} Add sector experience</p>
-                <p class="mt-1 text-sm text-slate-600">Help businesses understand where you have context.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if settings.logo_path %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if settings.logo_path %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.logo_path else '○' }} Upload logo</p>
-                <p class="mt-1 text-sm text-slate-600">Your logo is used on cards, profiles and your branded page.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if settings.website_intro and settings.about_text and settings.services_text %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if settings.website_intro and settings.about_text and settings.services_text %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.website_intro and settings.about_text and settings.services_text else '○' }} Website content</p>
-                <p class="mt-1 text-sm text-slate-600">Complete intro, about and services sections.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if settings.contact_email or settings.contact_phone or settings.linkedin_url %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if settings.contact_email or settings.contact_phone or settings.linkedin_url %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.contact_email or settings.contact_phone or settings.linkedin_url else '○' }} Contact details</p>
-                <p class="mt-1 text-sm text-slate-600">Add email, phone or LinkedIn for public trust.</p>
-            </div>
-            <div class="rounded-2xl border p-4 {% if settings.is_published and profile and profile.is_public %}bg-green-50 border-green-200{% else %}bg-white border-slate-200{% endif %}">
-                <p class="font-black {% if settings.is_published and profile and profile.is_public %}text-green-800{% else %}text-slate-800{% endif %}">{{ '✓' if settings.is_published and profile and profile.is_public else '○' }} Publish profile</p>
-                <p class="mt-1 text-sm text-slate-600">Your website and directory profile both need to be live.</p>
-            </div>
-        </div>
-
-        <div class="mt-7 flex flex-wrap gap-3">
-            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-button hive-button-secondary">Edit Directory Profile</a>
-            <a href="{{ url_for('website_settings') }}" class="hive-button hive-button-primary">Edit Website Settings</a>
-            <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="hive-button hive-button-gold">Preview Public Page</a>
-        </div>
-    </div>
-
-    <div class="hive-card rounded-[1.75rem] p-6 md:p-7">
-        <p class="hive-page-kicker">Go-live status</p>
-        <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Public presence</h2>
-
-        <div class="mt-6 space-y-4">
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Branded website</p>
-                <div class="mt-2 flex items-center justify-between gap-3">
-                    <span class="font-black text-slate-950">/consultants/{{ settings.tenant_slug }}</span>
-                    {% if settings.is_published %}<span class="hive-pill hive-pill-teal">Live</span>{% else %}<span class="hive-pill hive-pill-gold">Draft</span>{% endif %}
+        <div class="hive-today-products">
+            {% if resolvhr_summary %}
+            <article class="hive-product-summary">
+                <div class="hive-product-summary-head">
+                    <div class="hive-product-summary-title"><strong>ResolvHR</strong></div>
+                    <span class="hive-product-status{% if not resolvhr_summary.available %} is-unavailable{% endif %}">{{ 'Connected' if resolvhr_summary.available else 'Unavailable' }}</span>
                 </div>
-            </div>
-
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Directory listing</p>
-                <div class="mt-2 flex items-center justify-between gap-3">
-                    <span class="font-black text-slate-950">Searchable profile</span>
-                    {% if profile and profile.is_public %}<span class="hive-pill hive-pill-teal">Visible</span>{% else %}<span class="hive-pill hive-pill-gold">Hidden</span>{% endif %}
+                {% if resolvhr_summary.available %}
+                <div class="hive-product-summary-grid">
+                    <div><span>Open PIPs</span><strong>{{ resolvhr_summary.summary.get('pip_open', 0) }}</strong></div>
+                    <div><span>Probation</span><strong>{{ resolvhr_summary.summary.get('probation_active', 0) }}</strong></div>
+                    <div><span>Total open</span><strong>{{ resolvhr_summary.summary.get('open_cases_total', 0) }}</strong></div>
                 </div>
-            </div>
+                {% else %}
+                <p class="hive-product-summary-note">{{ 'Open ResolvHR once to complete the HIVE link.' if resolvhr_summary.link_required else 'The live summary is temporarily unavailable.' }}</p>
+                {% endif %}
+                <div class="hive-product-summary-footer"><span>HR case management</span><a href="{{ url_for('launch_app', app_slug=resolvhr_summary.app_slug) }}" class="hive-phase2-text-link">Open</a></div>
+            </article>
+            {% endif %}
 
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Enquiries</p>
-                <div class="mt-2 flex items-center justify-between gap-3">
-                    <span class="font-black text-slate-950">Directory inbox</span>
-                    <span class="text-2xl font-black text-slate-950">{{ assigned_leads_count + active_leads_count }}</span>
+            {% if pathlyhire_summary %}
+            <article class="hive-product-summary">
+                <div class="hive-product-summary-head">
+                    <div class="hive-product-summary-title"><strong>PathlyHire</strong></div>
+                    <span class="hive-product-status{% if not pathlyhire_summary.available %} is-unavailable{% endif %}">{{ 'Connected' if pathlyhire_summary.available else 'Unavailable' }}</span>
                 </div>
-            </div>
+                {% if pathlyhire_summary.available %}
+                <div class="hive-product-summary-grid">
+                    <div><span>Live jobs</span><strong>{{ pathlyhire_summary.summary.get('live_jobs', 0) }}</strong></div>
+                    <div><span>Applications</span><strong>{{ pathlyhire_summary.summary.get('applications', 0) }}</strong></div>
+                    <div><span>To review</span><strong>{{ pathlyhire_summary.summary.get('applications_to_review', 0) }}</strong></div>
+                </div>
+                {% else %}
+                <p class="hive-product-summary-note">{{ 'Open PathlyHire once to complete the HIVE link.' if pathlyhire_summary.link_required else 'The live summary is temporarily unavailable.' }}</p>
+                {% endif %}
+                <div class="hive-product-summary-footer"><span>Recruitment pipeline</span><a href="{{ url_for('launch_app', app_slug=pathlyhire_summary.app_slug) }}" class="hive-phase2-text-link">Open</a></div>
+            </article>
+            {% endif %}
+
+            {% if pathly_summary %}
+            <article class="hive-product-summary">
+                <div class="hive-product-summary-head">
+                    <div class="hive-product-summary-title"><strong>Pathly</strong></div>
+                    <span class="hive-product-status{% if not pathly_summary.available %} is-unavailable{% endif %}">{{ 'Connected' if pathly_summary.available else 'Unavailable' }}</span>
+                </div>
+                {% if pathly_summary.available %}
+                <div class="hive-product-summary-grid">
+                    <div><span>Active users</span><strong>{{ pathly_summary.summary.get('active_users', 0) }}</strong></div>
+                    <div><span>Courses</span><strong>{{ pathly_summary.summary.get('published_courses', 0) }}</strong></div>
+                    <div><span>In progress</span><strong>{{ pathly_summary.summary.get('pathways_in_progress', 0) }}</strong></div>
+                </div>
+                {% else %}
+                <p class="hive-product-summary-note">{{ 'Open Pathly once to complete the HIVE link.' if pathly_summary.link_required else 'The live summary is temporarily unavailable.' }}</p>
+                {% endif %}
+                <div class="hive-product-summary-footer"><span>Learning & compliance</span><a href="{{ url_for('launch_app', app_slug=pathly_summary.app_slug) }}" class="hive-phase2-text-link">Open</a></div>
+            </article>
+            {% endif %}
+
+            {% if ellipsecrm_summary %}
+            <article class="hive-product-summary">
+                <div class="hive-product-summary-head">
+                    <div class="hive-product-summary-title"><strong>EllipseCRM</strong></div>
+                    <span class="hive-product-status{% if not ellipsecrm_summary.available %} is-unavailable{% endif %}">{{ 'Connected' if ellipsecrm_summary.available else 'Unavailable' }}</span>
+                </div>
+                {% if ellipsecrm_summary.available %}
+                <div class="hive-product-summary-grid">
+                    <div><span>Active clients</span><strong>{{ ellipsecrm_summary.summary.get('active_clients', 0) }}</strong></div>
+                    <div><span>Open cases</span><strong>{{ ellipsecrm_summary.summary.get('open_cases', 0) }}</strong></div>
+                    <div><span>Urgent</span><strong>{{ ellipsecrm_summary.summary.get('urgent_cases', 0) }}</strong></div>
+                </div>
+                {% else %}
+                <p class="hive-product-summary-note">{{ 'Open EllipseCRM once to complete your user link.' if ellipsecrm_summary.link_required else 'The live summary is temporarily unavailable.' }}</p>
+                {% endif %}
+                <div class="hive-product-summary-footer"><span>Client & case management</span><a href="{{ url_for('launch_app', app_slug=ellipsecrm_summary.app_slug) }}" class="hive-phase2-text-link">Open</a></div>
+            </article>
+            {% endif %}
         </div>
+    </section>
 
-        <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="mt-6 hive-button hive-button-primary w-full">View Directory Enquiries</a>
-    </div>
-</section>
-
-<section class="mb-8 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-    <div class="hive-stat-card"><p class="hive-stat-label">Active apps</p><p class="hive-stat-value">{{ active_apps_count }}</p></div>
-    <div class="hive-stat-card"><p class="hive-stat-label">Toolkit items</p><p class="hive-stat-value">{{ active_resources_count }}</p></div>
-    <div class="hive-stat-card"><p class="hive-stat-label">Cover requests</p><p class="hive-stat-value">{{ cover_requests_count }}</p></div>
-    <div class="hive-stat-card"><p class="hive-stat-label">Signal leads</p><p class="hive-stat-value">{{ assigned_leads_count }}</p></div>
-    <div class="hive-stat-card"><p class="hive-stat-label">Active leads</p><p class="hive-stat-value">{{ active_leads_count }}</p></div>
-    <div class="hive-stat-card"><p class="hive-stat-label">Expert help</p><p class="hive-stat-value">{{ open_expert_requests_count }}</p></div>
-</section>
-
-{% if resolvhr_summary %}
-<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
-    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+    <section class="hive-phase2-section hive-today-bottom-grid">
         <div>
-            <div class="flex items-center gap-3">
-                <p class="hive-page-kicker">Connected app</p>
-                <span class="hive-pill hive-pill-teal">ResolvHR</span>
+            <div class="hive-phase2-section-head">
+                <div>
+                    <h2>Opportunities</h2>
+                    <p>Commercial work currently tracked through PeopleSignal.</p>
+                </div>
+                <a class="hive-phase2-text-link" href="{{ url_for('leads_list') }}">View opportunities</a>
             </div>
-            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">HR case workload</h2>
-            <p class="mt-2 text-slate-600">Live organisation-level case counts from ResolvHR for your connected HIVE tenant.</p>
+            <div class="hive-today-opportunity-panel">
+                <div class="hive-today-opportunity-row">
+                    <div class="hive-today-opportunity-copy"><strong>Active opportunities</strong><span>Assigned or accepted PeopleSignal leads</span></div>
+                    <strong>{{ active_leads_count }}</strong>
+                </div>
+                <div class="hive-today-opportunity-row">
+                    <div class="hive-today-opportunity-copy"><strong>Total assigned leads</strong><span>All PeopleSignal leads assigned to you</span></div>
+                    <strong>{{ assigned_leads_count }}</strong>
+                </div>
+            </div>
         </div>
-        <a href="{{ url_for('launch_app', app_slug=resolvhr_summary.app_slug) }}" class="hive-button hive-button-primary">Open ResolvHR</a>
-    </div>
 
-    {% if resolvhr_summary.available %}
-    <div class="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Open PIPs</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ resolvhr_summary.summary.get('pip_open', 0) }}</p>
+        <div>
+            <div class="hive-phase2-section-head">
+                <div><h2>Quick actions</h2><p>Common HIVE workflows.</p></div>
+            </div>
+            <div class="hive-today-quick-list">
+                <a href="{{ url_for('cover_list') }}" class="hive-today-quick-link">Request cover</a>
+                <a href="{{ url_for('expert_help_list') }}" class="hive-today-quick-link">Ask an expert</a>
+                <a href="{{ url_for('resources_list') }}" class="hive-today-quick-link">Open toolkit</a>
+                <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="hive-today-quick-link">Directory enquiries</a>
+            </div>
         </div>
-        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Active probation</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ resolvhr_summary.summary.get('probation_active', 0) }}</p>
+    </section>
+
+    {% if completion < 100 %}
+    <aside class="hive-today-setup-note">
+        <strong>Your business profile is {{ completion }}% complete.</strong>
+        <p>Setup is no longer part of your daily workspace, but completing it improves your public HIVE presence.</p>
+        <div class="hive-phase2-empty-actions">
+            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-phase2-btn">Review profile</a>
+            <a href="{{ url_for('website_settings') }}" class="hive-phase2-btn">Website settings</a>
         </div>
-        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Open sickness</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ resolvhr_summary.summary.get('sickness_open', 0) }}</p>
-        </div>
-        <div class="rounded-2xl bg-slate-950 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Total open</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-white">{{ resolvhr_summary.summary.get('open_cases_total', 0) }}</p>
-        </div>
-    </div>
-    {% elif resolvhr_summary.link_required %}
-    <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-        <p class="font-black text-amber-900">Connect this HIVE tenant to ResolvHR</p>
-        <p class="mt-1 text-sm leading-6 text-amber-800">Open ResolvHR once from HIVE to confirm your existing ResolvHR account and organisation. The live case summary will appear here afterwards.</p>
-    </div>
-    {% else %}
-    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <p class="font-black text-slate-900">ResolvHR summary temporarily unavailable</p>
-        <p class="mt-1 text-sm leading-6 text-slate-600">Your ResolvHR access is still active. Open the app normally while HIVE retries the summary on your next dashboard visit.</p>
-    </div>
+    </aside>
     {% endif %}
-</section>
-{% endif %}
-
-{% if pathlyhire_summary %}
-<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
-    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
-        <div>
-            <div class="flex items-center gap-3">
-                <p class="hive-page-kicker">Connected app</p>
-                <span class="hive-pill hive-pill-teal">PathlyHire</span>
-            </div>
-            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Recruitment pipeline</h2>
-            <p class="mt-2 text-slate-600">Live tenant-level recruitment counts from PathlyHire for your connected HIVE organisation.</p>
-        </div>
-        <a href="{{ url_for('launch_app', app_slug=pathlyhire_summary.app_slug) }}" class="hive-button hive-button-primary">Open PathlyHire</a>
-    </div>
-
-    {% if pathlyhire_summary.available %}
-    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Live jobs</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ pathlyhire_summary.summary.get('live_jobs', 0) }}</p>
-        </div>
-        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Applications</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ pathlyhire_summary.summary.get('applications', 0) }}</p>
-        </div>
-        <div class="rounded-2xl bg-slate-950 p-5">
-            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-400">To review</p>
-            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-white">{{ pathlyhire_summary.summary.get('applications_to_review', 0) }}</p>
-        </div>
-    </div>
-    {% elif pathlyhire_summary.link_required %}
-    <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
-        <p class="font-black text-amber-900">Connect this HIVE tenant to PathlyHire</p>
-        <p class="mt-1 text-sm leading-6 text-amber-800">Open PathlyHire once from HIVE to confirm your existing PathlyHire account and tenant. The recruitment summary will appear here afterwards.</p>
-    </div>
-    {% else %}
-    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-        <p class="font-black text-slate-900">PathlyHire summary temporarily unavailable</p>
-        <p class="mt-1 text-sm leading-6 text-slate-600">Your PathlyHire access remains active. Open the app normally while HIVE retries the summary on your next dashboard visit.</p>
-    </div>
-    {% endif %}
-</section>
-{% endif %}
-
-{% include "integrations/pathly_dashboard_card.html" %}
-
-<section>
-    <div class="mb-5 flex items-end justify-between gap-4">
-        <div>
-            <p class="hive-page-kicker">Workspace</p>
-            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Operate your consultancy</h2>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <div class="hive-card p-6">
-            <span class="hive-pill hive-pill-teal">Tools</span>
-            <h3 class="mt-4 hive-section-heading">App access</h3>
-            <p class="mt-2 text-sm text-slate-600 leading-6">Access PayScope, RecruitFlow AI, ResolvHR, People Signal and LMS modules.</p>
-            <a href="{{ url_for('apps_index') }}" class="mt-5 hive-button hive-button-primary">Manage Apps</a>
-        </div>
-
-        <div class="hive-card p-6">
-            <span class="hive-pill hive-pill-teal">Delivery</span>
-            <h3 class="mt-4 hive-section-heading">Toolkit</h3>
-            <p class="mt-2 text-sm text-slate-600 leading-6">Consultant-ready templates, workflows, playbooks and delivery resources.</p>
-            <a href="{{ url_for('resources_list') }}" class="mt-5 hive-button hive-button-primary">Open Toolkit</a>
-        </div>
-
-        <div class="hive-card p-6">
-            <span class="hive-pill hive-pill-gold">Continuity</span>
-            <h3 class="mt-4 hive-section-heading">HIVE Covered</h3>
-            <p class="mt-2 text-sm text-slate-600 leading-6">Request holiday, sickness, overflow or emergency cover for client continuity.</p>
-            <a href="{{ url_for('cover_list') }}" class="mt-5 hive-button hive-button-primary">Manage Cover</a>
-        </div>
-
-        <div class="hive-card p-6">
-            <span class="hive-pill hive-pill-gold">Growth</span>
-            <h3 class="mt-4 hive-section-heading">PeopleSignal Leads</h3>
-            <p class="mt-2 text-sm text-slate-600 leading-6">Review opportunities assigned to your consultancy and progress them quickly.</p>
-            <a href="{{ url_for('leads_list') }}" class="mt-5 hive-button hive-button-primary">View Leads</a>
-        </div>
-
-        <div class="hive-card p-6">
-            <span class="hive-pill hive-pill-gold">Risk</span>
-            <h3 class="mt-4 hive-section-heading">Expert Help</h3>
-            <p class="mt-2 text-sm text-slate-600 leading-6">Request specialist HR, ER, TUPE, reward, recruitment or escalation support.</p>
-            <a href="{{ url_for('expert_help_list') }}" class="mt-5 hive-button hive-button-primary">Manage Expert Help</a>
-        </div>
-
-        <div class="hive-card p-6">
-            <span class="hive-pill hive-pill-teal">Marketplace</span>
-            <h3 class="mt-4 hive-section-heading">Directory Enquiries</h3>
-            <p class="mt-2 text-sm text-slate-600 leading-6">Manage enquiries generated from your public HIVE directory profile.</p>
-            <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="mt-5 hive-button hive-button-primary">View Enquiries</a>
-        </div>
-    </div>
-</section>
-
+</div>
 {% endblock %}
