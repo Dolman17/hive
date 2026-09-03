@@ -211,10 +211,12 @@ def register_integration_routes(bp):
             return {
                 "resolvhr_summary": None,
                 "pathlyhire_summary": None,
+                "pathly_summary": None,
             }
         return {
             "resolvhr_summary": _dashboard_product_summary("resolvhr"),
             "pathlyhire_summary": _dashboard_product_summary("pathlyhire"),
+            "pathly_summary": _dashboard_product_summary("pathly"),
         }
 
     @bp.route("/integrations/action-centre")
