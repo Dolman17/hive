@@ -159,6 +159,53 @@
     <div class="hive-stat-card"><p class="hive-stat-label">Expert help</p><p class="hive-stat-value">{{ open_expert_requests_count }}</p></div>
 </section>
 
+{% if resolvhr_summary %}
+<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+        <div>
+            <div class="flex items-center gap-3">
+                <p class="hive-page-kicker">Connected app</p>
+                <span class="hive-pill hive-pill-teal">ResolvHR</span>
+            </div>
+            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">HR case workload</h2>
+            <p class="mt-2 text-slate-600">Live organisation-level case counts from ResolvHR for your connected HIVE tenant.</p>
+        </div>
+        <a href="{{ url_for('launch_app', app_slug=resolvhr_summary.app_slug) }}" class="hive-button hive-button-primary">Open ResolvHR</a>
+    </div>
+
+    {% if resolvhr_summary.available %}
+    <div class="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Open PIPs</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ resolvhr_summary.summary.get('pip_open', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Active probation</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ resolvhr_summary.summary.get('probation_active', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Open sickness</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ resolvhr_summary.summary.get('sickness_open', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-950 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-400">Total open</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-white">{{ resolvhr_summary.summary.get('open_cases_total', 0) }}</p>
+        </div>
+    </div>
+    {% elif resolvhr_summary.link_required %}
+    <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <p class="font-black text-amber-900">Connect this HIVE tenant to ResolvHR</p>
+        <p class="mt-1 text-sm leading-6 text-amber-800">Open ResolvHR once from HIVE to confirm your existing ResolvHR account and organisation. The live case summary will appear here afterwards.</p>
+    </div>
+    {% else %}
+    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p class="font-black text-slate-900">ResolvHR summary temporarily unavailable</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600">Your ResolvHR access is still active. Open the app normally while HIVE retries the summary on your next dashboard visit.</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
 <section>
     <div class="mb-5 flex items-end justify-between gap-4">
         <div>
