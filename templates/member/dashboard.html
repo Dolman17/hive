@@ -206,6 +206,49 @@
 </section>
 {% endif %}
 
+{% if pathlyhire_summary %}
+<section class="mb-8 hive-card rounded-[1.75rem] p-6 md:p-7">
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+        <div>
+            <div class="flex items-center gap-3">
+                <p class="hive-page-kicker">Connected app</p>
+                <span class="hive-pill hive-pill-teal">PathlyHire</span>
+            </div>
+            <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Recruitment pipeline</h2>
+            <p class="mt-2 text-slate-600">Live tenant-level recruitment counts from PathlyHire for your connected HIVE organisation.</p>
+        </div>
+        <a href="{{ url_for('launch_app', app_slug=pathlyhire_summary.app_slug) }}" class="hive-button hive-button-primary">Open PathlyHire</a>
+    </div>
+
+    {% if pathlyhire_summary.available %}
+    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Live jobs</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ pathlyhire_summary.summary.get('live_jobs', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Applications</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ pathlyhire_summary.summary.get('applications', 0) }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-950 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-400">To review</p>
+            <p class="mt-2 text-3xl font-black tracking-[-0.05em] text-white">{{ pathlyhire_summary.summary.get('applications_to_review', 0) }}</p>
+        </div>
+    </div>
+    {% elif pathlyhire_summary.link_required %}
+    <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <p class="font-black text-amber-900">Connect this HIVE tenant to PathlyHire</p>
+        <p class="mt-1 text-sm leading-6 text-amber-800">Open PathlyHire once from HIVE to confirm your existing PathlyHire account and tenant. The recruitment summary will appear here afterwards.</p>
+    </div>
+    {% else %}
+    <div class="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+        <p class="font-black text-slate-900">PathlyHire summary temporarily unavailable</p>
+        <p class="mt-1 text-sm leading-6 text-slate-600">Your PathlyHire access remains active. Open the app normally while HIVE retries the summary on your next dashboard visit.</p>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
 <section>
     <div class="mb-5 flex items-end justify-between gap-4">
         <div>

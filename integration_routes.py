@@ -208,8 +208,14 @@ def register_integration_routes(bp):
     @bp.app_context_processor
     def inject_integration_dashboard_context():
         if request.endpoint != "dashboard":
-            return {"resolvhr_summary": None}
-        return {"resolvhr_summary": _dashboard_product_summary("resolvhr")}
+            return {
+                "resolvhr_summary": None,
+                "pathlyhire_summary": None,
+            }
+        return {
+            "resolvhr_summary": _dashboard_product_summary("resolvhr"),
+            "pathlyhire_summary": _dashboard_product_summary("pathlyhire"),
+        }
 
     @bp.route("/integrations/action-centre")
     @login_required
