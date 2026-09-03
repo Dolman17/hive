@@ -1,0 +1,136 @@
+name: HIVE integration validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/hive-integration-platform]
+
+jobs:
+  integration-validation:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: hive_test
+          POSTGRES_PASSWORD: hive_test
+          POSTGRES_DB: hive_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U hive_test -d hive_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://hive_test:hive_test@127.0.0.1:5432/hive_test
+      SECRET_KEY: ci-secret-key
+      UPLOAD_FOLDER: /tmp/hive-uploads
+      HIVE_RESOLVHR_SSO_SECRET: ci-resolvhr-secret
+      HIVE_PATHLY_SSO_SECRET: ci-pathly-secret
+      HIVE_PATHLYHIRE_SSO_SECRET: ci-pathlyhire-secret
+      HIVE_ELLIPSECRM_SSO_SECRET: ci-ellipsecrm-secret
+      HIVE_RESOLVHR_EVENT_TOKEN: ci-resolvhr-event-token
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile Python sources
+        run: python -m compileall -q .
+
+      - name: Verify Flask app imports
+        run: python -c "from app import app; print(app.name); print(len(list(app.url_map.iter_rules())))"
+
+      - name: Verify migration graph
+        run: flask --app app db heads
+
+      - name: Upgrade clean PostgreSQL database
+        run: flask --app app db upgrade
+
+      - name: Verify database revision
+        run: flask --app app db current
+
+      - name: Verify integration routes and unauthorized API behavior
+        run: |
+          python - <<'PY'
+          from app import app
+          from extensions import db
+          from integration_models import AppIntegration
+          from models import AppModule
+
+          rules = {rule.rule for rule in app.url_map.iter_rules()}
+          required = {
+              '/integrations/action-centre',
+              '/integrations/apps/<app_slug>/launch',
+              '/api/integrations/v1/actions',
+              '/api/integrations/v1/events',
+              '/admin/integrations',
+          }
+          missing = required - rules
+          assert not missing, f'Missing integration routes: {sorted(missing)}'
+
+          with app.app_context():
+              app_module = AppModule(
+                  name='ResolvHR CI',
+                  slug='resolvhr-ci',
+                  description='CI integration fixture',
+                  required_tier='professional',
+                  icon='ShieldCheck',
+                  launch_url='',
+                  is_active=True,
+              )
+              db.session.add(app_module)
+              db.session.flush()
+              integration = AppIntegration(
+                  app_module_id=app_module.id,
+                  service_key='resolvhr',
+                  base_url='https://example.invalid',
+                  sso_path='/auth/hive-sso',
+                  sso_audience='resolvhr',
+                  event_token_env='HIVE_RESOLVHR_EVENT_TOKEN',
+                  summary_path='/api/v1/summary',
+                  health_path='/api/v1/health',
+                  is_enabled=True,
+              )
+              db.session.add(integration)
+              db.session.commit()
+
+          client = app.test_client()
+          payload = {
+              'app': 'resolvhr',
+              'external_event_id': 'ci-event-1',
+              'event_type': 'case.created',
+              'title': 'CI event',
+          }
+
+          response = client.post('/api/integrations/v1/events', json=payload)
+          assert response.status_code == 401, response.get_data(as_text=True)
+
+          response = client.post(
+              '/api/integrations/v1/events',
+              json=payload,
+              headers={'Authorization': 'Bearer wrong-token'},
+          )
+          assert response.status_code == 401, response.get_data(as_text=True)
+
+          response = client.post(
+              '/api/integrations/v1/events',
+              json=payload,
+              headers={'Authorization': 'Bearer ci-resolvhr-event-token'},
+          )
+          assert response.status_code == 201, response.get_data(as_text=True)
+          print('HIVE integration route smoke test passed')
+          PY

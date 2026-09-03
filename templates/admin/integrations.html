@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}App Integrations · The HIVE{% endblock %}
+
+{% block content %}
+<section class="mb-8">
+    <p class="hive-page-kicker">System administration</p>
+    <h1 class="mt-2 text-3xl font-black tracking-[-0.05em] text-slate-950">App integrations</h1>
+    <p class="mt-2 max-w-3xl text-slate-600">Configure SSO and event connections for HIVE marketplace apps. Event secrets stay in environment variables and are never stored here.</p>
+</section>
+
+<section class="space-y-5">
+    {% for app_module in app_modules %}
+        {% set integration = integration_map.get(app_module.id) %}
+        <form method="POST" class="hive-card rounded-[1.75rem] p-5 md:p-7">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="app_module_id" value="{{ app_module.id }}">
+
+            <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h2 class="text-xl font-black text-slate-950">{{ app_module.name }}</h2>
+                        {% if integration and integration.is_enabled %}<span class="hive-pill hive-pill-teal">Connected</span>{% else %}<span class="hive-pill hive-pill-gold">Not connected</span>{% endif %}
+                    </div>
+                    <p class="mt-1 text-sm text-slate-500">Marketplace slug: {{ app_module.slug }}</p>
+                </div>
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                    <input type="checkbox" name="is_enabled" {% if integration and integration.is_enabled %}checked{% endif %}>
+                    Enable integration
+                </label>
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <label class="text-sm font-bold text-slate-700">Service key
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="service_key" value="{{ integration.service_key if integration else app_module.slug }}" required>
+                </label>
+                <label class="text-sm font-bold text-slate-700">Base URL
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="base_url" placeholder="https://resolvhr.example.com" value="{{ integration.base_url if integration else '' }}" required>
+                </label>
+                <label class="text-sm font-bold text-slate-700">SSO path
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="sso_path" value="{{ integration.sso_path if integration else '/auth/hive-sso' }}">
+                </label>
+                <label class="text-sm font-bold text-slate-700">SSO audience
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="sso_audience" value="{{ integration.sso_audience if integration else app_module.slug }}">
+                </label>
+                <label class="text-sm font-bold text-slate-700">Event token environment variable
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="event_token_env" placeholder="HIVE_RESOLVHR_EVENT_TOKEN" value="{{ integration.event_token_env if integration else '' }}">
+                </label>
+                <label class="text-sm font-bold text-slate-700">Summary API path
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="summary_path" value="{{ integration.summary_path if integration else '/api/v1/summary' }}">
+                </label>
+                <label class="text-sm font-bold text-slate-700">Health API path
+                    <input class="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" name="health_path" value="{{ integration.health_path if integration else '/api/v1/health' }}">
+                </label>
+            </div>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+                <button type="submit" class="hive-button hive-button-primary">Save Integration</button>
+                {% if integration and integration.is_enabled %}
+                    <code class="rounded-xl bg-slate-100 px-3 py-2 text-xs text-slate-600">Launch URL: {{ url_for('billing.integration_sso_launch', app_slug=app_module.slug) }}</code>
+                {% endif %}
+            </div>
+        </form>
+    {% else %}
+        <div class="hive-card rounded-[1.75rem] p-8 text-center text-slate-600">Create marketplace apps first, then configure their integrations here.</div>
+    {% endfor %}
+</section>
+{% endblock %}

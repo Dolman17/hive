@@ -476,3 +476,8 @@ def admin_billing_detail(consultant_id):
         billing_profile=billing_profile,
         tier_label=TIER_LABELS.get(subscription.tier, subscription.tier.title())
     )
+
+
+from integration_routes import register_integration_routes
+
+register_integration_routes(billing_bp)
