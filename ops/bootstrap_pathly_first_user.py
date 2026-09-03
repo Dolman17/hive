@@ -1,7 +1,8 @@
 """Bootstrap and prove the first real HIVE -> Pathly production identity.
 
 This idempotent operational utility:
-- selects an existing active non-demo HIVE consultant with tenant settings;
+- selects an existing active non-demo HIVE consultant;
+- initializes that consultant's normal HIVE tenant settings if needed;
 - creates or reuses one Pathly Service for that consultant;
 - creates or reuses a Pathly admin User with the same email;
 - enables the existing HIVE Pathly entitlement;
@@ -38,7 +39,7 @@ from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
 
-from app import app
+from app import app, get_or_create_tenant_settings
 from extensions import db
 from integration_models import AppIntegration
 from integration_routes import get_or_create_hive_identity
@@ -60,9 +61,8 @@ def _split_name(value: str) -> tuple[str, str]:
 
 
 def _select_consultant() -> tuple[User, TenantSettings]:
-    rows = (
-        db.session.query(User, TenantSettings)
-        .join(TenantSettings, TenantSettings.user_id == User.id)
+    consultant = (
+        User.query
         .filter(
             User.role == "consultant",
             User.is_active.is_(True),
@@ -70,11 +70,13 @@ def _select_consultant() -> tuple[User, TenantSettings]:
             ~db.func.lower(User.name).like("%demo%"),
         )
         .order_by(User.id.asc())
-        .all()
+        .first()
     )
-    if not rows:
-        raise RuntimeError("No active non-demo HIVE consultant with tenant settings is available.")
-    return rows[0]
+    if not consultant:
+        raise RuntimeError("No active non-demo HIVE consultant is available.")
+
+    settings = get_or_create_tenant_settings(consultant)
+    return consultant, settings
 
 
 def _required_env(name: str) -> str:
