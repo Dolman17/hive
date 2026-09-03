@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 import hmac
+import json
 import os
-from urllib.parse import quote
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlencode
+from urllib.request import Request, urlopen
 from uuid import uuid4
 
 from flask import current_app, flash, jsonify, redirect, render_template, request, url_for
@@ -90,6 +93,11 @@ def _integration_token_env_name(integration: AppIntegration) -> str:
     return f"HIVE_{service_key}_EVENT_TOKEN"
 
 
+def _integration_api_token_env_name(integration: AppIntegration) -> str:
+    service_key = integration.service_key.upper().replace("-", "_")
+    return f"HIVE_{service_key}_API_TOKEN"
+
+
 def _sso_secret_env_name(integration: AppIntegration) -> str:
     service_key = integration.service_key.upper().replace("-", "_")
     return f"HIVE_{service_key}_SSO_SECRET"
@@ -116,7 +124,93 @@ def _parse_event_datetime(value):
         return datetime.utcnow()
 
 
+def _dashboard_product_summary(service_key: str):
+    if not _consultant_allowed():
+        return None
+
+    integration = AppIntegration.query.filter_by(
+        service_key=service_key,
+        is_enabled=True,
+    ).first()
+    if not integration or not integration.app_module or not integration.app_module.is_active:
+        return None
+
+    access = ConsultantAppAccess.query.filter_by(
+        consultant_id=current_user.id,
+        app_module_id=integration.app_module_id,
+        status="active",
+    ).first()
+    if not access:
+        return None
+
+    result = {
+        "service_key": integration.service_key,
+        "app_name": integration.app_module.name,
+        "app_slug": integration.app_module.slug,
+        "available": False,
+        "link_required": False,
+        "summary": {},
+    }
+
+    api_token = os.getenv(_integration_api_token_env_name(integration), "").strip()
+    if not api_token:
+        current_app.logger.warning(
+            "No API token configured for dashboard summary integration %s",
+            integration.service_key,
+        )
+        return result
+
+    identity = get_or_create_hive_identity(current_user)
+    summary_url = (
+        f"{_normalise_base_url(integration.base_url)}"
+        f"{_normalise_path(integration.summary_path, '/api/v1/summary')}"
+        f"?{urlencode({'hive_tenant_id': identity.hive_tenant_id})}"
+    )
+    summary_request = Request(
+        summary_url,
+        headers={
+            "Authorization": f"Bearer {api_token}",
+            "Accept": "application/json",
+        },
+        method="GET",
+    )
+
+    try:
+        with urlopen(summary_request, timeout=3) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        if exc.code == 404:
+            result["link_required"] = True
+        else:
+            current_app.logger.warning(
+                "Dashboard summary request for %s returned HTTP %s",
+                integration.service_key,
+                exc.code,
+            )
+        return result
+    except (URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+        current_app.logger.warning(
+            "Dashboard summary request for %s failed: %s",
+            integration.service_key,
+            exc,
+        )
+        return result
+
+    if not payload.get("ok") or not isinstance(payload.get("summary"), dict):
+        return result
+
+    result["available"] = True
+    result["summary"] = payload["summary"]
+    return result
+
+
 def register_integration_routes(bp):
+    @bp.app_context_processor
+    def inject_integration_dashboard_context():
+        if request.endpoint != "dashboard":
+            return {"resolvhr_summary": None}
+        return {"resolvhr_summary": _dashboard_product_summary("resolvhr")}
+
     @bp.route("/integrations/action-centre")
     @login_required
     def integration_action_centre():
