@@ -1,0 +1,159 @@
+:root {
+    --hive-app-bg: #f6f8fa;
+    --hive-app-surface: #ffffff;
+    --hive-app-fg: #172033;
+    --hive-app-muted: #667085;
+    --hive-app-border: #e4e7ec;
+    --hive-app-accent: #0084bd;
+    --hive-app-accent-soft: #eaf6fb;
+    --hive-app-ink: #0f2a44;
+    --hive-app-teal: #2fa4a9;
+    --hive-app-gold: #d6a84b;
+    --hive-app-success: #16835a;
+    --hive-app-warning: #b7791f;
+    --hive-app-danger: #c53d43;
+    --hive-app-radius: 6px;
+    --hive-app-radius-lg: 10px;
+    --hive-app-sidebar: 248px;
+    --hive-app-topbar: 62px;
+    --hive-app-font-display: "Satoshi", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --hive-app-font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+    --hive-app-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+body.hive-consultant-mode {
+    min-height: 100vh;
+    margin: 0;
+    background: var(--hive-app-bg);
+    color: var(--hive-app-fg);
+    font-family: var(--hive-app-font-body);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+body.hive-consultant-mode *,
+body.hive-consultant-mode *::before,
+body.hive-consultant-mode *::after { box-sizing: border-box; }
+body.hive-consultant-mode :focus-visible { outline: 3px solid rgba(0, 132, 189, 0.28); outline-offset: 2px; }
+body.hive-consultant-mode a { color: inherit; }
+body.hive-consultant-mode button,
+body.hive-consultant-mode input { font: inherit; }
+
+.hive-app-shell { min-height: 100vh; display: grid; grid-template-columns: var(--hive-app-sidebar) minmax(0, 1fr); }
+.hive-app-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 50; width: var(--hive-app-sidebar); display: flex; flex-direction: column; padding: 18px 14px 16px; background: var(--hive-app-surface); border-right: 1px solid var(--hive-app-border); transition: transform 180ms ease; }
+.hive-app-sidebar-head { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 8px 16px; }
+.hive-app-brand { display: inline-flex; align-items: center; gap: 9px; font-family: var(--hive-app-font-display); font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-decoration: none; }
+.hive-app-brand-mark { width: 32px; height: 32px; object-fit: contain; }
+.hive-app-nav { min-height: 0; overflow-y: auto; padding-right: 2px; }
+.hive-app-nav-group + .hive-app-nav-group { margin-top: 20px; }
+.hive-app-nav-label { margin: 0 10px 7px; color: var(--hive-app-muted); font-family: var(--hive-app-font-mono); font-size: 10px; line-height: 1.4; letter-spacing: 0.09em; text-transform: uppercase; }
+.hive-app-nav-item { position: relative; min-height: 42px; display: flex; align-items: center; gap: 10px; margin: 1px 0; padding: 9px 10px; border-radius: 5px; color: var(--hive-app-muted); font-size: 14px; font-weight: 500; text-decoration: none; transition: background 130ms ease, color 130ms ease; }
+.hive-app-nav-item:hover { background: #f4f6f8; color: var(--hive-app-fg); }
+.hive-app-nav-item.is-active { background: var(--hive-app-accent-soft); color: var(--hive-app-fg); font-weight: 600; }
+.hive-app-nav-item.is-active::before { content: ""; position: absolute; left: -14px; width: 2px; height: 22px; background: var(--hive-app-accent); }
+.hive-app-nav-icon,
+.hive-app-icon-button svg,
+.hive-app-command-trigger svg,
+.hive-app-command-search svg { width: 18px; height: 18px; display: block; flex: none; }
+.hive-app-nav-badge { margin-left: auto; min-width: 22px; padding: 1px 6px; border: 1px solid var(--hive-app-border); border-radius: 5px; background: var(--hive-app-surface); color: var(--hive-app-muted); font-family: var(--hive-app-font-mono); font-size: 10px; line-height: 1.6; text-align: center; }
+.hive-app-sidebar-bottom { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--hive-app-border); }
+.hive-app-user-row { display: flex; align-items: center; gap: 10px; padding: 12px 10px 0; }
+.hive-app-avatar,
+.hive-app-avatar-button { width: 34px; height: 34px; display: grid; place-items: center; flex: none; border-radius: 50%; background: var(--hive-app-ink); color: #fff; font-size: 11px; font-weight: 700; }
+.hive-app-user-copy { min-width: 0; }
+.hive-app-user-copy strong,
+.hive-app-user-copy span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hive-app-user-copy strong { color: var(--hive-app-fg); font-size: 13px; font-weight: 600; }
+.hive-app-user-copy span { margin-top: 1px; color: var(--hive-app-muted); font-size: 11px; }
+.hive-app-main-shell { min-width: 0; grid-column: 2; }
+.hive-app-topbar { position: sticky; top: 0; z-index: 40; min-height: var(--hive-app-topbar); display: grid; grid-template-columns: minmax(160px, 1fr) minmax(280px, 520px) minmax(160px, 1fr); align-items: center; gap: 24px; padding: 9px 28px; background: rgba(255, 255, 255, 0.96); border-bottom: 1px solid var(--hive-app-border); backdrop-filter: blur(12px); }
+.hive-app-topbar-left,
+.hive-app-topbar-actions { display: flex; align-items: center; }
+.hive-app-topbar-actions { justify-content: flex-end; gap: 6px; }
+.hive-app-page-name { font-family: var(--hive-app-font-display); font-size: 15px; font-weight: 600; }
+.hive-app-icon-button { position: relative; width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid transparent; border-radius: var(--hive-app-radius); background: transparent; color: var(--hive-app-muted); text-decoration: none; cursor: pointer; transition: background 130ms ease, color 130ms ease, border-color 130ms ease; }
+.hive-app-icon-button:hover { background: #f4f6f8; color: var(--hive-app-fg); }
+.hive-app-menu-button,
+.hive-app-sidebar-close { display: none; }
+.hive-app-command-trigger { min-height: 42px; display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: 1px solid var(--hive-app-border); border-radius: var(--hive-app-radius); background: var(--hive-app-bg); color: var(--hive-app-muted); text-align: left; cursor: pointer; transition: background 130ms ease, border-color 130ms ease, color 130ms ease; }
+.hive-app-command-trigger:hover { background: var(--hive-app-surface); border-color: #cbd2da; color: var(--hive-app-fg); }
+.hive-app-command-trigger span { flex: 1; }
+.hive-app-command-trigger kbd,
+.hive-app-command-search kbd { padding: 2px 6px; border: 1px solid var(--hive-app-border); border-bottom-width: 2px; border-radius: 5px; background: var(--hive-app-surface); color: var(--hive-app-muted); font-family: var(--hive-app-font-mono); font-size: 10px; }
+.hive-app-notify-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: var(--hive-app-danger); box-shadow: 0 0 0 2px var(--hive-app-surface); }
+.hive-app-account-menu { position: relative; }
+.hive-app-avatar-button { border: 0; list-style: none; cursor: pointer; }
+.hive-app-avatar-button::-webkit-details-marker { display: none; }
+.hive-app-account-popover { position: absolute; top: calc(100% + 8px); right: 0; width: 230px; padding: 8px; border: 1px solid var(--hive-app-border); border-radius: var(--hive-app-radius-lg); background: var(--hive-app-surface); box-shadow: 0 14px 35px rgba(15, 42, 68, 0.12); }
+.hive-app-account-popover a,
+.hive-app-account-popover button { width: 100%; min-height: 40px; display: flex; align-items: center; padding: 8px 10px; border: 0; border-radius: 5px; background: transparent; color: var(--hive-app-fg); font-size: 13px; text-align: left; text-decoration: none; cursor: pointer; }
+.hive-app-account-popover a:hover,
+.hive-app-account-popover button:hover { background: #f4f6f8; }
+.hive-app-account-meta { padding: 7px 10px 10px; margin-bottom: 4px; border-bottom: 1px solid var(--hive-app-border); }
+.hive-app-account-meta strong,
+.hive-app-account-meta span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hive-app-account-meta strong { font-size: 13px; font-weight: 600; }
+.hive-app-account-meta span { margin-top: 2px; color: var(--hive-app-muted); font-size: 11px; }
+.hive-app-content { width: min(100%, 1400px); margin: 0 auto; padding: 34px 32px 64px; }
+.hive-app-flash-stack { display: grid; gap: 8px; margin-bottom: 18px; }
+.hive-app-flash { padding: 11px 13px; border: 1px solid var(--hive-app-border); border-radius: var(--hive-app-radius); background: var(--hive-app-surface); color: var(--hive-app-fg); font-size: 13px; }
+.hive-app-flash--success { border-color: rgba(22, 131, 90, 0.3); color: #116c4a; }
+.hive-app-flash--danger { border-color: rgba(197, 61, 67, 0.3); color: #9d3035; }
+.hive-app-flash--warning { border-color: rgba(183, 121, 31, 0.35); color: #8c5c18; }
+.hive-app-scrim { display: none; }
+.hive-app-command-overlay[hidden] { display: none; }
+.hive-app-command-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: start center; padding: 14vh 18px 24px; background: rgba(15, 42, 68, 0.34); backdrop-filter: blur(3px); }
+.hive-app-command-panel { width: min(620px, 100%); overflow: hidden; border: 1px solid var(--hive-app-border); border-radius: var(--hive-app-radius-lg); background: var(--hive-app-surface); box-shadow: 0 24px 70px rgba(15, 42, 68, 0.22); }
+.hive-app-command-search { min-height: 56px; display: flex; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--hive-app-border); color: var(--hive-app-muted); }
+.hive-app-command-search input { min-width: 0; flex: 1; border: 0 !important; border-radius: 0 !important; background: transparent !important; box-shadow: none !important; color: var(--hive-app-fg) !important; outline: 0 !important; }
+.hive-app-command-results { max-height: min(56vh, 520px); overflow-y: auto; padding: 7px; }
+.hive-app-command-results a { min-height: 48px; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 5px; color: var(--hive-app-fg); font-weight: 600; text-decoration: none; }
+.hive-app-command-results a:hover,
+.hive-app-command-results a:focus-visible { background: var(--hive-app-accent-soft); }
+.hive-app-command-results a span { margin-left: auto; color: var(--hive-app-muted); font-size: 12px; font-weight: 400; }
+.hive-app-command-empty,
+.hive-app-command-footer { color: var(--hive-app-muted); font-size: 12px; }
+.hive-app-command-empty { padding: 22px 16px; text-align: center; }
+.hive-app-command-footer { padding: 9px 14px; border-top: 1px solid var(--hive-app-border); background: var(--hive-app-bg); }
+
+@media (max-width: 1100px) {
+    .hive-app-topbar { grid-template-columns: minmax(160px, 1fr) minmax(240px, 420px) auto; gap: 14px; padding-inline: 20px; }
+}
+
+@media (max-width: 900px) {
+    .hive-app-shell { display: block; }
+    .hive-app-main-shell { grid-column: auto; }
+    .hive-app-sidebar { width: min(290px, 86vw); transform: translateX(-102%); box-shadow: 18px 0 45px rgba(15, 42, 68, 0.16); }
+    body.hive-nav-open .hive-app-sidebar { transform: translateX(0); }
+    .hive-app-sidebar-close,
+    .hive-app-menu-button { display: grid; }
+    .hive-app-scrim { position: fixed; inset: 0; z-index: 45; border: 0; background: rgba(15, 42, 68, 0.32); opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+    body.hive-nav-open .hive-app-scrim { display: block; opacity: 1; pointer-events: auto; }
+    .hive-app-topbar { grid-template-columns: auto minmax(0, 1fr) auto; padding-inline: 14px; }
+    .hive-app-command-trigger { justify-self: center; max-width: 430px; }
+    .hive-app-content { padding: 26px 20px 52px; }
+}
+
+@media (max-width: 640px) {
+    .hive-app-topbar { min-height: 58px; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 8px 12px; }
+    .hive-app-topbar-left { min-width: 0; }
+    .hive-app-page-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hive-app-command-trigger { width: 42px; min-height: 42px; padding: 0; justify-content: center; grid-column: auto; }
+    .hive-app-command-trigger span,
+    .hive-app-command-trigger kbd { display: none; }
+    .hive-app-topbar-actions { display: none; }
+    .hive-app-content { padding: 22px 14px 44px; }
+    .hive-app-command-overlay { padding-top: 8vh; }
+    .hive-app-command-results a { align-items: flex-start; flex-direction: column; gap: 2px; }
+    .hive-app-command-results a span { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hive-app-sidebar,
+    .hive-app-scrim,
+    .hive-app-nav-item,
+    .hive-app-icon-button,
+    .hive-app-command-trigger { transition: none !important; }
+}
