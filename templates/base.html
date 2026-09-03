@@ -5,68 +5,187 @@
     <title>{% block title %}The HIVE Platform{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    {#
+      Phase 1 migration boundary:
+      existing consultant/admin templates still rely on Tailwind utility classes.
+      The new consultant shell is owned by hive-app.css and intentionally loads
+      after the legacy stylesheet. Tailwind can be removed once page conversion
+      is complete in later redesign phases.
+    #}
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/hive_favicon_512.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-    <style>
-        body {
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
-        details > summary::-webkit-details-marker {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/hive-app.css') }}">
 </head>
 
-<body class="hive-shell">
+{% set is_consultant_shell = current_user.is_authenticated and current_user.role == 'consultant' %}
+<body class="{% if is_consultant_shell %}hive-consultant-mode{% else %}hive-shell{% endif %}">
 
-{% if current_user.is_authenticated %}
-<header class="hive-topbar">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="py-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+{% macro consultant_nav_item(label, endpoint, icon, active_endpoints=[], badge=None) -%}
+    {% set is_active = request.endpoint == endpoint or request.endpoint in active_endpoints %}
+    <a href="{{ url_for(endpoint) }}" class="hive-app-nav-item{% if is_active %} is-active{% endif %}"{% if is_active %} aria-current="page"{% endif %}>
+        <span class="hive-app-nav-icon" aria-hidden="true">{{ icon|safe }}</span>
+        <span>{{ label }}</span>
+        {% if badge is not none and badge|int > 0 %}
+            <span class="hive-app-nav-badge">{{ badge }}</span>
+        {% endif %}
+    </a>
+{%- endmacro %}
 
-            <div class="flex items-center justify-between gap-4">
-                <a href="{{ url_for('home') }}" class="flex items-center gap-4 group">
-                    <img
-                        src="{{ url_for('static', filename='img/hive_logo_top_corner.png') }}"
-                        alt="The Hive"
-                        class="h-16 w-16 shrink-0 object-contain block"
-                    >
+{% if is_consultant_shell %}
+    {% set current_page_name = 'Today' %}
+    {% if request.endpoint == 'billing.integration_action_centre' or request.endpoint == 'billing.integration_action_resolve' %}
+        {% set current_page_name = 'Action Centre' %}
+    {% elif request.endpoint in ['leads_list', 'lead_detail', 'lead_update_status'] %}
+        {% set current_page_name = 'Opportunities' %}
+    {% elif request.endpoint in ['apps_index', 'request_app_access', 'launch_app', 'billing.integration_sso_launch'] %}
+        {% set current_page_name = 'Apps' %}
+    {% elif request.endpoint in ['resources_list', 'resource_detail', 'resource_download'] %}
+        {% set current_page_name = 'Toolkit' %}
+    {% elif request.endpoint in ['cover_list', 'cover_new', 'cover_detail', 'cover_add_client', 'cover_submit'] %}
+        {% set current_page_name = 'HIVE Covered' %}
+    {% elif request.endpoint in ['expert_help_list', 'expert_help_new', 'expert_help_detail'] %}
+        {% set current_page_name = 'Expert Help' %}
+    {% elif request.endpoint and request.endpoint.startswith('consultant_profiles.') %}
+        {% set current_page_name = 'Profile' %}
+    {% elif request.endpoint in ['website_settings', 'website_preview'] %}
+        {% set current_page_name = 'Website' %}
+    {% elif request.endpoint and request.endpoint.startswith('directory_enquiries.') %}
+        {% set current_page_name = 'Directory Enquiries' %}
+    {% elif request.endpoint and request.endpoint.startswith('billing.') %}
+        {% set current_page_name = 'Plan & Billing' %}
+    {% elif request.endpoint and request.endpoint.startswith('notifications.') %}
+        {% set current_page_name = 'Notifications' %}
+    {% elif request.endpoint and request.endpoint.startswith('public_directory.') %}
+        {% set current_page_name = 'Directory' %}
+    {% endif %}
 
-                    <span class="flex flex-col justify-center">
-                        <span class="block text-white text-[1.35rem] font-black tracking-[-0.045em] leading-none">
-                            The Hive
-                        </span>
-                        <span class="block text-[0.68rem] text-teal-300 mt-1.5 font-extrabold tracking-[0.16em] uppercase">
-                            Supporting consultants to thrive
-                        </span>
-                    </span>
+    {% set icon_today %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h6v6H4zM14 5h6v4h-6zM14 13h6v6h-6zM4 15h6v4H4z"/></svg>{% endset %}
+    {% set icon_actions %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l2 2 4-4"/><path d="M5 4h14v16H5z"/></svg>{% endset %}
+    {% set icon_opps %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V9l8-5 8 5v10"/><path d="M8 19v-6h8v6"/></svg>{% endset %}
+    {% set icon_apps %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg>{% endset %}
+    {% set icon_toolkit %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 4h14v16H5zM9 4v16M12 8h4m-4 4h4"/></svg>{% endset %}
+    {% set icon_cover %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6h16v14H4zM8 3v6m8-6v6"/></svg>{% endset %}
+    {% set icon_expert %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v12H8l-4 3z"/></svg>{% endset %}
+    {% set icon_profile %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3"/><path d="M5 20c.7-4 3.1-6 7-6s6.3 2 7 6"/></svg>{% endset %}
+    {% set icon_website %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.4 2.2 3.5 4.9 3.5 8S14.4 17.8 12 20M12 4c-2.4 2.2-3.5 4.9-3.5 8S9.6 17.8 12 20"/></svg>{% endset %}
+    {% set icon_directory %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>{% endset %}
+    {% set icon_billing %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="6" width="16" height="12" rx="1"/><path d="M4 10h16"/></svg>{% endset %}
+    {% set icon_notifications %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 17h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v5zM10 20h4"/></svg>{% endset %}
+
+    <div class="hive-app-shell">
+        <aside class="hive-app-sidebar" id="hiveSidebar" aria-label="Consultant navigation">
+            <div class="hive-app-sidebar-head">
+                <a class="hive-app-brand" href="{{ url_for('dashboard') }}" aria-label="HIVE Today">
+                    <img src="{{ url_for('static', filename='img/hive_logo_top_corner.png') }}" alt="" class="hive-app-brand-mark">
+                    <span>HIVE</span>
                 </a>
-
-                <div class="xl:hidden text-right">
-                    <p class="text-xs text-slate-400">Signed in as</p>
-                    <p class="text-sm text-white font-bold">{{ current_user.name }}</p>
-                </div>
+                <button type="button" class="hive-app-icon-button hive-app-sidebar-close" id="hiveSidebarClose" aria-label="Close navigation">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                </button>
             </div>
 
-            <nav class="flex flex-wrap items-center gap-2">
-                {% if current_user.role == "admin" %}
-                    <a href="{{ url_for('admin_dashboard') }}" class="hive-nav-link">Dashboard</a>
+            <nav class="hive-app-nav">
+                <div class="hive-app-nav-group">
+                    {{ consultant_nav_item('Today', 'dashboard', icon_today) }}
+                    {{ consultant_nav_item('Action Centre', 'billing.integration_action_centre', icon_actions, ['billing.integration_action_resolve'], hive_open_action_count|default(0)) }}
+                    {{ consultant_nav_item('Opportunities', 'leads_list', icon_opps, ['lead_detail', 'lead_update_status'], opportunity_count|default(0)) }}
+                    {{ consultant_nav_item('Apps', 'apps_index', icon_apps, ['request_app_access', 'launch_app', 'billing.integration_sso_launch']) }}
+                </div>
 
+                <div class="hive-app-nav-group">
+                    <p class="hive-app-nav-label">Workspace</p>
+                    {{ consultant_nav_item('Toolkit', 'resources_list', icon_toolkit, ['resource_detail', 'resource_download']) }}
+                    {{ consultant_nav_item('HIVE Covered', 'cover_list', icon_cover, ['cover_new', 'cover_detail', 'cover_add_client', 'cover_submit']) }}
+                    {{ consultant_nav_item('Expert Help', 'expert_help_list', icon_expert, ['expert_help_new', 'expert_help_detail']) }}
+                </div>
+
+                <div class="hive-app-nav-group">
+                    <p class="hive-app-nav-label">Business</p>
+                    {{ consultant_nav_item('Profile', 'consultant_profiles.profile_detail', icon_profile, ['consultant_profiles.profile_edit']) }}
+                    {{ consultant_nav_item('Website', 'website_settings', icon_website, ['website_preview']) }}
+                    {{ consultant_nav_item('Directory Enquiries', 'directory_enquiries.consultant_directory_enquiries', icon_directory) }}
+                    {{ consultant_nav_item('Plan & Billing', 'billing.billing_home', icon_billing, ['billing.billing_pricing']) }}
+                </div>
+            </nav>
+
+            <div class="hive-app-sidebar-bottom">
+                {{ consultant_nav_item('Notifications', 'notifications.notification_list', icon_notifications, [], unread_notification_count|default(0)) }}
+                <div class="hive-app-user-row">
+                    <span class="hive-app-avatar" aria-hidden="true">{{ (current_user.name or current_user.email)[:2]|upper }}</span>
+                    <div class="hive-app-user-copy">
+                        <strong>{{ current_user.name }}</strong>
+                        <span>{{ current_user.email }}</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <button type="button" class="hive-app-scrim" id="hiveSidebarScrim" aria-label="Close navigation" tabindex="-1"></button>
+
+        <div class="hive-app-main-shell">
+            <header class="hive-app-topbar">
+                <div class="hive-app-topbar-left">
+                    <button type="button" class="hive-app-icon-button hive-app-menu-button" id="hiveSidebarOpen" aria-label="Open navigation" aria-controls="hiveSidebar" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                    </button>
+                    <span class="hive-app-page-name">{{ current_page_name }}</span>
+                </div>
+
+                <button type="button" class="hive-app-command-trigger" id="hiveCommandTrigger" aria-haspopup="dialog" aria-controls="hiveCommandDialog">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+                    <span>Search HIVE or jump to…</span>
+                    <kbd>Ctrl K</kbd>
+                </button>
+
+                <div class="hive-app-topbar-actions">
+                    <a href="{{ url_for('notifications.notification_list') }}" class="hive-app-icon-button" aria-label="Notifications{% if unread_notification_count|default(0) > 0 %}, {{ unread_notification_count }} unread{% endif %}">
+                        {{ icon_notifications|safe }}
+                        {% if unread_notification_count|default(0) > 0 %}<span class="hive-app-notify-dot" aria-hidden="true"></span>{% endif %}
+                    </a>
+                    <details class="hive-app-account-menu">
+                        <summary class="hive-app-avatar-button" aria-label="Account menu">{{ (current_user.name or current_user.email)[:2]|upper }}</summary>
+                        <div class="hive-app-account-popover">
+                            <div class="hive-app-account-meta">
+                                <strong>{{ current_user.name }}</strong>
+                                <span>{{ current_user.email }}</span>
+                            </div>
+                            <a href="{{ url_for('consultant_profiles.profile_detail') }}">Profile</a>
+                            <a href="{{ url_for('billing.billing_home') }}">Plan & Billing</a>
+                            <a href="{{ url_for('public_directory.directory_index') }}">Public Directory</a>
+                            <form method="POST" action="{{ url_for('logout') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit">Log out</button>
+                            </form>
+                        </div>
+                    </details>
+                </div>
+            </header>
+
+{% else %}
+
+    {% if current_user.is_authenticated %}
+    <header class="hive-topbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="py-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex items-center justify-between gap-4">
+                    <a href="{{ url_for('home') }}" class="flex items-center gap-4 group">
+                        <img src="{{ url_for('static', filename='img/hive_logo_top_corner.png') }}" alt="The Hive" class="h-16 w-16 shrink-0 object-contain block">
+                        <span class="flex flex-col justify-center">
+                            <span class="block text-white text-[1.35rem] font-black tracking-[-0.045em] leading-none">The Hive</span>
+                            <span class="block text-[0.68rem] text-teal-300 mt-1.5 font-extrabold tracking-[0.16em] uppercase">Supporting consultants to thrive</span>
+                        </span>
+                    </a>
+                </div>
+                <nav class="flex flex-wrap items-center gap-2">
+                    <a href="{{ url_for('admin_dashboard') }}" class="hive-nav-link">Dashboard</a>
                     <details class="relative">
-                        <summary class="hive-nav-link cursor-pointer select-none list-none">
-                            Manage <span class="text-xs opacity-70">▾</span>
-                        </summary>
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">Manage <span class="text-xs opacity-70">▾</span></summary>
                         <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
                             <a href="{{ url_for('admin_apps') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Apps</a>
                             <a href="{{ url_for('admin_resources') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Toolkit</a>
@@ -77,11 +196,8 @@
                             <a href="{{ url_for('billing.admin_billing') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Billing</a>
                         </div>
                     </details>
-
                     <details class="relative">
-                        <summary class="hive-nav-link cursor-pointer select-none list-none">
-                            Workflows <span class="text-xs opacity-70">▾</span>
-                        </summary>
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">Workflows <span class="text-xs opacity-70">▾</span></summary>
                         <div class="absolute left-0 mt-2 w-60 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
                             <a href="{{ url_for('admin_cover') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">HIVE Covered</a>
                             <a href="{{ url_for('admin_leads') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">PeopleSignal</a>
@@ -89,114 +205,82 @@
                             <a href="{{ url_for('directory_enquiries.admin_directory_enquiries') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Directory Enquiries</a>
                         </div>
                     </details>
-
                     <details class="relative">
-                        <summary class="hive-nav-link cursor-pointer select-none list-none">
-                            Activity <span class="text-xs opacity-70">▾</span>
-                        </summary>
+                        <summary class="hive-nav-link cursor-pointer select-none list-none">Activity <span class="text-xs opacity-70">▾</span></summary>
                         <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
                             <a href="{{ url_for('notifications.admin_notifications') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Notification Log</a>
-                            <a href="{{ url_for('notifications.notification_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">
-                                My Notifications
-                                {% if unread_notification_count and unread_notification_count > 0 %}
-                                    <span class="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-black text-white">{{ unread_notification_count }}</span>
-                                {% endif %}
-                            </a>
+                            <a href="{{ url_for('notifications.notification_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">My Notifications{% if unread_notification_count and unread_notification_count > 0 %}<span class="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-black text-white">{{ unread_notification_count }}</span>{% endif %}</a>
                         </div>
                     </details>
-                {% else %}
-                    <a href="{{ url_for('dashboard') }}" class="hive-nav-link">Dashboard</a>
-
-                    <details class="relative">
-                        <summary class="hive-nav-link cursor-pointer select-none list-none">
-                            Business <span class="text-xs opacity-70">▾</span>
-                        </summary>
-                        <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
-                            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Profile</a>
-                            <a href="{{ url_for('website_settings') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Website</a>
-                            <a href="{{ url_for('billing.billing_home') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Billing</a>
-                        </div>
-                    </details>
-
-                    <details class="relative">
-                        <summary class="hive-nav-link cursor-pointer select-none list-none">
-                            Tools <span class="text-xs opacity-70">▾</span>
-                        </summary>
-                        <div class="absolute left-0 mt-2 w-56 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
-                            <a href="{{ url_for('apps_index') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Apps</a>
-                            <a href="{{ url_for('resources_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Toolkit</a>
-                        </div>
-                    </details>
-
-                    <details class="relative">
-                        <summary class="hive-nav-link cursor-pointer select-none list-none">
-                            Workflows <span class="text-xs opacity-70">▾</span>
-                        </summary>
-                        <div class="absolute left-0 mt-2 w-60 rounded-2xl bg-slate-950 border border-white/10 shadow-2xl p-2 z-50">
-                            <a href="{{ url_for('cover_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">HIVE Covered</a>
-                            <a href="{{ url_for('leads_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">PeopleSignal Leads</a>
-                            <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Directory Enquiries</a>
-                            <a href="{{ url_for('expert_help_list') }}" class="block rounded-xl px-4 py-3 text-sm font-bold text-slate-200 hover:bg-white/10 hover:text-white">Expert Help</a>
-                        </div>
-                    </details>
-                {% endif %}
-
-                <a href="{{ url_for('public_directory.directory_index') }}" class="hive-nav-link hive-nav-link--primary">
-                    Directory
-                </a>
-
-                <a href="{{ url_for('notifications.notification_list') }}" class="hive-nav-link relative">
-                    Notifications
-                    {% if unread_notification_count and unread_notification_count > 0 %}
-                        <span class="hive-notification-badge">
-                            {{ unread_notification_count }}
-                        </span>
-                    {% endif %}
-                </a>
-
-                <div class="hidden xl:block h-6 w-px bg-white/10 mx-1"></div>
-
-                <span class="hidden xl:inline text-sm text-slate-400">
-                    {{ current_user.name }}
-                </span>
-
-                <form method="POST" action="{{ url_for('logout') }}" class="inline">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="hive-nav-link">
-                        Logout
-                    </button>
-                </form>
-            </nav>
+                    <a href="{{ url_for('public_directory.directory_index') }}" class="hive-nav-link hive-nav-link--primary">Directory</a>
+                    <a href="{{ url_for('notifications.notification_list') }}" class="hive-nav-link relative">Notifications{% if unread_notification_count and unread_notification_count > 0 %}<span class="hive-notification-badge">{{ unread_notification_count }}</span>{% endif %}</a>
+                    <span class="hidden xl:inline text-sm text-slate-400">{{ current_user.name }}</span>
+                    <form method="POST" action="{{ url_for('logout') }}" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="hive-nav-link">Logout</button>
+                    </form>
+                </nav>
+            </div>
         </div>
-    </div>
-</header>
+    </header>
+    {% endif %}
+
 {% endif %}
 
-<main class="hive-page">
+<main class="{% if is_consultant_shell %}hive-app-content{% else %}hive-page{% endif %}">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="space-y-3 mb-6">
-                {% for category, message in messages %}
-                    <div class="hive-flash
-                        {% if category == 'success' %}
-                            bg-green-50 text-green-800 border border-green-200
-                        {% elif category == 'danger' %}
-                            bg-red-50 text-red-800 border border-red-200
-                        {% elif category == 'warning' %}
-                            bg-amber-50 text-amber-900 border border-amber-200
-                        {% else %}
-                            bg-white text-slate-800 border border-slate-200
-                        {% endif %}
-                    ">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
+            {% if is_consultant_shell %}
+                <div class="hive-app-flash-stack" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="hive-app-flash hive-app-flash--{{ category|default('info') }}" role="status">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="space-y-3 mb-6">
+                    {% for category, message in messages %}
+                        <div class="hive-flash {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% elif category == 'danger' %}bg-red-50 text-red-800 border border-red-200{% elif category == 'warning' %}bg-amber-50 text-amber-900 border border-amber-200{% else %}bg-white text-slate-800 border border-slate-200{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         {% endif %}
     {% endwith %}
-
     {% block content %}{% endblock %}
 </main>
+
+{% if is_consultant_shell %}
+        </div>
+    </div>
+
+    <div class="hive-app-command-overlay" id="hiveCommandDialog" role="dialog" aria-modal="true" aria-labelledby="hiveCommandTitle" hidden>
+        <div class="hive-app-command-panel">
+            <div class="hive-app-command-search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>
+                <label for="hiveCommandInput" class="sr-only" id="hiveCommandTitle">Search HIVE navigation</label>
+                <input id="hiveCommandInput" type="search" autocomplete="off" placeholder="Search navigation…">
+                <kbd>Esc</kbd>
+            </div>
+            <div class="hive-app-command-results" id="hiveCommandResults">
+                <a href="{{ url_for('dashboard') }}" data-command-label="Today dashboard">Today <span>Dashboard</span></a>
+                <a href="{{ url_for('billing.integration_action_centre') }}" data-command-label="Action Centre actions overdue">Action Centre <span>Cross-product work queue</span></a>
+                <a href="{{ url_for('leads_list') }}" data-command-label="Opportunities PeopleSignal leads">Opportunities <span>PeopleSignal leads</span></a>
+                <a href="{{ url_for('apps_index') }}" data-command-label="Apps connected products marketplace">Apps <span>Connected products</span></a>
+                <a href="{{ url_for('resources_list') }}" data-command-label="Toolkit resources templates">Toolkit <span>Resources and templates</span></a>
+                <a href="{{ url_for('cover_list') }}" data-command-label="HIVE Covered continuity cover">HIVE Covered <span>Continuity support</span></a>
+                <a href="{{ url_for('expert_help_list') }}" data-command-label="Expert Help support">Expert Help <span>Specialist support</span></a>
+                <a href="{{ url_for('consultant_profiles.profile_detail') }}" data-command-label="Profile consultant business">Profile <span>Consultant profile</span></a>
+                <a href="{{ url_for('website_settings') }}" data-command-label="Website settings public page">Website <span>Public website settings</span></a>
+                <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" data-command-label="Directory enquiries">Directory Enquiries <span>Inbound enquiries</span></a>
+                <a href="{{ url_for('billing.billing_home') }}" data-command-label="Plan billing membership">Plan & Billing <span>Membership</span></a>
+                <a href="{{ url_for('notifications.notification_list') }}" data-command-label="Notifications">Notifications <span>Informational updates</span></a>
+            </div>
+            <p class="hive-app-command-empty" id="hiveCommandEmpty" hidden>No navigation matches that search.</p>
+            <div class="hive-app-command-footer">Navigation only in Phase 1. Record search will be added through scoped providers later.</div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/hive-app-shell.js') }}" defer></script>
+{% endif %}
 
 </body>
 </html>
