@@ -20,6 +20,12 @@ from models import AppModule, ConsultantAppAccess, TenantSettings, User
 
 
 VALID_PRIORITIES = {"low", "normal", "medium", "high", "urgent"}
+REMOTE_ACTION_PREFIXES = {
+    "resolvhr": ("pip-review-overdue:",),
+    "pathlyhire": ("onboarding-task-overdue:",),
+    "pathly": ("course-assignment-overdue:",),
+    "ellipsecrm": ("crm-task-overdue:",),
+}
 
 
 def _get_bearer_token() -> str:
@@ -204,6 +210,131 @@ def _dashboard_product_summary(service_key: str):
     return result
 
 
+def _sync_remote_actions(identity: HiveIdentity):
+    accesses = (
+        ConsultantAppAccess.query
+        .filter_by(consultant_id=current_user.id, status="active")
+        .all()
+    )
+
+    for access in accesses:
+        integration = AppIntegration.query.filter_by(
+            app_module_id=access.app_module_id,
+            is_enabled=True,
+        ).first()
+        if not integration or not integration.app_module or not integration.app_module.is_active:
+            continue
+        prefixes = REMOTE_ACTION_PREFIXES.get(integration.service_key)
+        if not prefixes:
+            continue
+
+        api_token = os.getenv(_integration_api_token_env_name(integration), "").strip()
+        if not api_token:
+            current_app.logger.warning(
+                "No API token configured for Action Centre integration %s",
+                integration.service_key,
+            )
+            continue
+
+        actions_url = (
+            f"{_normalise_base_url(integration.base_url)}/api/v1/actions"
+            f"?{urlencode({'hive_tenant_id': identity.hive_tenant_id, 'hive_user_id': identity.hive_user_id})}"
+        )
+        actions_request = Request(
+            actions_url,
+            headers={
+                "Authorization": f"Bearer {api_token}",
+                "Accept": "application/json",
+            },
+            method="GET",
+        )
+
+        try:
+            with urlopen(actions_request, timeout=2) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            if exc.code != 404:
+                current_app.logger.warning(
+                    "Action Centre request for %s returned HTTP %s",
+                    integration.service_key,
+                    exc.code,
+                )
+            continue
+        except (URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+            current_app.logger.warning(
+                "Action Centre request for %s failed: %s",
+                integration.service_key,
+                exc,
+            )
+            continue
+
+        remote_actions = payload.get("actions") if payload.get("ok") else None
+        if not isinstance(remote_actions, list):
+            continue
+
+        returned_ids = set()
+        for action in remote_actions[:100]:
+            if not isinstance(action, dict):
+                continue
+            external_event_id = str(action.get("external_event_id") or "").strip()
+            event_type = str(action.get("event_type") or "").strip()
+            title = str(action.get("title") or "").strip()
+            if not external_event_id or not event_type or not title:
+                continue
+            if not any(external_event_id.startswith(prefix) for prefix in prefixes):
+                continue
+
+            returned_ids.add(external_event_id)
+            existing = IntegrationEvent.query.filter_by(
+                app_integration_id=integration.id,
+                external_event_id=external_event_id,
+            ).first()
+
+            priority = str(action.get("priority") or "normal").strip().lower()
+            if priority not in VALID_PRIORITIES:
+                priority = "normal"
+
+            if existing:
+                if existing.status != "resolved":
+                    existing.event_type = event_type[:150]
+                    existing.title = title[:255]
+                    existing.description = action.get("description") or action.get("summary")
+                    existing.priority = priority
+                    existing.target_url = url_for("launch_app", app_slug=integration.app_module.slug)
+                    existing.occurred_at = _parse_event_datetime(action.get("occurred_at"))
+                continue
+
+            db.session.add(IntegrationEvent(
+                app_integration_id=integration.id,
+                consultant_id=current_user.id if integration.service_key == "ellipsecrm" else None,
+                hive_tenant_id=identity.hive_tenant_id,
+                external_event_id=external_event_id,
+                event_type=event_type[:150],
+                title=title[:255],
+                description=action.get("description") or action.get("summary"),
+                priority=priority,
+                target_url=url_for("launch_app", app_slug=integration.app_module.slug),
+                status="open",
+                occurred_at=_parse_event_datetime(action.get("occurred_at")),
+            ))
+
+        stale_query = IntegrationEvent.query.filter(
+            IntegrationEvent.app_integration_id == integration.id,
+            IntegrationEvent.status == "open",
+            _event_visible_to_user(IntegrationEvent, identity),
+        )
+        prefix_filter = or_(*[
+            IntegrationEvent.external_event_id.like(f"{prefix}%")
+            for prefix in prefixes
+        ])
+        for stale_event in stale_query.filter(prefix_filter).all():
+            if stale_event.external_event_id not in returned_ids:
+                stale_event.status = "resolved"
+                stale_event.resolved_at = datetime.utcnow()
+
+        db.session.commit()
+
+
 def register_integration_routes(bp):
     @bp.app_context_processor
     def inject_integration_dashboard_context():
@@ -229,6 +360,7 @@ def register_integration_routes(bp):
             return redirect(url_for("home"))
 
         identity = get_or_create_hive_identity(current_user)
+        _sync_remote_actions(identity)
         events = (
             IntegrationEvent.query
             .filter(_event_visible_to_user(IntegrationEvent, identity))
@@ -327,6 +459,7 @@ def register_integration_routes(bp):
             return jsonify({"ok": False, "error": "Forbidden."}), 403
 
         identity = get_or_create_hive_identity(current_user)
+        _sync_remote_actions(identity)
         events = (
             IntegrationEvent.query
             .filter(_event_visible_to_user(IntegrationEvent, identity))
