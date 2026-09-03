@@ -6,9 +6,11 @@ from urllib.parse import urlencode
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy import and_, or_
 
 from extensions import db
-from models import AppModule, ConsultantAppAccess, User
+from integration_models import HiveIdentity, IntegrationEvent
+from models import AppModule, ConsultantAppAccess, Lead, User
 
 
 notifications_bp = Blueprint("notifications", __name__)
@@ -100,6 +102,51 @@ def unread_notification_count(user):
     if not user or not user.is_authenticated:
         return 0
     return Notification.query.filter_by(recipient_user_id=user.id, is_read=False).count()
+
+
+def _consultant_today_context(user):
+    context = {
+        "hive_open_action_count": 0,
+        "hive_overdue_action_count": 0,
+        "hive_dashboard_actions": [],
+        "opportunity_count": 0,
+    }
+
+    if not user or not user.is_authenticated or user.role != "consultant":
+        return context
+
+    context["opportunity_count"] = Lead.query.filter(
+        Lead.assigned_consultant_id == user.id,
+        Lead.status.in_(["assigned", "accepted"]),
+    ).count()
+
+    identity = HiveIdentity.query.filter_by(user_id=user.id).first()
+    if not identity:
+        return context
+
+    visibility = or_(
+        IntegrationEvent.consultant_id == user.id,
+        and_(
+            IntegrationEvent.consultant_id.is_(None),
+            IntegrationEvent.hive_tenant_id == identity.hive_tenant_id,
+        ),
+    )
+    open_query = IntegrationEvent.query.filter(
+        visibility,
+        IntegrationEvent.status == "open",
+    )
+
+    context["hive_open_action_count"] = open_query.count()
+    context["hive_overdue_action_count"] = open_query.filter(
+        IntegrationEvent.event_type.ilike("%overdue%")
+    ).count()
+    context["hive_dashboard_actions"] = (
+        open_query
+        .order_by(IntegrationEvent.occurred_at.desc())
+        .limit(5)
+        .all()
+    )
+    return context
 
 
 def _required_env(name):
@@ -215,7 +262,9 @@ def _build_connected_app_rows():
 
 @notifications_bp.app_context_processor
 def inject_notification_count():
-    return {"unread_notification_count": unread_notification_count(current_user)}
+    context = {"unread_notification_count": unread_notification_count(current_user)}
+    context.update(_consultant_today_context(current_user))
+    return context
 
 
 @notifications_bp.route("/apps/<app_slug>/hive-sso-launch")
