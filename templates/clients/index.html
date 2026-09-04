@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Clients · HIVE{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase7.css') }}">
+
+<div class="hive-workspace hive-clients-workspace">
+    <header class="hive-workspace-head">
+        <div>
+            <h1>Clients</h1>
+            <p>Read-only client overview from connected systems. Open the source product to manage client records or case work.</p>
+        </div>
+        {% if source_state.source_launch_url %}
+            <div class="hive-workspace-actions">
+                <a class="hive-btn hive-btn--primary" href="{{ source_state.source_launch_url }}">Open EllipseCRM</a>
+            </div>
+        {% endif %}
+    </header>
+
+    <div class="hive-source-notice">
+        <strong>Client identity is deliberately conservative.</strong>
+        <span>EllipseCRM is the authoritative client source in this phase. HIVE is not matching records from ResolvHR, PathlyHire or Pathly by company name, so no client identities are guessed or silently merged.</span>
+    </div>
+
+    {% if source_state.state == 'available' %}
+        <section class="hive-metric-rail" aria-label="Client summary">
+            <div class="hive-metric"><span>Total clients</span><strong>{{ totals.total }}</strong></div>
+            <div class="hive-metric"><span>Active</span><strong>{{ totals.active }}</strong></div>
+            <div class="hive-metric"><span>Needs attention</span><strong>{{ totals.attention }}</strong></div>
+            <div class="hive-metric"><span>Open actions</span><strong>{{ totals.open_actions }}</strong></div>
+        </section>
+
+        <form method="GET" class="hive-client-toolbar">
+            <label class="hive-client-search">
+                <span class="sr-only">Search clients</span>
+                <input type="search" name="q" value="{{ search_term }}" placeholder="Search clients, contacts or location">
+            </label>
+            <label>
+                <span class="sr-only">Filter by status</span>
+                <select name="status">
+                    <option value="">All statuses</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>Active</option>
+                    <option value="prospect" {% if selected_status == 'prospect' %}selected{% endif %}>Prospect</option>
+                    <option value="inactive" {% if selected_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+            </label>
+            <label class="hive-client-check">
+                <input type="checkbox" name="attention" value="1" {% if attention_only %}checked{% endif %}>
+                Needs attention
+            </label>
+            <button class="hive-btn" type="submit">Apply</button>
+            {% if search_term or selected_status or attention_only %}
+                <a class="hive-btn" href="{{ url_for('notifications.client_list') }}">Clear</a>
+            {% endif %}
+        </form>
+
+        <section class="hive-client-list" aria-label="Clients">
+            {% for client in clients %}
+                <article class="hive-client-row{% if client.needs_attention %} has-attention{% endif %}">
+                    <div class="hive-client-main">
+                        <div class="hive-client-title-line">
+                            <h2>{{ client.name }}</h2>
+                            <span class="hive-client-status hive-client-status--{{ client.account_status }}">{{ client.account_status|replace('_', ' ')|title }}</span>
+                        </div>
+                        <p>
+                            {% if client.service_arrangement %}{{ client.service_arrangement }}{% endif %}
+                            {% if client.town_city %}{% if client.service_arrangement %} · {% endif %}{{ client.town_city }}{% endif %}
+                            {% if client.main_contact_name %}{% if client.service_arrangement or client.town_city %} · {% endif %}{{ client.main_contact_name }}{% endif %}
+                        </p>
+                        <div class="hive-client-stats">
+                            <span><strong>{{ client.open_cases }}</strong> open cases</span>
+                            <span{% if client.urgent_cases %} class="is-alert"{% endif %}><strong>{{ client.urgent_cases }}</strong> urgent cases</span>
+                            <span{% if client.open_actions %} class="is-alert"{% endif %}><strong>{{ client.open_actions }}</strong> open actions</span>
+                        </div>
+                    </div>
+                    <div class="hive-client-side">
+                        {% if client.latest_activity_at %}
+                            <span class="hive-client-updated">Latest activity {{ client.latest_activity_at[:10] }}</span>
+                        {% endif %}
+                        <a class="hive-btn" href="{{ source_state.source_launch_url }}">Open EllipseCRM</a>
+                    </div>
+                </article>
+            {% else %}
+                <div class="hive-empty">
+                    <h2>No clients match these filters</h2>
+                    <p>Clear the filters to return to all authorised client summaries.</p>
+                </div>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="hive-empty hive-client-source-empty">
+            <h2>Client overview is not available yet</h2>
+            <p>{{ source_state.message }}</p>
+            <div class="hive-empty-actions">
+                <a class="hive-btn hive-btn--primary" href="{{ url_for('apps_index') }}">Open Apps</a>
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}
