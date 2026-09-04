@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
+{% block title %}Apps · HIVE{% endblock %}
+
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase3.css') }}">
 
 {% set subscription = current_user.subscription %}
 {% set current_tier = subscription.tier if subscription else 'free' %}
@@ -21,7 +24,8 @@
     'admin': 'Admin'
 } %}
 {% set current_rank = tier_rank.get(current_tier, 0) %}
-{% set stats = namespace(active=0, requested=0, available=0, upgrade=0) %}
+{% set stats = namespace(active=0, requested=0, discover=0, suspended=0) %}
+
 {% for app_module in app_modules %}
     {% set access = access_map.get(app_module.id) %}
     {% set required_rank = tier_rank.get(app_module.required_tier, 20) %}
@@ -29,188 +33,164 @@
         {% set stats.active = stats.active + 1 %}
     {% elif access and access.status == 'requested' %}
         {% set stats.requested = stats.requested + 1 %}
-    {% elif current_rank < required_rank %}
-        {% set stats.upgrade = stats.upgrade + 1 %}
+    {% elif access and access.status == 'suspended' %}
+        {% set stats.suspended = stats.suspended + 1 %}
     {% else %}
-        {% set stats.available = stats.available + 1 %}
+        {% set stats.discover = stats.discover + 1 %}
     {% endif %}
 {% endfor %}
 
-<section class="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
-    <div class="xl:col-span-2 hive-card--dark rounded-[1.75rem] p-8 overflow-hidden relative">
-        <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-400/20 blur-3xl"></div>
-        <div class="absolute -left-20 -bottom-20 w-72 h-72 rounded-full bg-teal-400/10 blur-3xl"></div>
+{% set selected_tab = request.args.get('tab', 'my-apps') %}
+{% if selected_tab not in ['my-apps', 'discover', 'requests'] %}{% set selected_tab = 'my-apps' %}{% endif %}
 
-        <div class="relative">
-            <p class="text-amber-300 text-xs font-black uppercase tracking-[0.18em]">HIVE Apps</p>
-            <h1 class="mt-4 text-4xl md:text-5xl font-black tracking-[-0.06em] leading-none text-white">
-                App Marketplace
-            </h1>
-            <p class="mt-5 text-slate-300 max-w-2xl leading-7">
-                Browse HIVE modules, request access, and launch tools that are active for your consultancy.
-            </p>
-
-            <div class="mt-7 flex flex-wrap gap-3">
-                <a href="{{ url_for('dashboard') }}" class="hive-button bg-white/10 text-white border border-white/10 hover:bg-white/15">Back to Dashboard</a>
-                <a href="{{ url_for('billing.billing_home') }}" class="hive-button hive-button-gold">View Membership</a>
-            </div>
+<div class="hive-phase3">
+    <header class="hive-p3-heading">
+        <div>
+            <h1>Apps</h1>
+            <p>Launch products already connected to your consultancy, review pending access requests, or discover other HIVE modules available through your membership.</p>
         </div>
-    </div>
-
-    <div class="hive-card rounded-[1.75rem] p-6">
-        <p class="hive-page-kicker">Your app access</p>
-        <h2 class="mt-3 text-3xl font-black tracking-[-0.05em] text-slate-950">{{ tier_label.get(current_tier, current_tier|title) }}</h2>
-        <p class="mt-2 text-sm text-slate-500">Apps are controlled by subscription tier and admin approval.</p>
-
-        <div class="mt-6 grid grid-cols-2 gap-3">
-            <div class="rounded-2xl bg-green-50 border border-green-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.14em] text-green-700">Active</p>
-                <p class="mt-1 text-3xl font-black text-green-900">{{ stats.active }}</p>
-            </div>
-            <div class="rounded-2xl bg-amber-50 border border-amber-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.14em] text-amber-700">Requested</p>
-                <p class="mt-1 text-3xl font-black text-amber-900">{{ stats.requested }}</p>
-            </div>
-            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.14em] text-slate-600">Available</p>
-                <p class="mt-1 text-3xl font-black text-slate-950">{{ stats.available }}</p>
-            </div>
-            <div class="rounded-2xl bg-blue-50 border border-blue-200 p-4">
-                <p class="text-xs font-black uppercase tracking-[0.14em] text-blue-700">Upgrade</p>
-                <p class="mt-1 text-3xl font-black text-blue-900">{{ stats.upgrade }}</p>
-            </div>
+        <div class="hive-p3-actions">
+            <a class="hive-p3-button" href="{{ url_for('billing.billing_home') }}">Plan & billing</a>
         </div>
-    </div>
-</section>
+    </header>
 
-{% if not app_modules %}
-    <div class="hive-card rounded-[1.75rem] p-8 shadow-sm">
-        <h2 class="text-xl font-black text-slate-950">No apps available yet</h2>
-        <p class="text-slate-600 mt-2">The HIVE app catalogue has not been configured yet.</p>
-    </div>
-{% endif %}
+    <section class="hive-p3-metrics" aria-label="App access summary">
+        <div class="hive-p3-metric"><span>Connected</span><strong>{{ stats.active }}</strong></div>
+        <div class="hive-p3-metric"><span>Pending requests</span><strong>{{ stats.requested }}</strong></div>
+        <div class="hive-p3-metric"><span>Discover</span><strong>{{ stats.discover }}</strong></div>
+        <div class="hive-p3-metric"><span>Current plan</span><strong style="font-size:18px; margin-top:7px">{{ tier_label.get(current_tier, current_tier|title) }}</strong></div>
+    </section>
 
-<div class="mb-5 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-    <div>
-        <p class="hive-page-kicker">Catalogue</p>
-        <h2 class="mt-2 text-2xl font-black tracking-[-0.04em] text-slate-950">Available HIVE modules</h2>
-    </div>
-    <div class="flex flex-wrap gap-2 text-xs font-black">
-        <span class="rounded-full bg-green-100 text-green-800 px-3 py-1">Active</span>
-        <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1">Requested</span>
-        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1">Available</span>
-        <span class="rounded-full bg-blue-100 text-blue-800 px-3 py-1">Upgrade Needed</span>
-    </div>
-</div>
+    <nav class="hive-p3-tabs" aria-label="Apps sections">
+        <a class="hive-p3-tab {% if selected_tab == 'my-apps' %}is-active{% endif %}" href="{{ url_for('apps_index', tab='my-apps') }}">My Apps <span class="hive-p3-tab-count">{{ stats.active + stats.suspended }}</span></a>
+        <a class="hive-p3-tab {% if selected_tab == 'discover' %}is-active{% endif %}" href="{{ url_for('apps_index', tab='discover') }}">Discover <span class="hive-p3-tab-count">{{ stats.discover }}</span></a>
+        <a class="hive-p3-tab {% if selected_tab == 'requests' %}is-active{% endif %}" href="{{ url_for('apps_index', tab='requests') }}">Requests <span class="hive-p3-tab-count">{{ stats.requested }}</span></a>
+    </nav>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-    {% for app_module in app_modules %}
-        {% set access = access_map.get(app_module.id) %}
-        {% set required_rank = tier_rank.get(app_module.required_tier, 20) %}
-        {% set can_request = current_rank >= required_rank %}
-        {% set app_icon = app_module.icon or '⬢' %}
-
-        {% if access and access.status == "active" %}
-            {% set card_state = 'active' %}
-        {% elif access and access.status == "requested" %}
-            {% set card_state = 'requested' %}
-        {% elif access and access.status == "suspended" %}
-            {% set card_state = 'suspended' %}
-        {% elif not can_request %}
-            {% set card_state = 'upgrade' %}
+    {% if not app_modules %}
+        <section class="hive-p3-empty">
+            <h2>No apps configured</h2>
+            <p>The HIVE app catalogue has not been configured yet.</p>
+        </section>
+    {% elif selected_tab == 'my-apps' %}
+        {% if stats.active + stats.suspended == 0 %}
+            <section class="hive-p3-empty">
+                <h2>No connected apps yet</h2>
+                <p>Browse Discover to see modules available for your membership and request access.</p>
+                <a class="hive-p3-button hive-p3-button--primary" style="margin-top:14px" href="{{ url_for('apps_index', tab='discover') }}">Discover apps</a>
+            </section>
         {% else %}
-            {% set card_state = 'available' %}
+            <section class="hive-p3-app-grid">
+                {% for app_module in app_modules %}
+                    {% set access = access_map.get(app_module.id) %}
+                    {% if access and access.status in ['active', 'suspended'] %}
+                        {% set app_icon = app_module.icon or 'H' %}
+                        <article class="hive-p3-app-card">
+                            <div class="hive-p3-app-head">
+                                <div class="hive-p3-app-identity">
+                                    <div class="hive-p3-app-mark" aria-hidden="true">{{ app_icon }}</div>
+                                    <div class="hive-p3-app-title">
+                                        <h2>{{ app_module.name }}</h2>
+                                        <p>{{ tier_label.get(app_module.required_tier, app_module.required_tier|title) }} module</p>
+                                    </div>
+                                </div>
+                                {% if access.status == 'active' %}
+                                    <span class="hive-p3-app-state hive-p3-app-state--active">Connected</span>
+                                {% else %}
+                                    <span class="hive-p3-app-state hive-p3-app-state--suspended">Suspended</span>
+                                {% endif %}
+                            </div>
+
+                            <p class="hive-p3-app-description">{{ app_module.description or 'No description has been added for this app yet.' }}</p>
+
+                            <div class="hive-p3-app-footer">
+                                <div class="hive-p3-app-meta">
+                                    {% if access.activated_at %}Active since <strong>{{ access.activated_at.strftime('%d %b %Y') }}</strong>{% else %}<strong>{{ access.access_level|replace('_',' ')|title }}</strong> access{% endif %}
+                                </div>
+                                {% if access.status == 'active' %}
+                                    {% if app_module.slug == 'payscope' %}
+                                        <a class="hive-p3-button hive-p3-button--primary" href="{{ url_for('notifications.hive_sso_launch', app_slug=app_module.slug) }}">Open</a>
+                                    {% else %}
+                                        <a class="hive-p3-button hive-p3-button--primary" href="{{ url_for('launch_app', app_slug=app_module.slug) }}">Open</a>
+                                    {% endif %}
+                                {% else %}
+                                    <button class="hive-p3-button" type="button" disabled>Unavailable</button>
+                                {% endif %}
+                            </div>
+                        </article>
+                    {% endif %}
+                {% endfor %}
+            </section>
         {% endif %}
 
-        <article class="group relative overflow-hidden rounded-[2rem] border shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl
-            {% if card_state == 'active' %}bg-green-50 border-green-200
-            {% elif card_state == 'requested' %}bg-amber-50 border-amber-200
-            {% elif card_state == 'upgrade' %}bg-blue-50 border-blue-200
-            {% elif card_state == 'suspended' %}bg-red-50 border-red-200
-            {% else %}bg-white border-slate-200{% endif %}
-        ">
-            <div class="absolute inset-x-0 top-0 h-28 opacity-70
-                {% if card_state == 'active' %}bg-gradient-to-br from-green-200 to-transparent
-                {% elif card_state == 'requested' %}bg-gradient-to-br from-amber-200 to-transparent
-                {% elif card_state == 'upgrade' %}bg-gradient-to-br from-blue-200 to-transparent
-                {% elif card_state == 'suspended' %}bg-gradient-to-br from-red-200 to-transparent
-                {% else %}bg-gradient-to-br from-slate-100 to-transparent{% endif %}
-            "></div>
-
-            <div class="relative p-6 flex flex-col min-h-[360px]">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="h-14 w-14 rounded-2xl bg-slate-950 text-white flex items-center justify-center text-2xl shadow-sm">
-                        {{ app_icon }}
-                    </div>
-
-                    {% if card_state == "active" %}
-                        <span class="rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-black border border-green-200">Active</span>
-                    {% elif card_state == "requested" %}
-                        <span class="rounded-full bg-amber-100 text-amber-800 px-3 py-1 text-xs font-black border border-amber-200">Requested</span>
-                    {% elif card_state == "suspended" %}
-                        <span class="rounded-full bg-red-100 text-red-800 px-3 py-1 text-xs font-black border border-red-200">Suspended</span>
-                    {% elif card_state == "upgrade" %}
-                        <span class="rounded-full bg-blue-100 text-blue-800 px-3 py-1 text-xs font-black border border-blue-200">Upgrade Needed</span>
-                    {% else %}
-                        <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-black border border-slate-200">Available</span>
+    {% elif selected_tab == 'requests' %}
+        {% if stats.requested == 0 %}
+            <section class="hive-p3-empty">
+                <h2>No pending requests</h2>
+                <p>You do not currently have any app access requests waiting for HIVE approval.</p>
+                <a class="hive-p3-button" style="margin-top:14px" href="{{ url_for('apps_index', tab='discover') }}">Discover apps</a>
+            </section>
+        {% else %}
+            <section class="hive-p3-app-grid">
+                {% for app_module in app_modules %}
+                    {% set access = access_map.get(app_module.id) %}
+                    {% if access and access.status == 'requested' %}
+                        <article class="hive-p3-app-card">
+                            <div class="hive-p3-app-head">
+                                <div class="hive-p3-app-identity">
+                                    <div class="hive-p3-app-mark" aria-hidden="true">{{ app_module.icon or 'H' }}</div>
+                                    <div class="hive-p3-app-title"><h2>{{ app_module.name }}</h2><p>{{ tier_label.get(app_module.required_tier, app_module.required_tier|title) }} module</p></div>
+                                </div>
+                                <span class="hive-p3-app-state hive-p3-app-state--requested">Awaiting approval</span>
+                            </div>
+                            <p class="hive-p3-app-description">{{ app_module.description or 'No description has been added for this app yet.' }}</p>
+                            <div class="hive-p3-app-footer">
+                                <div class="hive-p3-app-meta">Requested <strong>{{ access.created_at.strftime('%d %b %Y') if access.created_at else 'recently' }}</strong></div>
+                                <button class="hive-p3-button" type="button" disabled>Pending</button>
+                            </div>
+                        </article>
                     {% endif %}
-                </div>
+                {% endfor %}
+            </section>
+            <div class="hive-p3-note">Access requests are approved by HIVE administrators. The current application does not support consultant-side cancellation, so no cancellation control is shown.</div>
+        {% endif %}
 
-                <div class="mt-6">
-                    <h2 class="text-2xl font-black tracking-[-0.045em] text-slate-950">{{ app_module.name }}</h2>
-                    <p class="text-xs font-black uppercase tracking-[0.16em] text-slate-500 mt-2">
-                        Required tier: {{ tier_label.get(app_module.required_tier, app_module.required_tier|title) }}
-                    </p>
-                </div>
-
-                <p class="text-sm text-slate-600 mt-4 leading-6 flex-1">
-                    {{ app_module.description or 'No description has been added for this app yet.' }}
-                </p>
-
-                <div class="mt-5 rounded-2xl bg-white/75 border border-white/70 p-4 text-sm">
-                    {% if card_state == 'active' %}
-                        <p class="font-black text-green-800">Ready to use</p>
-                        <p class="mt-1 text-slate-600">This app is active for your account.</p>
-                    {% elif card_state == 'requested' %}
-                        <p class="font-black text-amber-800">Awaiting admin approval</p>
-                        <p class="mt-1 text-slate-600">Your access request has been submitted.</p>
-                    {% elif card_state == 'upgrade' %}
-                        <p class="font-black text-blue-800">Membership upgrade required</p>
-                        <p class="mt-1 text-slate-600">Your current tier is {{ tier_label.get(current_tier, current_tier|title) }}.</p>
-                    {% elif card_state == 'suspended' %}
-                        <p class="font-black text-red-800">Access suspended</p>
-                        <p class="mt-1 text-slate-600">Contact HIVE admin if this looks incorrect.</p>
-                    {% else %}
-                        <p class="font-black text-slate-800">Available to request</p>
-                        <p class="mt-1 text-slate-600">Request access and admin can approve it.</p>
+    {% else %}
+        {% if stats.discover == 0 %}
+            <section class="hive-p3-empty"><h2>Nothing else to discover</h2><p>Every currently active module is already connected, pending approval or suspended for your account.</p></section>
+        {% else %}
+            <section class="hive-p3-app-grid">
+                {% for app_module in app_modules %}
+                    {% set access = access_map.get(app_module.id) %}
+                    {% set required_rank = tier_rank.get(app_module.required_tier, 20) %}
+                    {% set can_request = current_rank >= required_rank %}
+                    {% if not access or access.status not in ['active', 'requested', 'suspended'] %}
+                        <article class="hive-p3-app-card">
+                            <div class="hive-p3-app-head">
+                                <div class="hive-p3-app-identity">
+                                    <div class="hive-p3-app-mark" aria-hidden="true">{{ app_module.icon or 'H' }}</div>
+                                    <div class="hive-p3-app-title"><h2>{{ app_module.name }}</h2><p>Requires {{ tier_label.get(app_module.required_tier, app_module.required_tier|title) }}</p></div>
+                                </div>
+                                {% if can_request %}<span class="hive-p3-app-state">Available</span>{% else %}<span class="hive-p3-app-state">Plan upgrade</span>{% endif %}
+                            </div>
+                            <p class="hive-p3-app-description">{{ app_module.description or 'No description has been added for this app yet.' }}</p>
+                            <div class="hive-p3-app-footer">
+                                <div class="hive-p3-app-meta">Your plan: <strong>{{ tier_label.get(current_tier, current_tier|title) }}</strong></div>
+                                {% if can_request %}
+                                    <form method="POST" action="{{ url_for('request_app_access', app_slug=app_module.slug) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="hive-p3-button hive-p3-button--primary" type="submit">Request access</button>
+                                    </form>
+                                {% else %}
+                                    <a class="hive-p3-button" href="{{ url_for('billing.billing_pricing') }}">View plan</a>
+                                {% endif %}
+                            </div>
+                        </article>
                     {% endif %}
-                </div>
-
-                <div class="mt-6 flex flex-wrap gap-3">
-                    {% if card_state == "active" %}
-                        {% if app_module.slug == "payscope" %}
-                            <a href="{{ url_for('notifications.hive_sso_launch', app_slug=app_module.slug) }}" class="hive-button hive-button-primary">Open PayScope</a>
-                        {% else %}
-                            <a href="{{ url_for('launch_app', app_slug=app_module.slug) }}" class="hive-button hive-button-primary">
-                                {{ 'Launch App' if app_module.launch_url else 'Open App' }}
-                            </a>
-                        {% endif %}
-                    {% elif card_state == "requested" %}
-                        <button type="button" class="hive-button bg-slate-100 text-slate-500 cursor-not-allowed" disabled>Awaiting Approval</button>
-                    {% elif card_state == "upgrade" %}
-                        <a href="{{ url_for('billing.billing_pricing') }}" class="hive-button hive-button-gold">View Upgrade Options</a>
-                    {% elif card_state == "suspended" %}
-                        <button type="button" class="hive-button bg-red-100 text-red-700 cursor-not-allowed" disabled>Suspended</button>
-                    {% else %}
-                        <form method="POST" action="{{ url_for('request_app_access', app_slug=app_module.slug) }}">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" class="hive-button hive-button-gold cursor-pointer">Request Access</button>
-                        </form>
-                    {% endif %}
-                </div>
-            </div>
-        </article>
-    {% endfor %}
+                {% endfor %}
+            </section>
+        {% endif %}
+    {% endif %}
 </div>
 
 {% endblock %}

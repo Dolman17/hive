@@ -5,7 +5,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import ConsultantProfile, User
+from models import ConsultantProfile, Lead, User
 
 try:
     from notification_routes import create_notification, notify_admins
@@ -84,6 +84,142 @@ def consultant_required(view_func):
         return view_func(*args, **kwargs)
 
     return wrapped_view
+
+
+def _opportunity_stage_group(status):
+    status_key = (status or "new").strip().lower()
+    if status_key in {"new", "assigned"}:
+        return "new"
+    if status_key == "accepted":
+        return "active"
+    if status_key == "won":
+        return "won"
+    if status_key in {"lost", "declined", "closed"}:
+        return "closed"
+    return "other"
+
+
+def _opportunity_age_label(created_at):
+    if not created_at:
+        return "Unknown"
+    delta = datetime.utcnow() - created_at
+    days = max(delta.days, 0)
+    if days == 0:
+        hours = max(int(delta.total_seconds() // 3600), 0)
+        if hours <= 0:
+            return "Just now"
+        return f"{hours}h ago"
+    if days == 1:
+        return "1 day ago"
+    return f"{days} days ago"
+
+
+def _consultant_opportunity_rows(user_id):
+    rows = []
+
+    leads = (
+        Lead.query
+        .filter_by(assigned_consultant_id=user_id)
+        .order_by(Lead.created_at.desc())
+        .all()
+    )
+    for lead in leads:
+        rows.append({
+            "key": f"people-signal-{lead.id}",
+            "source": "PeopleSignal",
+            "source_key": "people_signal",
+            "company": lead.company_name,
+            "contact": lead.contact_name or lead.contact_email or "Contact not provided",
+            "opportunity_type": (lead.signal_type or "PeopleSignal lead").replace("_", " ").title(),
+            "summary": lead.support_needed or lead.signal_summary or "No opportunity summary provided.",
+            "urgency": (lead.urgency or "unknown").lower(),
+            "status": (lead.status or "new").lower(),
+            "status_label": (lead.status or "new").replace("_", " ").title(),
+            "stage_group": _opportunity_stage_group(lead.status),
+            "age": _opportunity_age_label(lead.created_at),
+            "created_at": lead.created_at,
+            "detail_url": url_for("lead_detail", lead_id=lead.id),
+        })
+
+    enquiries = (
+        DirectoryEnquiry.query
+        .filter_by(assigned_consultant_id=user_id)
+        .order_by(DirectoryEnquiry.created_at.desc())
+        .all()
+    )
+    for enquiry in enquiries:
+        rows.append({
+            "key": f"directory-{enquiry.id}",
+            "source": "Directory",
+            "source_key": "directory",
+            "company": enquiry.company_name,
+            "contact": enquiry.contact_name or enquiry.contact_email or "Contact not provided",
+            "opportunity_type": "Directory enquiry",
+            "summary": enquiry.support_needed or "No support summary provided.",
+            "urgency": (enquiry.urgency or "unknown").lower(),
+            "status": (enquiry.status or "new").lower(),
+            "status_label": (enquiry.status or "new").replace("_", " ").title(),
+            "stage_group": _opportunity_stage_group(enquiry.status),
+            "age": _opportunity_age_label(enquiry.created_at),
+            "created_at": enquiry.created_at,
+            "detail_url": url_for(
+                "directory_enquiries.consultant_directory_enquiry_detail",
+                enquiry_id=enquiry.id,
+            ),
+        })
+
+    rows.sort(key=lambda row: row["created_at"] or datetime.min, reverse=True)
+    return rows
+
+
+@directory_enquiries_bp.app_context_processor
+def inject_consultant_opportunities():
+    if (
+        request.endpoint != "leads_list"
+        or not current_user.is_authenticated
+        or current_user.role != "consultant"
+    ):
+        return {}
+
+    all_rows = _consultant_opportunity_rows(current_user.id)
+    source_filter = request.args.get("source", "all").strip().lower() or "all"
+    stage_filter = request.args.get("stage", "all").strip().lower() or "all"
+    search_query = request.args.get("q", "").strip().lower()
+
+    rows = all_rows
+    if source_filter in {"people_signal", "directory"}:
+        rows = [row for row in rows if row["source_key"] == source_filter]
+    if stage_filter in {"new", "active", "won", "closed", "other"}:
+        rows = [row for row in rows if row["stage_group"] == stage_filter]
+    if search_query:
+        rows = [
+            row for row in rows
+            if search_query in row["company"].lower()
+            or search_query in row["contact"].lower()
+            or search_query in row["opportunity_type"].lower()
+            or search_query in row["summary"].lower()
+        ]
+
+    stats = {
+        "total": len(all_rows),
+        "new": sum(1 for row in all_rows if row["stage_group"] == "new"),
+        "active": sum(1 for row in all_rows if row["stage_group"] == "active"),
+        "won": sum(1 for row in all_rows if row["stage_group"] == "won"),
+        "closed": sum(1 for row in all_rows if row["stage_group"] == "closed"),
+        "people_signal": sum(1 for row in all_rows if row["source_key"] == "people_signal"),
+        "directory": sum(1 for row in all_rows if row["source_key"] == "directory"),
+    }
+
+    return {
+        "opportunities": rows,
+        "opportunity_stats": stats,
+        "opportunity_filters": {
+            "source": source_filter,
+            "stage": stage_filter,
+            "q": request.args.get("q", "").strip(),
+            "view": request.args.get("view", "list").strip().lower() or "list",
+        },
+    }
 
 
 def log_enquiry_event(enquiry, event_type, notes=None, created_by=None, created_by_label=None, commit=False):

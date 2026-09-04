@@ -1,90 +1,133 @@
 {% extends "base.html" %}
 
+{% block title %}Opportunities · HIVE{% endblock %}
+
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase3.css') }}">
 
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            PeopleSignal Leads
-        </p>
+{% set selected_source = opportunity_filters.source if opportunity_filters else 'all' %}
+{% set selected_stage = opportunity_filters.stage if opportunity_filters else 'all' %}
+{% set selected_view = opportunity_filters.view if opportunity_filters and opportunity_filters.view in ['list', 'pipeline'] else 'list' %}
+{% set selected_q = opportunity_filters.q if opportunity_filters else '' %}
 
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            Lead Inbox
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            Opportunities generated from PeopleSignal and assigned to your consultancy.
-        </p>
-    </div>
-
-    <a href="{{ url_for('dashboard') }}"
-       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-        Back to Dashboard
-    </a>
-</div>
-
-{% if not leads %}
-    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <h2 class="text-xl font-bold text-slate-950">No PeopleSignal leads assigned</h2>
-        <p class="text-slate-600 mt-2">
-            Leads will appear here once HIVE admin assigns them to you.
-        </p>
-    </div>
-{% endif %}
-
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-    {% for lead in leads %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                        {{ lead.signal_type|replace("_", " ")|title if lead.signal_type else "PeopleSignal" }}
-                    </p>
-
-                    <h2 class="text-xl font-bold text-slate-950 mt-2">
-                        {{ lead.company_name }}
-                    </h2>
-                </div>
-
-                <span class="rounded-full px-3 py-1 text-xs font-semibold
-                    {% if lead.status == 'assigned' %}
-                        bg-blue-100 text-blue-800
-                    {% elif lead.status == 'accepted' %}
-                        bg-green-100 text-green-800
-                    {% elif lead.status == 'won' %}
-                        bg-slate-950 text-white
-                    {% elif lead.status in ['lost', 'declined'] %}
-                        bg-red-100 text-red-800
-                    {% else %}
-                        bg-slate-100 text-slate-700
-                    {% endif %}
-                ">
-                    {{ lead.status|capitalize }}
-                </span>
-            </div>
-
-            <p class="text-sm text-slate-600 mt-4 leading-6">
-                {{ lead.signal_summary or "No signal summary added." }}
-            </p>
-
-            <div class="mt-4 flex flex-wrap gap-2">
-                <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
-                    Urgency: {{ lead.urgency|capitalize if lead.urgency else "Unknown" }}
-                </span>
-
-                <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
-                    Risk: {{ lead.risk_level|capitalize if lead.risk_level else "Unknown" }}
-                </span>
-            </div>
-
-            <div class="mt-6">
-                <a href="{{ url_for('lead_detail', lead_id=lead.id) }}"
-                   class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
-                    View Lead
-                </a>
-            </div>
+<div class="hive-phase3">
+    <header class="hive-p3-heading">
+        <div>
+            <h1>Opportunities</h1>
+            <p>One working view of PeopleSignal leads and directory enquiries assigned to you. Each record still opens and updates in its original HIVE workflow.</p>
         </div>
-    {% endfor %}
+        <div class="hive-p3-actions">
+            <a class="hive-p3-button" href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}">Directory inbox</a>
+        </div>
+    </header>
+
+    <section class="hive-p3-metrics" aria-label="Opportunity summary">
+        <div class="hive-p3-metric"><span>Total opportunities</span><strong>{{ opportunity_stats.total if opportunity_stats else 0 }}</strong></div>
+        <div class="hive-p3-metric"><span>New</span><strong>{{ opportunity_stats.new if opportunity_stats else 0 }}</strong></div>
+        <div class="hive-p3-metric"><span>Active</span><strong>{{ opportunity_stats.active if opportunity_stats else 0 }}</strong></div>
+        <div class="hive-p3-metric"><span>Won</span><strong>{{ opportunity_stats.won if opportunity_stats else 0 }}</strong></div>
+    </section>
+
+    <form class="hive-p3-toolbar" method="GET" action="{{ url_for('leads_list') }}">
+        <input type="hidden" name="view" value="{{ selected_view }}">
+        <div class="hive-p3-search">
+            <label class="sr-only" for="opportunitySearch">Search opportunities</label>
+            <input id="opportunitySearch" type="search" name="q" value="{{ selected_q }}" placeholder="Search company, contact or opportunity…">
+        </div>
+        <label class="sr-only" for="opportunitySource">Source</label>
+        <select id="opportunitySource" name="source">
+            <option value="all" {% if selected_source == 'all' %}selected{% endif %}>All sources</option>
+            <option value="people_signal" {% if selected_source == 'people_signal' %}selected{% endif %}>PeopleSignal</option>
+            <option value="directory" {% if selected_source == 'directory' %}selected{% endif %}>Directory</option>
+        </select>
+        <label class="sr-only" for="opportunityStage">Stage</label>
+        <select id="opportunityStage" name="stage">
+            <option value="all" {% if selected_stage == 'all' %}selected{% endif %}>All stages</option>
+            <option value="new" {% if selected_stage == 'new' %}selected{% endif %}>New</option>
+            <option value="active" {% if selected_stage == 'active' %}selected{% endif %}>Active</option>
+            <option value="won" {% if selected_stage == 'won' %}selected{% endif %}>Won</option>
+            <option value="closed" {% if selected_stage == 'closed' %}selected{% endif %}>Closed</option>
+        </select>
+        <button class="hive-p3-button" type="submit">Apply</button>
+        {% if selected_q or selected_source != 'all' or selected_stage != 'all' %}
+            <a class="hive-p3-button hive-p3-button--quiet" href="{{ url_for('leads_list', view=selected_view) }}">Clear</a>
+        {% endif %}
+        <div class="hive-p3-view-switch" aria-label="Opportunity view">
+            <a class="{% if selected_view == 'list' %}is-active{% endif %}" href="{{ url_for('leads_list', view='list', source=selected_source, stage=selected_stage, q=selected_q) }}">List</a>
+            <a class="{% if selected_view == 'pipeline' %}is-active{% endif %}" href="{{ url_for('leads_list', view='pipeline', source=selected_source, stage=selected_stage, q=selected_q) }}">Pipeline</a>
+        </div>
+    </form>
+
+    {% if not opportunities %}
+        <section class="hive-p3-empty">
+            <h2>No matching opportunities</h2>
+            <p>{% if opportunity_stats and opportunity_stats.total > 0 %}Try clearing the current filters.{% else %}PeopleSignal leads and directory enquiries assigned to you will appear here.{% endif %}</p>
+            {% if opportunity_stats and opportunity_stats.total > 0 %}<a class="hive-p3-button" style="margin-top:14px" href="{{ url_for('leads_list') }}">Clear filters</a>{% endif %}
+        </section>
+    {% elif selected_view == 'pipeline' %}
+        <section class="hive-p3-pipeline" aria-label="Opportunity pipeline">
+            {% for group_key, group_label in [('new','New'), ('active','Active'), ('won','Won'), ('closed','Closed')] %}
+                {% set group = opportunities|selectattr('stage_group', 'equalto', group_key)|list %}
+                <div class="hive-p3-column">
+                    <div class="hive-p3-column-head">{{ group_label }} <span>{{ group|length }}</span></div>
+                    <div class="hive-p3-column-body">
+                        {% for opportunity in group %}
+                            <a class="hive-p3-pipeline-card" href="{{ opportunity.detail_url }}">
+                                <strong>{{ opportunity.company }}</strong>
+                                <p>{{ opportunity.opportunity_type }} · {{ opportunity.source }}</p>
+                                <div class="hive-p3-pipeline-meta"><span>{{ opportunity.status_label }}</span><span>{{ opportunity.age }}</span></div>
+                            </a>
+                        {% else %}
+                            <div class="hive-p3-column-empty">No opportunities</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+
+        {% set other_group = opportunities|selectattr('stage_group', 'equalto', 'other')|list %}
+        {% if other_group %}
+            <section>
+                <div class="hive-p3-heading"><div><h1 style="font-size:20px">Other statuses</h1><p>These records use a source status that does not map to the standard HIVE pipeline groups.</p></div></div>
+                <div class="hive-p3-panel" style="margin-top:12px">
+                    {% for opportunity in other_group %}
+                        <div class="hive-p3-opportunity-row">
+                            <div class="hive-p3-company"><strong>{{ opportunity.company }}</strong><span>{{ opportunity.contact }}</span></div>
+                            <div><span class="hive-p3-source">{{ opportunity.source }}</span><span class="hive-p3-cell-secondary">{{ opportunity.opportunity_type }}</span></div>
+                            <div><span class="hive-p3-status">{{ opportunity.status_label }}</span></div>
+                            <div class="hive-p3-urgency">{{ opportunity.urgency }}</div>
+                            <div class="hive-p3-cell-secondary">{{ opportunity.age }}</div>
+                            <div class="hive-p3-row-action"><a class="hive-p3-button" href="{{ opportunity.detail_url }}">Open</a></div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+    {% else %}
+        <section class="hive-p3-panel">
+            <div class="hive-p3-list-head">
+                <div>Company</div><div>Source</div><div>Stage</div><div>Urgency</div><div>Age</div><div></div>
+            </div>
+            {% for opportunity in opportunities %}
+                <div class="hive-p3-opportunity-row">
+                    <div class="hive-p3-company">
+                        <strong>{{ opportunity.company }}</strong>
+                        <span>{{ opportunity.contact }}</span>
+                    </div>
+                    <div>
+                        <span class="hive-p3-source">{{ opportunity.source }}</span>
+                        <span class="hive-p3-cell-secondary">{{ opportunity.opportunity_type }}</span>
+                    </div>
+                    <div><span class="hive-p3-status hive-p3-status--{{ opportunity.stage_group }}">{{ opportunity.status_label }}</span></div>
+                    <div class="hive-p3-urgency hive-p3-urgency--{{ opportunity.urgency }}">{{ opportunity.urgency }}</div>
+                    <div class="hive-p3-cell-secondary">{{ opportunity.age }}</div>
+                    <div class="hive-p3-row-action"><a class="hive-p3-button" href="{{ opportunity.detail_url }}">Open</a></div>
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    <div class="hive-p3-note">Pipeline columns are a presentation grouping only. Status changes still happen inside the original PeopleSignal lead or Directory enquiry record, using the existing authorised server-side forms.</div>
 </div>
 
 {% endblock %}
