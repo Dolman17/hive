@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from flask import jsonify, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 
+from integration_models import HiveIdentity, IntegrationEvent
 from models import (
     AppModule,
     ConsultantAppAccess,
@@ -65,6 +66,40 @@ def register_search_routes(bp):
         pattern = _like_pattern(query)
         results = []
 
+        identity = HiveIdentity.query.filter_by(user_id=current_user.id).first()
+        if identity:
+            visible_actions = (
+                IntegrationEvent.query
+                .filter(
+                    IntegrationEvent.status == "open",
+                    or_(
+                        IntegrationEvent.consultant_id == current_user.id,
+                        and_(
+                            IntegrationEvent.consultant_id.is_(None),
+                            IntegrationEvent.hive_tenant_id == identity.hive_tenant_id,
+                        ),
+                    ),
+                    or_(
+                        IntegrationEvent.title.ilike(pattern, escape="\\"),
+                        IntegrationEvent.description.ilike(pattern, escape="\\"),
+                        IntegrationEvent.event_type.ilike(pattern, escape="\\"),
+                    ),
+                )
+                .order_by(IntegrationEvent.occurred_at.desc())
+                .limit(6)
+                .all()
+            )
+            for action in visible_actions:
+                priority = (action.priority or "normal").replace("_", " ").title()
+                app_name = action.integration.app_module.name if action.integration and action.integration.app_module else "Connected app"
+                results.append(_result(
+                    "action",
+                    action.title,
+                    f"Action Centre · {priority} · {app_name}",
+                    url_for("billing.integration_action_centre"),
+                    f"action:{action.id}",
+                ))
+
         leads = (
             Lead.query
             .filter(Lead.assigned_consultant_id == current_user.id)
@@ -92,8 +127,6 @@ def register_search_routes(bp):
                 f"lead:{lead.id}",
             ))
 
-        # Directory enquiries live in their route module rather than models.py.
-        # Import lazily at request time to avoid the existing notification/enquiry import cycle.
         from directory_enquiry_routes import DirectoryEnquiry
 
         enquiries = (
