@@ -66,6 +66,8 @@ jobs:
       - name: Verify integration routes and unauthorized API behavior
         run: |
           python - <<'PY'
+          from sqlalchemy import inspect
+
           from app import app
           from extensions import db
           from integration_models import AppIntegration
@@ -74,6 +76,9 @@ jobs:
           rules = {rule.rule for rule in app.url_map.iter_rules()}
           required = {
               '/clients',
+              '/clients/<int:external_client_id>',
+              '/clients/<int:external_client_id>/links',
+              '/clients/<int:external_client_id>/links/<int:link_id>/remove',
               '/api/search',
               '/integrations/action-centre',
               '/integrations/apps/<app_slug>/launch',
@@ -85,6 +90,7 @@ jobs:
           assert not missing, f'Missing integration routes: {sorted(missing)}'
 
           with app.app_context():
+              assert 'client_record_link' in inspect(db.engine).get_table_names()
               app_module = AppModule(
                   name='ResolvHR CI',
                   slug='resolvhr-ci',
@@ -114,6 +120,9 @@ jobs:
 
           search_response = client.get('/api/search?q=client')
           assert search_response.status_code in {302, 401}, search_response.get_data(as_text=True)
+
+          client360_response = client.get('/clients/1')
+          assert client360_response.status_code in {302, 401}, client360_response.get_data(as_text=True)
 
           payload = {
               'app': 'resolvhr',
