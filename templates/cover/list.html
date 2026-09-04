@@ -1,97 +1,18 @@
 {% extends "base.html" %}
-
+{% block title %}HIVE Covered · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            HIVE Covered
-        </p>
-
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            Cover Requests
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            Request holiday, sickness, overflow or emergency cover.
-        </p>
-    </div>
-
-    <div class="flex flex-wrap gap-3">
-        <a href="{{ url_for('dashboard') }}"
-           class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-            Back to Dashboard
-        </a>
-
-        <a href="{{ url_for('cover_new') }}"
-           class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
-            New Cover Request
-        </a>
-    </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
+{% set stats = namespace(draft=0, submitted=0, active=0, completed=0) %}
+{% for item in cover_requests %}{% if item.status == 'draft' %}{% set stats.draft = stats.draft + 1 %}{% elif item.status in ['submitted','approved'] %}{% set stats.submitted = stats.submitted + 1 %}{% elif item.status == 'active' %}{% set stats.active = stats.active + 1 %}{% elif item.status == 'completed' %}{% set stats.completed = stats.completed + 1 %}{% endif %}{% endfor %}
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>HIVE Covered</h1><p>Plan continuity cover, prepare client handovers and track each request through review, assignment and completion.</p></div><div class="hive-workspace-actions"><a class="hive-btn hive-btn--primary" href="{{ url_for('cover_new') }}">New cover request</a></div></header>
+<div class="hive-metric-rail"><div class="hive-metric"><span>Draft</span><strong>{{ stats.draft }}</strong></div><div class="hive-metric"><span>Awaiting / approved</span><strong>{{ stats.submitted }}</strong></div><div class="hive-metric"><span>Active</span><strong>{{ stats.active }}</strong></div><div class="hive-metric"><span>Completed</span><strong>{{ stats.completed }}</strong></div></div>
+{% if not cover_requests %}<div class="hive-empty"><h2>No cover requests yet</h2><p>Create a request when you need holiday, sickness, overflow or emergency cover.</p><div style="margin-top:16px"><a class="hive-btn hive-btn--primary" href="{{ url_for('cover_new') }}">Create first request</a></div></div>{% else %}
+<div class="hive-case-list">
+{% for item in cover_requests %}
+<article class="hive-case-row"><div><div class="hive-row-title">{{ item.cover_type|title }} cover · {{ item.start_date.strftime('%d %b %Y') }} to {{ item.end_date.strftime('%d %b %Y') }}</div><div class="hive-row-copy">{{ item.summary or 'No summary added.' }}</div></div><div class="hive-row-meta"><strong>Status</strong><span class="hive-status {% if item.status == 'active' %}hive-status--active{% elif item.status == 'submitted' %}hive-status--submitted{% elif item.status == 'approved' %}hive-status--approved{% elif item.status == 'declined' %}hive-status--declined{% endif %}">{{ item.status|title }}</span></div><div class="hive-row-meta"><strong>Clients</strong>{{ item.clients|length }}</div><div><a class="hive-btn hive-btn--primary" href="{{ url_for('cover_detail', cover_id=item.id) }}">Open</a></div></article>
+{% endfor %}
+</div>{% endif %}
+<div class="hive-notice">Cover readiness is based on the actual handover records in each request. HIVE does not currently calculate a synthetic readiness score.</div>
 </div>
-
-{% if not cover_requests %}
-    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <h2 class="text-xl font-bold text-slate-950">No cover requests yet</h2>
-        <p class="text-slate-600 mt-2">
-            Create your first request when you need holiday, sickness or capacity cover.
-        </p>
-    </div>
-{% endif %}
-
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-    {% for cover_request in cover_requests %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                        {{ cover_request.cover_type|capitalize }}
-                    </p>
-
-                    <h2 class="text-xl font-bold text-slate-950 mt-2">
-                        {{ cover_request.start_date.strftime("%d %b %Y") }}
-                        -
-                        {{ cover_request.end_date.strftime("%d %b %Y") }}
-                    </h2>
-                </div>
-
-                <span class="rounded-full px-3 py-1 text-xs font-semibold
-                    {% if cover_request.status == 'draft' %}
-                        bg-slate-100 text-slate-700
-                    {% elif cover_request.status == 'submitted' %}
-                        bg-amber-100 text-amber-800
-                    {% elif cover_request.status == 'approved' %}
-                        bg-blue-100 text-blue-800
-                    {% elif cover_request.status == 'active' %}
-                        bg-green-100 text-green-800
-                    {% elif cover_request.status == 'completed' %}
-                        bg-slate-900 text-white
-                    {% elif cover_request.status == 'declined' %}
-                        bg-red-100 text-red-800
-                    {% else %}
-                        bg-slate-100 text-slate-700
-                    {% endif %}
-                ">
-                    {{ cover_request.status|capitalize }}
-                </span>
-            </div>
-
-            <p class="text-sm text-slate-600 mt-4 leading-6">
-                {{ cover_request.summary or "No summary added." }}
-            </p>
-
-            <p class="text-xs text-slate-400 mt-4">
-                Covered clients: {{ cover_request.clients|length }}
-            </p>
-
-            <div class="mt-6">
-                <a href="{{ url_for('cover_detail', cover_id=cover_request.id) }}"
-                   class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
-                    View Request
-                </a>
-            </div>
-        </div>
-    {% endfor %}
-</div>
-
 {% endblock %}
