@@ -58,6 +58,11 @@
     const results = document.getElementById("hiveCommandResults");
     const empty = document.getElementById("hiveCommandEmpty");
     let commandReturnFocus = null;
+    let searchTimer = null;
+    let searchSequence = 0;
+    let activeResultIndex = -1;
+
+    if (input) input.placeholder = "Search HIVE records or navigation…";
 
     if (results && !results.querySelector('a[href="/clients"]')) {
         const clientsCommand = document.createElement("a");
@@ -69,18 +74,110 @@
         else results.appendChild(clientsCommand);
     }
 
-    const commandLinks = Array.from(results?.querySelectorAll("a") || []);
+    const staticLinks = Array.from(results?.querySelectorAll("a") || []);
+    const remoteContainer = document.createElement("div");
+    remoteContainer.dataset.commandRemoteResults = "true";
+    results?.appendChild(remoteContainer);
 
-    const filterCommands = () => {
-        const query = (input?.value || "").trim().toLowerCase();
+    const visibleLinks = () => Array.from(results?.querySelectorAll("a") || []).filter((link) => !link.hidden);
+
+    const setEmptyState = (message, visibleCount) => {
+        if (!empty) return;
+        empty.textContent = message;
+        empty.hidden = visibleCount !== 0;
+    };
+
+    const clearActiveResult = () => {
+        visibleLinks().forEach((link) => link.removeAttribute("data-command-active"));
+        activeResultIndex = -1;
+    };
+
+    const focusResult = (index) => {
+        const links = visibleLinks();
+        if (!links.length) return;
+        activeResultIndex = ((index % links.length) + links.length) % links.length;
+        links.forEach((link, linkIndex) => {
+            if (linkIndex === activeResultIndex) {
+                link.dataset.commandActive = "true";
+                link.focus();
+                link.scrollIntoView({ block: "nearest" });
+            } else {
+                link.removeAttribute("data-command-active");
+            }
+        });
+    };
+
+    const renderRemoteResults = (items) => {
+        remoteContainer.replaceChildren();
+        for (const item of items) {
+            if (!item || !item.url || !item.title) continue;
+            const link = document.createElement("a");
+            link.href = item.url;
+            link.dataset.commandRemote = "true";
+            link.dataset.commandLabel = `${item.kind || "record"} ${item.title} ${item.subtitle || ""}`;
+            link.append(document.createTextNode(item.title));
+            const meta = document.createElement("span");
+            meta.textContent = item.subtitle || item.kind || "HIVE record";
+            link.append(meta);
+            remoteContainer.appendChild(link);
+        }
+    };
+
+    const filterStaticLinks = (query) => {
         let visible = 0;
-        commandLinks.forEach((link) => {
+        staticLinks.forEach((link) => {
             const haystack = (link.dataset.commandLabel || link.textContent || "").toLowerCase();
             const show = !query || haystack.includes(query);
             link.hidden = !show;
             if (show) visible += 1;
         });
-        if (empty) empty.hidden = visible !== 0;
+        return visible;
+    };
+
+    const performSearch = async (query, sequence) => {
+        try {
+            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+                method: "GET",
+                credentials: "same-origin",
+                headers: { Accept: "application/json" },
+            });
+            if (sequence !== searchSequence) return;
+            if (!response.ok) throw new Error(`Search returned ${response.status}`);
+
+            const payload = await response.json();
+            const items = payload && payload.ok && Array.isArray(payload.results) ? payload.results : [];
+            renderRemoteResults(items);
+            clearActiveResult();
+            const visibleCount = filterStaticLinks(query.toLowerCase()) + items.length;
+            setEmptyState("No matching HIVE records or destinations.", visibleCount);
+        } catch (error) {
+            if (sequence !== searchSequence) return;
+            renderRemoteResults([]);
+            clearActiveResult();
+            const visibleCount = filterStaticLinks(query.toLowerCase());
+            setEmptyState("Record search is temporarily unavailable. Navigation search still works.", visibleCount);
+            console.warn("HIVE command search failed", error);
+        }
+    };
+
+    const updateCommands = () => {
+        const query = (input?.value || "").trim();
+        const normalised = query.toLowerCase();
+        const staticVisible = filterStaticLinks(normalised);
+        clearActiveResult();
+
+        if (searchTimer) window.clearTimeout(searchTimer);
+        searchSequence += 1;
+        const sequence = searchSequence;
+
+        if (query.length < 2) {
+            renderRemoteResults([]);
+            setEmptyState("No matching navigation destination.", staticVisible);
+            return;
+        }
+
+        setEmptyState("Searching HIVE…", 0);
+        searchTimer = window.setTimeout(() => performSearch(query, sequence), 180);
     };
 
     const openCommand = () => {
@@ -90,7 +187,7 @@
         body.classList.add("hive-command-open");
         if (input) {
             input.value = "";
-            filterCommands();
+            updateCommands();
             window.requestAnimationFrame(() => input.focus());
         }
     };
@@ -99,11 +196,38 @@
         if (!dialog || dialog.hidden) return;
         dialog.hidden = true;
         body.classList.remove("hive-command-open");
+        if (searchTimer) window.clearTimeout(searchTimer);
+        searchSequence += 1;
+        renderRemoteResults([]);
+        clearActiveResult();
         if (commandReturnFocus instanceof HTMLElement) commandReturnFocus.focus();
     };
 
     trigger?.addEventListener("click", openCommand);
-    input?.addEventListener("input", filterCommands);
+    input?.addEventListener("input", updateCommands);
+    input?.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            focusResult(activeResultIndex + 1);
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            focusResult(activeResultIndex <= 0 ? -1 : activeResultIndex - 1);
+        } else if (event.key === "Enter") {
+            const links = visibleLinks();
+            if (links.length) {
+                event.preventDefault();
+                links[Math.max(activeResultIndex, 0)].click();
+            }
+        }
+    });
+    results?.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            const links = visibleLinks();
+            const currentIndex = links.indexOf(document.activeElement);
+            focusResult(currentIndex + (event.key === "ArrowDown" ? 1 : -1));
+        }
+    });
     dialog?.addEventListener("click", (event) => {
         if (event.target === dialog) closeCommand();
     });

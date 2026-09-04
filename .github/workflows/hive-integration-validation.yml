@@ -73,6 +73,8 @@ jobs:
 
           rules = {rule.rule for rule in app.url_map.iter_rules()}
           required = {
+              '/clients',
+              '/api/search',
               '/integrations/action-centre',
               '/integrations/apps/<app_slug>/launch',
               '/api/integrations/v1/actions',
@@ -109,6 +111,10 @@ jobs:
               db.session.commit()
 
           client = app.test_client()
+
+          search_response = client.get('/api/search?q=client')
+          assert search_response.status_code in {302, 401}, search_response.get_data(as_text=True)
+
           payload = {
               'app': 'resolvhr',
               'external_event_id': 'ci-event-1',
