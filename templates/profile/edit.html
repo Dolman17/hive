@@ -1,16 +1,76 @@
 {% extends "base.html" %}
+{% block title %}Edit Business Profile · HIVE{% endblock %}
 {% block content %}
-<h1 class="text-3xl font-bold text-slate-950 mb-6">Edit Profile</h1>
-<form method="POST" class="space-y-5 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div><label class="block text-sm font-medium text-slate-700 mb-1">Business name</label><input name="business_name" value="{{ profile.business_name or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3"></div>
-    <div><label class="block text-sm font-medium text-slate-700 mb-1">Location</label><input name="location" value="{{ profile.location or '' }}" class="w-full rounded-xl border border-slate-300 px-4 py-3"></div>
-    <div><label class="block text-sm font-medium text-slate-700 mb-1">Bio</label><textarea name="bio" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ profile.bio or '' }}</textarea></div>
-    <div><label class="block text-sm font-medium text-slate-700 mb-1">Specialisms</label><textarea name="specialisms" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ profile.specialisms or '' }}</textarea></div>
-    <div><label class="block text-sm font-medium text-slate-700 mb-1">Sectors</label><textarea name="sectors" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ profile.sectors or '' }}</textarea></div>
-    <label class="flex items-center gap-3 text-sm text-slate-700"><input type="checkbox" name="remote_available" {% if profile.remote_available %}checked{% endif %}> Remote available</label>
-    <label class="flex items-center gap-3 text-sm text-slate-700"><input type="checkbox" name="is_public" {% if profile.is_public %}checked{% endif %}> Public directory visible</label>
-    <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Save Profile</button>
-    <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="ml-3 text-sm text-slate-600 hover:text-slate-950">Cancel</a>
-</form>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase5.css') }}">
+
+<div class="hive-business">
+    <header class="hive-business-head">
+        <div>
+            <h1>Edit business profile</h1>
+            <p>Keep the information HIVE uses for directory visibility and consultant matching accurate and concise.</p>
+        </div>
+        <div class="hive-business-actions">
+            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-biz-btn">Cancel</a>
+        </div>
+    </header>
+
+    <form method="POST" class="hive-biz-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <section class="hive-biz-form-panel">
+            <h2>Professional identity</h2>
+            <div class="hive-biz-form-grid">
+                <div class="hive-biz-field">
+                    <label for="business_name">Business name</label>
+                    <input id="business_name" name="business_name" value="{{ profile.business_name or '' }}">
+                </div>
+                <div class="hive-biz-field">
+                    <label for="location">Location</label>
+                    <input id="location" name="location" value="{{ profile.location or '' }}">
+                </div>
+                <div class="hive-biz-field is-wide">
+                    <label for="bio">Bio</label>
+                    <textarea id="bio" name="bio">{{ profile.bio or '' }}</textarea>
+                    <span class="hive-biz-help">Focus on your experience, approach and the problems you help clients solve.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="hive-biz-form-panel">
+            <h2>Expertise</h2>
+            <div class="hive-biz-form-grid">
+                <div class="hive-biz-field">
+                    <label for="specialisms">Specialisms</label>
+                    <textarea id="specialisms" name="specialisms">{{ profile.specialisms or '' }}</textarea>
+                </div>
+                <div class="hive-biz-field">
+                    <label for="sectors">Sectors</label>
+                    <textarea id="sectors" name="sectors">{{ profile.sectors or '' }}</textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="hive-biz-form-panel">
+            <h2>Availability & visibility</h2>
+            <div style="display:grid;gap:16px">
+                <label class="hive-biz-check">
+                    <input type="checkbox" name="remote_available" {% if profile.remote_available %}checked{% endif %}>
+                    <span><strong>Available for remote work</strong><span>Allow HIVE matching and directory users to understand that remote delivery is available.</span></span>
+                </label>
+                <label class="hive-biz-check">
+                    <input type="checkbox" name="is_public" {% if profile.is_public %}checked{% endif %}>
+                    <span><strong>Visible in the public directory</strong><span>When enabled, prospective clients can discover your consultant profile and submit directory enquiries.</span></span>
+                </label>
+            </div>
+        </section>
+
+        <div class="hive-biz-form-actions">
+            <span class="hive-biz-help">Verification fields are managed by HIVE administrators.</span>
+            <div class="hive-business-actions">
+                <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-biz-btn">Cancel</a>
+                <button type="submit" class="hive-biz-btn hive-biz-btn--primary">Save profile</button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}

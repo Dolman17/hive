@@ -1,23 +1,79 @@
 {% extends "base.html" %}
+{% block title %}Directory Enquiry · HIVE{% endblock %}
 {% block content %}
-<h1 class="text-3xl font-bold text-slate-950 mb-6">Directory Enquiry</h1>
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950">{{ enquiry.company_name }}</h2>
-        <div class="text-sm text-slate-600 mt-4 space-y-2">
-            <p>Contact: {{ enquiry.contact_name }}</p>
-            <p>Email: {{ enquiry.contact_email }}</p>
-            <p>Phone: {{ enquiry.contact_phone or 'Not provided' }}</p>
-            <p>Urgency: {{ enquiry.urgency|title }}</p>
-            <p>Status: {{ enquiry.status|title }}</p>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase5.css') }}">
+
+<div class="hive-business">
+    <header class="hive-business-head">
+        <div>
+            <h1>{{ enquiry.company_name }}</h1>
+            <p>Directory enquiry from {{ enquiry.contact_name }}. Review the request, maintain your notes and keep the commercial status current.</p>
         </div>
-        <p class="text-slate-600 mt-5 whitespace-pre-line">{{ enquiry.support_needed or 'No support summary provided.' }}</p>
+        <div class="hive-business-actions">
+            <a href="{{ url_for('directory_enquiries.consultant_directory_enquiries') }}" class="hive-biz-btn">Back to enquiries</a>
+            <a href="{{ url_for('leads_list') }}" class="hive-biz-btn">All opportunities</a>
+        </div>
+    </header>
+
+    <div class="hive-enquiry-detail">
+        <div style="display:grid;gap:20px;align-content:start">
+            <div class="hive-biz-panel">
+                <section class="hive-enquiry-message">
+                    <h2>Support needed</h2>
+                    <p>{{ enquiry.support_needed or 'No support summary provided.' }}</p>
+                </section>
+                <section class="hive-biz-section">
+                    <h3>Contact</h3>
+                    <dl class="hive-biz-kv">
+                        <div><dt>Name</dt><dd>{{ enquiry.contact_name }}</dd></div>
+                        <div><dt>Email</dt><dd>{{ enquiry.contact_email }}</dd></div>
+                        <div><dt>Phone</dt><dd>{{ enquiry.contact_phone or 'Not provided' }}</dd></div>
+                        <div><dt>Urgency</dt><dd>{{ enquiry.urgency|title }}</dd></div>
+                    </dl>
+                </section>
+            </div>
+
+            {% if enquiry.timeline_events %}
+            <div class="hive-biz-panel">
+                <section class="hive-biz-section">
+                    <h2>Activity</h2>
+                    <div style="display:grid;gap:0;margin-top:14px">
+                        {% for event in enquiry.timeline_events|sort(attribute='created_at', reverse=true) %}
+                        <div style="padding:12px 0;border-top:1px solid var(--hive-app-border)">
+                            <div style="font-size:12px;font-weight:650;color:#344054">{{ event.event_type }}</div>
+                            {% if event.notes %}<div style="margin-top:3px;font-size:12px;color:var(--hive-app-muted);line-height:1.5">{{ event.notes }}</div>{% endif %}
+                            <div style="margin-top:4px;font-size:11px;color:var(--hive-app-muted)">{{ event.created_at.strftime('%d %b %Y %H:%M') }} · {{ event.created_by_label or 'HIVE' }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+            {% endif %}
+        </div>
+
+        <aside class="hive-biz-panel" style="height:fit-content">
+            <form method="POST" class="hive-biz-section" style="display:grid;gap:16px">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <h2>Manage enquiry</h2>
+                    <p>Changes are recorded in the enquiry timeline and status changes notify HIVE administrators.</p>
+                </div>
+                <div class="hive-biz-field">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        {% for status in ['assigned','accepted','won','lost','closed'] %}
+                        <option value="{{ status }}" {% if enquiry.status == status %}selected{% endif %}>{{ status|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="hive-biz-field">
+                    <label for="consultant_notes">Consultant notes</label>
+                    <textarea id="consultant_notes" name="consultant_notes">{{ enquiry.consultant_notes or '' }}</textarea>
+                    <span class="hive-biz-help">Use this for your working notes on the opportunity.</span>
+                </div>
+                <button type="submit" class="hive-biz-btn hive-biz-btn--primary">Save changes</button>
+            </form>
+        </aside>
     </div>
-    <form method="POST" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5 h-fit">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div><label class="block text-sm font-medium text-slate-700 mb-1">Status</label><select name="status" class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white">{% for status in ['assigned','accepted','won','lost','closed'] %}<option value="{{ status }}" {% if enquiry.status == status %}selected{% endif %}>{{ status|title }}</option>{% endfor %}</select></div>
-        <div><label class="block text-sm font-medium text-slate-700 mb-1">Notes</label><textarea name="consultant_notes" class="w-full rounded-xl border border-slate-300 px-4 py-3">{{ enquiry.consultant_notes or '' }}</textarea></div>
-        <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Save</button>
-    </form>
 </div>
 {% endblock %}

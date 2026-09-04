@@ -1,194 +1,94 @@
 {% extends "base.html" %}
-
+{% block title %}Website Settings · HIVE{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase5.css') }}">
 
-<div class="mb-8">
-    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-        Website Builder
-    </p>
-
-    <h1 class="text-3xl font-bold text-slate-950 mt-2">
-        Website Settings
-    </h1>
-
-    <p class="text-slate-600 mt-2">
-        Build your basic branded consultant website.
-    </p>
-</div>
-
-<form method="POST" enctype="multipart/form-data" class="space-y-8">
-    {{ form.hidden_tag() }}
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Website Identity</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-                {{ form.tenant_slug.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.tenant_slug(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                <p class="text-xs text-slate-500 mt-1">
-                    Your page will be: /consultants/{{ form.tenant_slug.data or settings.tenant_slug }}
-                </p>
-                {% for error in form.tenant_slug.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.business_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.business_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.business_name.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div class="md:col-span-2">
-                {{ form.strapline.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.strapline(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.strapline.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div class="md:col-span-2">
-                {{ form.logo.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.logo(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
-
-                {% if settings.logo_path %}
-                    <p class="text-xs text-slate-500 mt-2">
-                        Current logo uploaded.
-                    </p>
-                {% endif %}
-
-                {% for error in form.logo.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Brand Colours</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div>
-                {{ form.primary_colour.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.primary_colour(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.primary_colour.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.accent_colour.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.accent_colour(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.accent_colour.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.text_colour.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.text_colour(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.text_colour.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Website Content</h2>
-
-        <div class="space-y-5">
-            <div>
-                {{ form.website_intro.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.website_intro(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
-            </div>
-
-            <div>
-                {{ form.about_text.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.about_text(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
-            </div>
-
-            <div>
-                {{ form.services_text.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.services_text(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
-                <p class="text-xs text-slate-500 mt-1">
-                    Put each service on a new line.
-                </p>
-            </div>
-
-            <div>
-                {{ form.sectors_text.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.sectors_text(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-24") }}
-                <p class="text-xs text-slate-500 mt-1">
-                    Put each sector on a new line.
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Contact and CTA</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-                {{ form.contact_email.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.contact_email(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.contact_email.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.contact_phone.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.contact_phone(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-            </div>
-
-            <div>
-                {{ form.linkedin_url.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.linkedin_url(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.linkedin_url.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.cta_label.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.cta_label(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-            </div>
-
-            <div class="md:col-span-2">
-                {{ form.cta_url.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.cta_url(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.cta_url.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<div class="hive-business">
+    <header class="hive-business-head">
         <div>
-            <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
-                {{ form.is_published(class="h-5 w-5 rounded border-slate-300") }}
-                Publish website
+            <h1>Website settings</h1>
+            <p>Manage the identity, content and publishing state of your HIVE-hosted consultant website.</p>
+        </div>
+        <div class="hive-business-actions">
+            <a href="{{ url_for('website_preview') }}" class="hive-biz-btn">Preview website</a>
+            {% if settings.tenant_slug %}<a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="hive-biz-btn">Open public page</a>{% endif %}
+        </div>
+    </header>
+
+    <form method="POST" enctype="multipart/form-data" class="hive-biz-form">
+        {{ form.hidden_tag() }}
+
+        <section class="hive-biz-form-panel">
+            <h2>Identity</h2>
+            <p>The core information used at the top of your public website.</p>
+            <div class="hive-biz-form-grid">
+                <div class="hive-biz-field">
+                    {{ form.tenant_slug.label() }}
+                    {{ form.tenant_slug() }}
+                    <span class="hive-biz-help">Public path: /consultants/{{ form.tenant_slug.data or settings.tenant_slug }}</span>
+                    {% for error in form.tenant_slug.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="hive-biz-field">
+                    {{ form.business_name.label() }}
+                    {{ form.business_name() }}
+                    {% for error in form.business_name.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="hive-biz-field is-wide">
+                    {{ form.strapline.label() }}
+                    {{ form.strapline() }}
+                    {% for error in form.strapline.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}
+                </div>
+                <div class="hive-biz-field is-wide">
+                    {{ form.logo.label() }}
+                    {{ form.logo() }}
+                    <span class="hive-biz-help">{% if settings.logo_path %}A logo is currently uploaded. Uploading a new file replaces it.{% else %}Add your business logo for the public site.{% endif %}</span>
+                    {% for error in form.logo.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="hive-biz-form-panel">
+            <h2>Brand colours</h2>
+            <p>Use your existing brand palette. HIVE applies these values to the hosted consultant page.</p>
+            <div class="hive-biz-form-grid">
+                <div class="hive-biz-field">{{ form.primary_colour.label() }}{{ form.primary_colour() }}{% for error in form.primary_colour.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}</div>
+                <div class="hive-biz-field">{{ form.accent_colour.label() }}{{ form.accent_colour() }}{% for error in form.accent_colour.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}</div>
+                <div class="hive-biz-field">{{ form.text_colour.label() }}{{ form.text_colour() }}{% for error in form.text_colour.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}</div>
+            </div>
+        </section>
+
+        <section class="hive-biz-form-panel">
+            <h2>Website content</h2>
+            <p>Keep the copy concise and client-focused. Services and sectors are entered one per line.</p>
+            <div class="hive-biz-form-grid">
+                <div class="hive-biz-field is-wide">{{ form.website_intro.label() }}{{ form.website_intro() }}</div>
+                <div class="hive-biz-field is-wide">{{ form.about_text.label() }}{{ form.about_text() }}</div>
+                <div class="hive-biz-field">{{ form.services_text.label() }}{{ form.services_text() }}<span class="hive-biz-help">One service per line.</span></div>
+                <div class="hive-biz-field">{{ form.sectors_text.label() }}{{ form.sectors_text() }}<span class="hive-biz-help">One sector per line.</span></div>
+            </div>
+        </section>
+
+        <section class="hive-biz-form-panel">
+            <h2>Contact & call to action</h2>
+            <div class="hive-biz-form-grid">
+                <div class="hive-biz-field">{{ form.contact_email.label() }}{{ form.contact_email() }}{% for error in form.contact_email.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}</div>
+                <div class="hive-biz-field">{{ form.contact_phone.label() }}{{ form.contact_phone() }}</div>
+                <div class="hive-biz-field">{{ form.linkedin_url.label() }}{{ form.linkedin_url() }}{% for error in form.linkedin_url.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}</div>
+                <div class="hive-biz-field">{{ form.cta_label.label() }}{{ form.cta_label() }}</div>
+                <div class="hive-biz-field is-wide">{{ form.cta_url.label() }}{{ form.cta_url() }}{% for error in form.cta_url.errors %}<span class="hive-biz-error">{{ error }}</span>{% endfor %}</div>
+            </div>
+        </section>
+
+        <div class="hive-publish-strip">
+            <label class="hive-biz-check">
+                {{ form.is_published() }}
+                <span><strong>{{ 'Website published' if settings.is_published else 'Publish website' }}</strong><span>When unpublished, only you and HIVE administrators can view the page.</span></span>
             </label>
-            <p class="text-xs text-slate-500 mt-1">
-                If unpublished, only you and admins can view it.
-            </p>
+            <div class="hive-business-actions">
+                <a href="{{ url_for('website_preview') }}" class="hive-biz-btn">Preview</a>
+                {{ form.submit(class='hive-biz-btn hive-biz-btn--primary') }}
+            </div>
         </div>
-
-        <div class="flex flex-wrap gap-3">
-            <a href="{{ url_for('website_preview') }}"
-               class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-                Preview
-            </a>
-
-            {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
-        </div>
-    </div>
-</form>
-
+    </form>
+</div>
 {% endblock %}

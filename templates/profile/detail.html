@@ -1,42 +1,72 @@
 {% extends "base.html" %}
+{% block title %}Business Profile · HIVE{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase5.css') }}">
 
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Consultant Profile</p>
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">{{ profile.business_name or current_user.name }}</h1>
-        <p class="text-slate-600 mt-2">Manage the profile HIVE uses for directory, verification and matching.</p>
-    </div>
-    <a href="{{ url_for('consultant_profiles.profile_edit') }}" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Edit Profile</a>
-</div>
+{% set completed = namespace(value=0) %}
+{% if profile.business_name %}{% set completed.value = completed.value + 1 %}{% endif %}
+{% if profile.location %}{% set completed.value = completed.value + 1 %}{% endif %}
+{% if profile.bio %}{% set completed.value = completed.value + 1 %}{% endif %}
+{% if profile.specialisms %}{% set completed.value = completed.value + 1 %}{% endif %}
+{% if profile.sectors %}{% set completed.value = completed.value + 1 %}{% endif %}
+{% set completion_pct = (completed.value * 100 / 5)|round|int %}
 
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <div class="xl:col-span-2 space-y-6">
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Bio</h2>
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.bio or 'No bio added yet.' }}</p>
+<div class="hive-business">
+    <header class="hive-business-head">
+        <div>
+            <h1>Business profile</h1>
+            <p>Manage the professional information HIVE uses for directory visibility, verification and consultant matching.</p>
         </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Specialisms</h2>
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.specialisms or 'No specialisms added yet.' }}</p>
+        <div class="hive-business-actions">
+            <a href="{{ url_for('website_settings') }}" class="hive-biz-btn">Website settings</a>
+            <a href="{{ url_for('consultant_profiles.profile_edit') }}" class="hive-biz-btn hive-biz-btn--primary">Edit profile</a>
         </div>
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Sectors</h2>
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">{{ profile.sectors or 'No sectors added yet.' }}</p>
+    </header>
+
+    <div class="hive-biz-grid">
+        <div class="hive-biz-panel">
+            <section class="hive-biz-section">
+                <h2>{{ profile.business_name or current_user.name }}</h2>
+                <p>{{ profile.bio or 'Add a concise professional introduction so prospective clients can understand your experience and approach.' }}</p>
+            </section>
+            <section class="hive-biz-section">
+                <h3>Specialisms</h3>
+                <p>{{ profile.specialisms or 'No specialisms added yet.' }}</p>
+            </section>
+            <section class="hive-biz-section">
+                <h3>Sectors</h3>
+                <p>{{ profile.sectors or 'No sectors added yet.' }}</p>
+            </section>
         </div>
-    </div>
-    <div class="space-y-6">
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Status</h2>
-            <div class="text-sm text-slate-600 mt-4 space-y-2">
-                <p>Location: {{ profile.location or 'Not set' }}</p>
-                <p>Remote available: {{ 'Yes' if profile.remote_available else 'No' }}</p>
-                <p>Public: {{ 'Yes' if profile.is_public else 'No' }}</p>
-                <p>Insurance verified: {{ 'Yes' if profile.insurance_verified else 'No' }}</p>
-                <p>Qualifications verified: {{ 'Yes' if profile.qualifications_verified else 'No' }}</p>
+
+        <aside style="display:grid;gap:20px;align-content:start">
+            <div class="hive-biz-panel">
+                <section class="hive-biz-section">
+                    <h2>Profile completeness</h2>
+                    <div class="hive-completion" style="margin-top:14px">
+                        <div class="hive-completion-bar"><div class="hive-completion-fill" style="width:{{ completion_pct }}%"></div></div>
+                        <div class="hive-completion-meta"><span>{{ completed.value }} of 5 core fields complete</span><strong>{{ completion_pct }}%</strong></div>
+                    </div>
+                </section>
             </div>
-        </div>
+
+            <div class="hive-biz-panel">
+                <section class="hive-biz-section">
+                    <h2>Visibility & verification</h2>
+                    <dl class="hive-biz-kv">
+                        <div><dt>Location</dt><dd>{{ profile.location or 'Not set' }}</dd></div>
+                        <div><dt>Remote work</dt><dd>{{ 'Available' if profile.remote_available else 'Not offered' }}</dd></div>
+                        <div><dt>Directory</dt><dd><span class="hive-biz-status {{ 'hive-biz-status--good' if profile.is_public else 'hive-biz-status--warn' }}">{{ 'Visible' if profile.is_public else 'Hidden' }}</span></dd></div>
+                        <div><dt>Insurance</dt><dd><span class="hive-biz-status {{ 'hive-biz-status--good' if profile.insurance_verified else '' }}">{{ 'Verified' if profile.insurance_verified else 'Not verified' }}</span></dd></div>
+                        <div><dt>Qualifications</dt><dd><span class="hive-biz-status {{ 'hive-biz-status--good' if profile.qualifications_verified else '' }}">{{ 'Verified' if profile.qualifications_verified else 'Not verified' }}</span></dd></div>
+                    </dl>
+                </section>
+            </div>
+
+            {% if not profile.is_public %}
+            <div class="hive-note">Your profile is currently hidden from the public directory. Turn on public directory visibility when you are ready to receive enquiries.</div>
+            {% endif %}
+        </aside>
     </div>
 </div>
-
 {% endblock %}
