@@ -1,94 +1,13 @@
 {% extends "base.html" %}
-
+{% block title %}{{ expert_request.subject }} · Expert Help · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            Expert Help
-        </p>
-
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            {{ expert_request.subject }}
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            {{ expert_request.category }} · Urgency: {{ expert_request.urgency|capitalize }}
-        </p>
-    </div>
-
-    <a href="{{ url_for('expert_help_list') }}"
-       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-        Back to Expert Help
-    </a>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>{{ expert_request.subject }}</h1><p>{{ expert_request.category }} · {{ expert_request.urgency|title }} urgency</p></div><div class="hive-workspace-actions"><a class="hive-btn" href="{{ url_for('expert_help_list') }}">Back to Expert Help</a></div></header>
+<div class="hive-detail-grid">
+<div class="hive-workspace">
+<section class="hive-panel"><div class="hive-section"><h2>Request summary</h2><p style="white-space:pre-line">{{ expert_request.summary or 'No summary added.' }}</p></div><div class="hive-section"><h2>Desired outcome</h2><p style="white-space:pre-line">{{ expert_request.desired_outcome or 'No desired outcome added.' }}</p></div>{% if expert_request.response_summary %}<div class="hive-section"><h2>HIVE response</h2><div class="hive-notice" style="margin-top:12px;white-space:pre-line">{{ expert_request.response_summary }}</div></div>{% endif %}</section>
 </div>
-
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <div class="xl:col-span-2 space-y-6">
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Summary</h2>
-
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
-                {{ expert_request.summary or "No summary added." }}
-            </p>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Desired Outcome</h2>
-
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
-                {{ expert_request.desired_outcome or "No desired outcome added." }}
-            </p>
-        </div>
-
-        {% if expert_request.response_summary %}
-            <div class="bg-green-50 rounded-2xl border border-green-200 p-6 shadow-sm">
-                <h2 class="text-lg font-bold text-green-900">Response Summary</h2>
-
-                <p class="text-green-900 mt-4 leading-7 whitespace-pre-line">
-                    {{ expert_request.response_summary }}
-                </p>
-            </div>
-        {% endif %}
-    </div>
-
-    <div class="space-y-6">
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">Status</h2>
-
-            <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold
-                {% if expert_request.status == 'new' %}
-                    bg-amber-100 text-amber-800
-                {% elif expert_request.status in ['reviewing', 'assigned'] %}
-                    bg-blue-100 text-blue-800
-                {% elif expert_request.status == 'responded' %}
-                    bg-green-100 text-green-800
-                {% elif expert_request.status == 'closed' %}
-                    bg-slate-950 text-white
-                {% else %}
-                    bg-slate-100 text-slate-700
-                {% endif %}
-            ">
-                {{ expert_request.status|capitalize }}
-            </span>
-
-            <div class="text-sm text-slate-600 mt-5 space-y-2">
-                <p>Created: {{ expert_request.created_at.strftime("%d %b %Y %H:%M") }}</p>
-
-                {% if expert_request.closed_at %}
-                    <p>Closed: {{ expert_request.closed_at.strftime("%d %b %Y %H:%M") }}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-amber-900">Important</h2>
-
-            <p class="text-sm text-amber-900 mt-4 leading-7">
-                This workflow records an escalation request. It should not be treated as standalone legal advice unless reviewed and confirmed by the appropriate specialist.
-            </p>
-        </div>
-    </div>
-</div>
-
+<aside class="hive-workspace"><section class="hive-panel"><div class="hive-section"><h2>Case status</h2><p><span class="hive-status {% if expert_request.status == 'responded' %}hive-status--active{% elif expert_request.status in ['reviewing','assigned'] %}hive-status--info{% elif expert_request.status == 'new' %}hive-status--waiting{% endif %}">{{ expert_request.status|title }}</span></p><div class="hive-definition-list"><div><dt>Category</dt><dd>{{ expert_request.category }}</dd></div><div><dt>Urgency</dt><dd>{{ expert_request.urgency|title }}</dd></div><div><dt>Created</dt><dd>{{ expert_request.created_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% if expert_request.closed_at %}<div><dt>Closed</dt><dd>{{ expert_request.closed_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% endif %}</div></div></section><div class="hive-notice hive-notice--warning">This records a specialist escalation request. It is not standalone legal advice unless reviewed and confirmed by the appropriate specialist.</div>{% if not expert_request.response_summary and expert_request.status != 'closed' %}<div class="hive-notice">HIVE has not recorded a response summary yet. Updates remain server-owned and will appear here when available.</div>{% endif %}</aside>
+</div></div>
 {% endblock %}
