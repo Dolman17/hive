@@ -1,97 +1,12 @@
 {% extends "base.html" %}
-
+{% block title %}Add Covered Client · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            HIVE Covered
-        </p>
-
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            Add Covered Client
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            Add the client handover details needed for cover delivery.
-        </p>
-    </div>
-
-    <a href="{{ url_for('cover_detail', cover_id=cover_request.id) }}"
-       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-        Back to Request
-    </a>
-</div>
-
-<form method="POST" class="space-y-8">
-    {{ form.hidden_tag() }}
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Client Details</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div class="md:col-span-2">
-                {{ form.client_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.client_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.client_name.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.contact_name.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.contact_name(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-            </div>
-
-            <div>
-                {{ form.contact_email.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.contact_email(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.contact_email.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div>
-                {{ form.contact_phone.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.contact_phone(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Cover Handover</h2>
-
-        <div class="space-y-5">
-            <div>
-                {{ form.retainer_scope.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.retainer_scope(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
-            </div>
-
-            <div>
-                {{ form.authority_limits.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.authority_limits(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
-            </div>
-
-            <div>
-                {{ form.escalation_rules.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.escalation_rules(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
-            </div>
-
-            <div>
-                {{ form.open_issues.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.open_issues(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
-            </div>
-
-            <div>
-                {{ form.risk_notes.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.risk_notes(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex justify-end">
-        {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
-    </div>
-</form>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>Add covered client</h1><p>Record the handover information the covering adviser needs to work safely within agreed limits.</p></div><div class="hive-workspace-actions"><a class="hive-btn" href="{{ url_for('cover_detail', cover_id=cover_request.id) }}">Back to request</a></div></header>
+<form method="POST" class="hive-workspace">{{ form.hidden_tag() }}
+<section class="hive-panel hive-form-panel"><h2 style="margin:0 0 16px;font-size:17px">Client details</h2><div class="hive-form-grid"><div class="hive-field is-wide">{{ form.client_name.label }}{{ form.client_name() }}{% for error in form.client_name.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div><div class="hive-field">{{ form.contact_name.label }}{{ form.contact_name() }}</div><div class="hive-field">{{ form.contact_email.label }}{{ form.contact_email() }}{% for error in form.contact_email.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div><div class="hive-field">{{ form.contact_phone.label }}{{ form.contact_phone() }}</div></div></section>
+<section class="hive-panel hive-form-panel"><h2 style="margin:0 0 16px;font-size:17px">Handover</h2><div class="hive-form-grid"><div class="hive-field">{{ form.retainer_scope.label }}{{ form.retainer_scope() }}</div><div class="hive-field">{{ form.authority_limits.label }}{{ form.authority_limits() }}</div><div class="hive-field">{{ form.escalation_rules.label }}{{ form.escalation_rules() }}</div><div class="hive-field">{{ form.risk_notes.label }}{{ form.risk_notes() }}</div><div class="hive-field is-wide">{{ form.open_issues.label }}{{ form.open_issues() }}</div></div><div class="hive-form-actions">{{ form.submit(class_='hive-btn hive-btn--primary') }}</div></section>
+<div class="hive-notice">These five handover sections are displayed individually on the request detail page. Blank sections remain visibly incomplete rather than being treated as ready.</div>
+</form></div>
 {% endblock %}

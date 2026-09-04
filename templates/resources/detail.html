@@ -1,106 +1,11 @@
 {% extends "base.html" %}
-
+{% block title %}{{ resource.title }} · Toolkit · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            {{ resource.category or "Toolkit Resource" }}
-        </p>
-
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            {{ resource.title }}
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            Required tier: {{ resource.required_tier|capitalize }}
-        </p>
-    </div>
-
-    <div class="flex flex-wrap gap-3">
-        <a href="{{ url_for('resources_list') }}"
-           class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-            Back to Toolkit
-        </a>
-
-        {% if resource.file_path %}
-            <a href="{{ url_for('resource_download', resource_id=resource.id) }}"
-               class="rounded-xl bg-amber-400 text-slate-950 px-5 py-3 text-sm font-semibold hover:bg-amber-300">
-                Download File
-            </a>
-        {% endif %}
-    </div>
-</div>
-
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <div class="xl:col-span-2 space-y-6">
-
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">
-                Description
-            </h2>
-
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
-                {{ resource.description or "No description added." }}
-            </p>
-        </div>
-
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">
-                Consultant Delivery Notes
-            </h2>
-
-            <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
-                {{ resource.consultant_notes or "No consultant notes added." }}
-            </p>
-        </div>
-
-    </div>
-
-    <div class="space-y-6">
-
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-950">
-                File
-            </h2>
-
-            {% if resource.file_path %}
-                <p class="text-sm text-slate-600 mt-3">
-                    {{ resource.original_filename or "Attached file" }}
-                </p>
-
-                <a href="{{ url_for('resource_download', resource_id=resource.id) }}"
-                   class="mt-5 inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
-                    Download
-                </a>
-            {% else %}
-                <p class="text-sm text-slate-600 mt-3">
-                    No file has been attached to this resource.
-                </p>
-            {% endif %}
-        </div>
-
-        <div class="bg-amber-50 rounded-2xl border border-amber-200 p-6 shadow-sm">
-            <h2 class="text-lg font-bold text-amber-900">
-                Risk Flags
-            </h2>
-
-            <p class="text-sm text-amber-900 mt-4 leading-7 whitespace-pre-line">
-                {{ resource.risk_flags or "No risk flags added." }}
-            </p>
-        </div>
-
-        <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm text-white">
-            <h2 class="text-lg font-bold">
-                Escalation Points
-            </h2>
-
-            <p class="text-sm text-slate-300 mt-4 leading-7 whitespace-pre-line">
-                {{ resource.escalation_points or "No escalation points added." }}
-            </p>
-        </div>
-
-    </div>
-</div>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>{{ resource.title }}</h1><p>{{ resource.category or 'Toolkit resource' }} · {{ resource.required_tier|title }} access</p></div><div class="hive-workspace-actions"><a class="hive-btn" href="{{ url_for('resources_list') }}">Back to Toolkit</a>{% if resource.file_path %}<a class="hive-btn hive-btn--primary" href="{{ url_for('resource_download', resource_id=resource.id) }}">Download file</a>{% endif %}</div></header>
+<div class="hive-detail-grid">
+<section class="hive-panel"><div class="hive-section"><h2>Description</h2><p style="white-space:pre-line">{{ resource.description or 'No description added.' }}</p></div><div class="hive-section"><h2>Consultant delivery notes</h2><p style="white-space:pre-line">{{ resource.consultant_notes or 'No consultant delivery notes added.' }}</p></div></section>
+<aside class="hive-panel"><div class="hive-section"><h2>File</h2><div class="hive-definition-list"><div><dt>Attachment</dt><dd>{{ resource.original_filename or ('Attached file' if resource.file_path else 'No file attached') }}</dd></div><div><dt>Required tier</dt><dd>{{ resource.required_tier|title }}</dd></div></div>{% if resource.file_path %}<div style="margin-top:16px"><a class="hive-btn hive-btn--primary" href="{{ url_for('resource_download', resource_id=resource.id) }}">Download</a></div>{% endif %}</div>{% if resource.risk_flags %}<div class="hive-section"><h2>Risk flags</h2><div class="hive-notice hive-notice--warning" style="margin-top:12px;white-space:pre-line">{{ resource.risk_flags }}</div></div>{% endif %}{% if resource.escalation_points %}<div class="hive-section"><h2>Escalation points</h2><div class="hive-notice" style="margin-top:12px;white-space:pre-line">{{ resource.escalation_points }}</div></div>{% endif %}</aside>
+</div></div>
 {% endblock %}

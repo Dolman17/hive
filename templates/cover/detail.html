@@ -1,206 +1,22 @@
 {% extends "base.html" %}
-
+{% block title %}{{ cover_request.cover_type|title }} Cover · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            HIVE Covered
-        </p>
-
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            {{ cover_request.cover_type|capitalize }} Cover
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            {{ cover_request.start_date.strftime("%d %b %Y") }}
-            -
-            {{ cover_request.end_date.strftime("%d %b %Y") }}
-        </p>
-    </div>
-
-    <div class="flex flex-wrap gap-3">
-        <a href="{{ url_for('cover_list') }}"
-           class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-            Back to Cover
-        </a>
-
-        {% if cover_request.status == "draft" %}
-            <a href="{{ url_for('cover_add_client', cover_id=cover_request.id) }}"
-               class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
-                Add Covered Client
-            </a>
-        {% endif %}
-    </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
+{% set stage_order = ['draft','submitted','approved','active','completed'] %}
+{% set current_index = stage_order.index(cover_request.status) if cover_request.status in stage_order else -1 %}
+{% set handover = namespace(complete=0,total=(cover_request.clients|length)*5) %}
+{% for client in cover_request.clients %}{% if client.retainer_scope %}{% set handover.complete=handover.complete+1 %}{% endif %}{% if client.authority_limits %}{% set handover.complete=handover.complete+1 %}{% endif %}{% if client.escalation_rules %}{% set handover.complete=handover.complete+1 %}{% endif %}{% if client.open_issues %}{% set handover.complete=handover.complete+1 %}{% endif %}{% if client.risk_notes %}{% set handover.complete=handover.complete+1 %}{% endif %}{% endfor %}
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>{{ cover_request.cover_type|title }} cover</h1><p>{{ cover_request.start_date.strftime('%d %b %Y') }} to {{ cover_request.end_date.strftime('%d %b %Y') }}</p></div><div class="hive-workspace-actions"><a class="hive-btn" href="{{ url_for('cover_list') }}">Back to Covered</a>{% if cover_request.status == 'draft' %}<a class="hive-btn hive-btn--primary" href="{{ url_for('cover_add_client', cover_id=cover_request.id) }}">Add client</a>{% endif %}</div></header>
+<div class="hive-detail-grid">
+<div class="hive-workspace">
+<section class="hive-panel"><div class="hive-section"><h2>Request summary</h2><p style="white-space:pre-line">{{ cover_request.summary or 'No summary added.' }}</p></div></section>
+<section class="hive-panel"><div class="hive-panel-head"><div><h2>Client handovers</h2><p>{{ cover_request.clients|length }} client{{ '' if cover_request.clients|length == 1 else 's' }} included · {{ handover.complete }}/{{ handover.total if handover.total else 0 }} handover sections completed</p></div>{% if cover_request.status == 'draft' %}<a class="hive-btn" href="{{ url_for('cover_add_client', cover_id=cover_request.id) }}">Add client</a>{% endif %}</div><div class="hive-handover-list">{% for client in cover_request.clients %}<article class="hive-handover-client"><div class="hive-handover-head"><div><h3>{{ client.client_name }}</h3><div class="hive-row-copy">{% if client.contact_name %}{{ client.contact_name }}{% endif %}{% if client.contact_email %} · {{ client.contact_email }}{% endif %}{% if client.contact_phone %} · {{ client.contact_phone }}{% endif %}</div></div></div><div class="hive-handover-grid"><div class="hive-handover-item"><strong>Retainer / service scope</strong><p>{{ client.retainer_scope or 'Not added.' }}</p></div><div class="hive-handover-item"><strong>Authority limits</strong><p>{{ client.authority_limits or 'Not added.' }}</p></div><div class="hive-handover-item"><strong>Escalation rules</strong><p>{{ client.escalation_rules or 'Not added.' }}</p></div><div class="hive-handover-item"><strong>Risk notes</strong><p>{{ client.risk_notes or 'Not added.' }}</p></div><div class="hive-handover-item hive-handover-item--wide"><strong>Open issues</strong><p>{{ client.open_issues or 'Not added.' }}</p></div></div></article>{% else %}<div class="hive-empty" style="border:0;border-radius:0"><h2>No clients added yet</h2><p>Add at least one covered client before submitting this request.</p></div>{% endfor %}</div></section>
 </div>
-
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950">
-            Request Summary
-        </h2>
-
-        <p class="text-slate-600 mt-4 leading-7 whitespace-pre-line">
-            {{ cover_request.summary or "No summary added." }}
-        </p>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950">
-            Status
-        </h2>
-
-        <span class="mt-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold
-            {% if cover_request.status == 'draft' %}
-                bg-slate-100 text-slate-700
-            {% elif cover_request.status == 'submitted' %}
-                bg-amber-100 text-amber-800
-            {% elif cover_request.status == 'approved' %}
-                bg-blue-100 text-blue-800
-            {% elif cover_request.status == 'active' %}
-                bg-green-100 text-green-800
-            {% elif cover_request.status == 'completed' %}
-                bg-slate-900 text-white
-            {% elif cover_request.status == 'declined' %}
-                bg-red-100 text-red-800
-            {% else %}
-                bg-slate-100 text-slate-700
-            {% endif %}
-        ">
-            {{ cover_request.status|capitalize }}
-        </span>
-
-        <div class="mt-6 text-sm text-slate-600 space-y-2">
-            <p>Created: {{ cover_request.created_at.strftime("%d %b %Y %H:%M") }}</p>
-
-            {% if cover_request.submitted_at %}
-                <p>Submitted: {{ cover_request.submitted_at.strftime("%d %b %Y %H:%M") }}</p>
-            {% endif %}
-
-            {% if cover_request.approved_at %}
-                <p>Approved: {{ cover_request.approved_at.strftime("%d %b %Y %H:%M") }}</p>
-            {% endif %}
-
-            {% if cover_request.activated_at %}
-                <p>Activated: {{ cover_request.activated_at.strftime("%d %b %Y %H:%M") }}</p>
-            {% endif %}
-
-            {% if cover_request.completed_at %}
-                <p>Completed: {{ cover_request.completed_at.strftime("%d %b %Y %H:%M") }}</p>
-            {% endif %}
-        </div>
-
-        {% if cover_request.status == "draft" %}
-            <form method="POST"
-                  action="{{ url_for('cover_submit', cover_id=cover_request.id) }}"
-                  class="mt-6"
-                  onsubmit="return confirm('Submit this cover request to HIVE admin?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit"
-                        class="w-full rounded-xl bg-amber-400 text-slate-950 px-5 py-3 text-sm font-semibold hover:bg-amber-300">
-                    Submit to HIVE
-                </button>
-            </form>
-
-            {% if not cover_request.clients %}
-                <p class="text-xs text-red-600 mt-2">
-                    Add at least one covered client before submitting.
-                </p>
-            {% endif %}
-        {% endif %}
-    </div>
-</div>
-
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="p-6 border-b border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <h2 class="text-lg font-bold text-slate-950">
-                Covered Clients
-            </h2>
-            <p class="text-sm text-slate-600 mt-1">
-                Client-specific handover information for HIVE Covered.
-            </p>
-        </div>
-
-        {% if cover_request.status == "draft" %}
-            <a href="{{ url_for('cover_add_client', cover_id=cover_request.id) }}"
-               class="rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
-                Add Client
-            </a>
-        {% endif %}
-    </div>
-
-    <div class="divide-y divide-slate-200">
-        {% for client in cover_request.clients %}
-            <div class="p-6">
-                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-950">
-                            {{ client.client_name }}
-                        </h3>
-
-                        <div class="text-sm text-slate-600 mt-2 space-y-1">
-                            {% if client.contact_name %}
-                                <p>Contact: {{ client.contact_name }}</p>
-                            {% endif %}
-
-                            {% if client.contact_email %}
-                                <p>Email: {{ client.contact_email }}</p>
-                            {% endif %}
-
-                            {% if client.contact_phone %}
-                                <p>Phone: {{ client.contact_phone }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
-                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-                        <h4 class="font-bold text-slate-950">Retainer / service scope</h4>
-                        <p class="text-sm text-slate-600 mt-3 whitespace-pre-line">
-                            {{ client.retainer_scope or "Not added." }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5">
-                        <h4 class="font-bold text-slate-950">Authority limits</h4>
-                        <p class="text-sm text-slate-600 mt-3 whitespace-pre-line">
-                            {{ client.authority_limits or "Not added." }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-2xl bg-amber-50 border border-amber-200 p-5">
-                        <h4 class="font-bold text-amber-900">Escalation rules</h4>
-                        <p class="text-sm text-amber-900 mt-3 whitespace-pre-line">
-                            {{ client.escalation_rules or "Not added." }}
-                        </p>
-                    </div>
-
-                    <div class="rounded-2xl bg-red-50 border border-red-200 p-5">
-                        <h4 class="font-bold text-red-900">Risk notes</h4>
-                        <p class="text-sm text-red-900 mt-3 whitespace-pre-line">
-                            {{ client.risk_notes or "Not added." }}
-                        </p>
-                    </div>
-
-                    <div class="lg:col-span-2 rounded-2xl bg-white border border-slate-200 p-5">
-                        <h4 class="font-bold text-slate-950">Open issues</h4>
-                        <p class="text-sm text-slate-600 mt-3 whitespace-pre-line">
-                            {{ client.open_issues or "Not added." }}
-                        </p>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-            <div class="p-8">
-                <h3 class="text-lg font-bold text-slate-950">No clients added yet</h3>
-                <p class="text-slate-600 mt-2">
-                    Add at least one client before submitting this cover request.
-                </p>
-            </div>
-        {% endfor %}
-    </div>
-</div>
-
+<aside class="hive-workspace">
+<section class="hive-panel"><div class="hive-section"><h2>Status</h2><p><span class="hive-status {% if cover_request.status == 'active' %}hive-status--active{% elif cover_request.status == 'submitted' %}hive-status--submitted{% elif cover_request.status == 'approved' %}hive-status--approved{% elif cover_request.status == 'declined' %}hive-status--declined{% endif %}">{{ cover_request.status|title }}</span></p><div class="hive-definition-list"><div><dt>Created</dt><dd>{{ cover_request.created_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% if cover_request.submitted_at %}<div><dt>Submitted</dt><dd>{{ cover_request.submitted_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% endif %}{% if cover_request.approved_at %}<div><dt>Approved</dt><dd>{{ cover_request.approved_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% endif %}{% if cover_request.activated_at %}<div><dt>Activated</dt><dd>{{ cover_request.activated_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% endif %}{% if cover_request.completed_at %}<div><dt>Completed</dt><dd>{{ cover_request.completed_at.strftime('%d %b %Y %H:%M') }}</dd></div>{% endif %}</div></div></section>
+{% if current_index >= 0 %}<section class="hive-panel"><div class="hive-section"><h2>Request lifecycle</h2><div class="hive-stepper" style="margin-top:16px">{% for stage in stage_order %}{% set idx=loop.index0 %}<div class="hive-step {% if idx < current_index %}is-done{% elif idx == current_index %}is-current{% endif %}"><span class="hive-step-mark"></span><div class="hive-step-copy"><strong>{{ stage|title }}</strong><span>{% if stage == 'draft' %}Prepare request and client handovers{% elif stage == 'submitted' %}HIVE review{% elif stage == 'approved' %}Cover approved / assigned{% elif stage == 'active' %}Cover period active{% else %}Cover completed{% endif %}</span></div></div>{% endfor %}</div></div></section>{% endif %}
+{% if cover_request.status == 'draft' %}<section class="hive-panel"><div class="hive-section"><h2>Submit request</h2>{% if not cover_request.clients %}<div class="hive-notice hive-notice--danger" style="margin-top:12px">Add at least one covered client before submitting.</div>{% else %}<p>Your request can now be submitted to HIVE for review.</p><form method="POST" action="{{ url_for('cover_submit', cover_id=cover_request.id) }}" style="margin-top:14px" onsubmit="return confirm('Submit this cover request to HIVE admin?');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="hive-btn hive-btn--accent" type="submit">Submit to HIVE</button></form>{% endif %}</div></section>{% endif %}
+</aside>
+</div></div>
 {% endblock %}

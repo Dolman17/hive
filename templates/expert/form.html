@@ -1,68 +1,11 @@
 {% extends "base.html" %}
-
+{% block title %}New Expert Request · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            Expert Help
-        </p>
-
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            New Expert Request
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            Submit a specialist escalation request for HIVE review.
-        </p>
-    </div>
-
-    <a href="{{ url_for('expert_help_list') }}"
-       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-        Back to Expert Help
-    </a>
-</div>
-
-<form method="POST" class="space-y-8">
-    {{ form.hidden_tag() }}
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950 mb-5">Request Details</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div>
-                {{ form.category.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.category(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
-            </div>
-
-            <div>
-                {{ form.urgency.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.urgency(class="w-full rounded-xl border border-slate-300 px-4 py-3 bg-white") }}
-            </div>
-
-            <div class="md:col-span-2">
-                {{ form.subject.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.subject(class="w-full rounded-xl border border-slate-300 px-4 py-3") }}
-                {% for error in form.subject.errors %}
-                    <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                {% endfor %}
-            </div>
-
-            <div class="md:col-span-2">
-                {{ form.summary.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.summary(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-32") }}
-            </div>
-
-            <div class="md:col-span-2">
-                {{ form.desired_outcome.label(class="block text-sm font-medium text-slate-700 mb-1") }}
-                {{ form.desired_outcome(class="w-full rounded-xl border border-slate-300 px-4 py-3 min-h-28") }}
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex justify-end">
-        {{ form.submit(class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800 cursor-pointer") }}
-    </div>
-</form>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>New expert request</h1><p>Describe the issue, urgency and outcome you need so HIVE can review the escalation.</p></div><div class="hive-workspace-actions"><a class="hive-btn" href="{{ url_for('expert_help_list') }}">Cancel</a></div></header>
+<form method="POST" class="hive-form-shell">{{ form.hidden_tag() }}
+<section class="hive-panel hive-form-panel"><div class="hive-form-grid"><div class="hive-field">{{ form.category.label }}{{ form.category() }}{% for error in form.category.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div><div class="hive-field">{{ form.urgency.label }}{{ form.urgency() }}{% for error in form.urgency.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div><div class="hive-field is-wide">{{ form.subject.label }}{{ form.subject() }}{% for error in form.subject.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div><div class="hive-field is-wide">{{ form.summary.label }}{{ form.summary() }}{% for error in form.summary.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div><div class="hive-field is-wide">{{ form.desired_outcome.label }}{{ form.desired_outcome() }}{% for error in form.desired_outcome.errors %}<p class="hive-field-error">{{ error }}</p>{% endfor %}</div></div><div class="hive-form-actions">{{ form.submit(class_='hive-btn hive-btn--primary') }}</div></section>
+<aside class="hive-workspace"><div class="hive-notice"><strong>What happens next</strong><br>Submitting creates a HIVE expert-support case with status New. HIVE admin owns the subsequent review and response workflow.</div><div class="hive-notice hive-notice--warning">Do not use this form as a substitute for emergency or regulated legal advice where immediate specialist support is required.</div></aside>
+</form></div>
 {% endblock %}
