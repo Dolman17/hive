@@ -91,7 +91,12 @@ def register_search_routes(bp):
             )
             for action in visible_actions:
                 priority = (action.priority or "normal").replace("_", " ").title()
-                app_name = action.integration.app_module.name if action.integration and action.integration.app_module else "Connected app"
+                integration = action.app_integration
+                app_name = (
+                    integration.app_module.name
+                    if integration and integration.app_module
+                    else "Connected app"
+                )
                 results.append(_result(
                     "action",
                     action.title,
