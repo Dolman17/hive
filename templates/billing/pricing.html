@@ -1,39 +1,19 @@
 {% extends "base.html" %}
-
+{% block title %}Compare Plans · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Billing</p>
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">Membership Tiers</h1>
-        <p class="text-slate-600 mt-2">Compare HIVE tiers. Checkout buttons currently route to safe placeholders.</p>
-    </div>
-    <a href="{{ url_for('billing.billing_home') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Back to Billing</a>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase6.css') }}">
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>Compare plans</h1><p>See what each HIVE membership level unlocks. Your current plan is {{ tier_label }}.</p></div><div class="hive-workspace-actions"><a class="hive-btn" href="{{ url_for('billing.billing_home') }}">Back to billing</a></div></header>
+<div class="hive-plan-list">
+{% for card in tier_cards %}
+<section class="hive-plan-card {% if subscription.tier == card.tier %}is-current{% endif %}">
+<div class="hive-status {% if subscription.tier == card.tier %}hive-status--active{% else %}hive-status--info{% endif %}">{{ 'Current plan' if subscription.tier == card.tier else card.label }}</div>
+<h2 style="margin-top:10px">{{ card.label }}</h2><p>{{ card.strapline }}</p>
+<ul>{% for feature in card.features %}<li>{{ feature }}</li>{% endfor %}</ul>
+{% if subscription.tier == card.tier %}<span class="hive-btn" aria-current="true">Current plan</span>{% else %}<a class="hive-btn hive-btn--primary" href="{{ url_for('billing.billing_checkout_placeholder', tier=card.tier) }}">Choose {{ card.label }}</a>{% endif %}
+</section>
+{% endfor %}
 </div>
-
-<div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm mb-8 text-white">
-    <p class="text-sm text-slate-400">Current membership</p>
-    <h2 class="text-2xl font-bold mt-1">{{ tier_label }}</h2>
-    <p class="text-sm text-slate-400 mt-2">Status: {{ subscription.status|replace('_', ' ')|title }}</p>
+<div class="hive-notice hive-notice--warning">Plan selection currently leads to the existing safe checkout placeholder. No payment will be taken until live Stripe Checkout is connected.</div>
 </div>
-
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-    {% for card in tier_cards %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
-            <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">{{ card.label }}</p>
-            <h2 class="text-xl font-bold text-slate-950 mt-2">{{ card.strapline }}</h2>
-            <ul class="mt-5 space-y-2 text-sm text-slate-600 flex-1">
-                {% for feature in card.features %}
-                    <li>• {{ feature }}</li>
-                {% endfor %}
-            </ul>
-            {% if subscription.tier == card.tier %}
-                <span class="mt-6 inline-flex justify-center rounded-xl bg-green-100 text-green-800 px-4 py-3 text-sm font-semibold">Current Tier</span>
-            {% else %}
-                <a href="{{ url_for('billing.billing_checkout_placeholder', tier=card.tier) }}" class="mt-6 inline-flex justify-center rounded-xl bg-slate-950 text-white px-4 py-3 text-sm font-semibold hover:bg-slate-800">Choose {{ card.label }}</a>
-            {% endif %}
-        </div>
-    {% endfor %}
-</div>
-
 {% endblock %}

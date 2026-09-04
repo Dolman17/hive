@@ -1,23 +1,11 @@
 {% extends "base.html" %}
-
+{% block title %}Billing Details · HIVE{% endblock %}
 {% block content %}
-
-<div class="max-w-3xl mx-auto">
-    <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Stripe Billing Portal Placeholder</p>
-        <h1 class="text-3xl font-bold text-slate-950 mt-3">Customer portal is ready to wire later</h1>
-        <p class="text-slate-600 mt-4 leading-7">This page is intentionally a placeholder. The next billing sprint can replace this with a Stripe Billing Portal Session redirect.</p>
-        <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-600 space-y-2">
-            <p>Current tier: {{ tier_label }}</p>
-            <p>Status: {{ subscription.status|replace('_', ' ')|title }}</p>
-            <p>Stripe customer ID: {{ billing_profile.stripe_customer_id or 'Not created yet' }}</p>
-            <p>Stripe subscription ID: {{ billing_profile.stripe_subscription_id or 'Not created yet' }}</p>
-        </div>
-        <div class="mt-8 flex flex-wrap gap-3">
-            <a href="{{ url_for('billing.billing_home') }}" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Back to Billing</a>
-            <a href="{{ url_for('dashboard') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Dashboard</a>
-        </div>
-    </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase6.css') }}">
+<div class="hive-workspace" style="max-width:820px;margin:0 auto">
+<header class="hive-workspace-head"><div><h1>Billing details</h1><p>Review the billing metadata already connected to your HIVE subscription.</p></div></header>
+<section class="hive-panel"><div class="hive-panel-head"><div><h2>{{ tier_label }}</h2><p>{{ subscription.status|replace('_', ' ')|title }} membership</p></div></div><div class="hive-section"><dl class="hive-definition-list"><div><dt>Billing email</dt><dd>{{ billing_profile.billing_email or 'Not set' }}</dd></div><div><dt>Period end</dt><dd>{{ billing_profile.current_period_end.strftime('%d %b %Y') if billing_profile.current_period_end else 'Not set' }}</dd></div><div><dt>Customer record</dt><dd>{{ 'Connected' if billing_profile.stripe_customer_id else 'Not created' }}</dd></div><div><dt>Subscription record</dt><dd>{{ 'Connected' if billing_profile.stripe_subscription_id else 'Not created' }}</dd></div></dl></div></section>
+<div class="hive-notice hive-notice--warning">The Stripe customer portal is not connected yet. This screen is read-only and does not change payment methods, invoices or cancellation state.</div>
+<div class="hive-workspace-actions"><a class="hive-btn hive-btn--primary" href="{{ url_for('billing.billing_home') }}">Back to billing</a><a class="hive-btn" href="{{ url_for('billing.billing_pricing') }}">Compare plans</a></div>
 </div>
-
 {% endblock %}

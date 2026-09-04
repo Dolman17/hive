@@ -1,22 +1,11 @@
 {% extends "base.html" %}
-
+{% block title %}Plan Change · HIVE{% endblock %}
 {% block content %}
-
-<div class="max-w-3xl mx-auto">
-    <div class="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Stripe Checkout Placeholder</p>
-        <h1 class="text-3xl font-bold text-slate-950 mt-3">Checkout is ready to wire later</h1>
-        <p class="text-slate-600 mt-4 leading-7">Requested tier: <strong>{{ requested_tier_label }}</strong>. This page is intentionally a placeholder. The next billing sprint can replace this with a Stripe Checkout Session redirect.</p>
-        <div class="mt-6 rounded-2xl bg-slate-50 border border-slate-200 p-5 text-sm text-slate-600 space-y-2">
-            <p>Current tier: {{ subscription.tier|title }}</p>
-            <p>Billing email: {{ billing_profile.billing_email or 'Not set' }}</p>
-            <p>Stripe checkout session ID: {{ billing_profile.stripe_checkout_session_id or 'Not created yet' }}</p>
-        </div>
-        <div class="mt-8 flex flex-wrap gap-3">
-            <a href="{{ url_for('billing.billing_home') }}" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Back to Billing</a>
-            <a href="{{ url_for('dashboard') }}" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">Dashboard</a>
-        </div>
-    </div>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase6.css') }}">
+<div class="hive-workspace" style="max-width:820px;margin:0 auto">
+<header class="hive-workspace-head"><div><h1>Change plan</h1><p>You selected {{ requested_tier_label }}. This screen is intentionally non-transactional until Stripe Checkout is connected.</p></div></header>
+<section class="hive-panel"><div class="hive-panel-head"><div><h2>Plan change preview</h2><p>No payment or membership change will be made from this screen.</p></div></div><div class="hive-section"><dl class="hive-definition-list"><div><dt>Requested plan</dt><dd>{{ requested_tier_label }}</dd></div><div><dt>Current plan</dt><dd>{{ subscription.tier|title }}</dd></div><div><dt>Billing email</dt><dd>{{ billing_profile.billing_email or 'Not set' }}</dd></div><div><dt>Checkout session</dt><dd>{{ 'Recorded' if billing_profile.stripe_checkout_session_id else 'Not created' }}</dd></div></dl></div></section>
+<div class="hive-notice hive-notice--warning">Live checkout is not connected. This page exists so the current route remains safe and explicit until the billing integration is implemented.</div>
+<div class="hive-workspace-actions"><a class="hive-btn hive-btn--primary" href="{{ url_for('billing.billing_pricing') }}">Back to plans</a><a class="hive-btn" href="{{ url_for('billing.billing_home') }}">Billing overview</a></div>
 </div>
-
 {% endblock %}

@@ -1,33 +1,57 @@
 {% extends "base.html" %}
-
+{% block title %}Plan & Billing · HIVE{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase6.css') }}">
 
-<div class="mb-8">
-    <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Billing</p>
-    <h1 class="text-3xl font-bold text-slate-950 mt-2">Billing Overview</h1>
-    <p class="text-slate-600 mt-2">This is the Stripe-ready billing shell. Live payment processing is not connected yet.</p>
-</div>
-
-<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-    <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-950">Current Membership</h2>
-        <div class="text-sm text-slate-600 mt-4 space-y-2">
-            <p>Tier: {{ tier_label }}</p>
-            <p>Status: {{ subscription.status|replace('_', ' ')|title }}</p>
-            <p>Billing email: {{ billing_profile.billing_email or 'Not set' }}</p>
-            <p>Stripe customer ID: {{ billing_profile.stripe_customer_id or 'Not created yet' }}</p>
-            <p>Stripe subscription ID: {{ billing_profile.stripe_subscription_id or 'Not created yet' }}</p>
+<div class="hive-workspace">
+    <header class="hive-workspace-head">
+        <div>
+            <h1>Plan & Billing</h1>
+            <p>Review your current HIVE membership and the billing information already held against your subscription.</p>
         </div>
+        <div class="hive-workspace-actions">
+            <a class="hive-btn" href="{{ url_for('billing.billing_pricing') }}">Compare plans</a>
+            <a class="hive-btn hive-btn--primary" href="{{ url_for('billing.billing_portal_placeholder') }}">Billing details</a>
+        </div>
+    </header>
+
+    <div class="hive-metric-rail">
+        <div class="hive-metric"><span>Current plan</span><strong>{{ tier_label }}</strong></div>
+        <div class="hive-metric"><span>Status</span><strong>{{ subscription.status|replace('_', ' ')|title }}</strong></div>
+        <div class="hive-metric"><span>Billing connection</span><strong>{{ 'Linked' if billing_profile.stripe_customer_id else 'Not linked' }}</strong></div>
+        <div class="hive-metric"><span>Renewal / period end</span><strong>{{ billing_profile.current_period_end.strftime('%d %b %Y') if billing_profile.current_period_end else 'Not set' }}</strong></div>
     </div>
 
-    <div class="bg-slate-950 rounded-2xl border border-slate-800 p-6 shadow-sm text-white">
-        <h2 class="text-lg font-bold">Billing Actions</h2>
-        <div class="mt-5 space-y-3">
-            <a href="{{ url_for('billing.billing_checkout_placeholder', tier='professional') }}" class="block rounded-xl bg-amber-400 text-slate-950 px-4 py-3 text-sm font-semibold text-center hover:bg-amber-300">Checkout Placeholder</a>
-            <a href="{{ url_for('billing.billing_portal_placeholder') }}" class="block rounded-xl bg-white text-slate-950 px-4 py-3 text-sm font-semibold text-center hover:bg-slate-100">Billing Portal Placeholder</a>
-            <a href="{{ url_for('dashboard') }}" class="block rounded-xl border border-slate-700 text-white px-4 py-3 text-sm font-semibold text-center hover:bg-slate-900">Back to Dashboard</a>
-        </div>
-    </div>
-</div>
+    <div class="hive-detail-grid">
+        <section class="hive-panel">
+            <div class="hive-panel-head">
+                <div><h2>Your membership</h2><p>The access level HIVE currently applies to your consultant account.</p></div>
+                <span class="hive-status {{ 'hive-status--active' if subscription.status == 'active' else 'hive-status--warning' }}">{{ subscription.status|replace('_', ' ')|title }}</span>
+            </div>
+            <div class="hive-section">
+                <dl class="hive-definition-list">
+                    <div><dt>Plan</dt><dd>{{ tier_label }}</dd></div>
+                    <div><dt>Billing email</dt><dd>{{ billing_profile.billing_email or 'Not set' }}</dd></div>
+                    <div><dt>Period end</dt><dd>{{ billing_profile.current_period_end.strftime('%d %b %Y') if billing_profile.current_period_end else 'Not set' }}</dd></div>
+                    <div><dt>Cancellation</dt><dd>{{ 'Ends at period end' if billing_profile.cancel_at_period_end else 'No cancellation recorded' }}</dd></div>
+                </dl>
+            </div>
+        </section>
 
+        <aside class="hive-panel">
+            <div class="hive-panel-head"><div><h2>Billing connection</h2><p>Current payment-provider metadata.</p></div></div>
+            <div class="hive-section">
+                <dl class="hive-definition-list" style="grid-template-columns:1fr">
+                    <div><dt>Customer record</dt><dd>{{ 'Connected' if billing_profile.stripe_customer_id else 'Not created yet' }}</dd></div>
+                    <div><dt>Subscription record</dt><dd>{{ 'Connected' if billing_profile.stripe_subscription_id else 'Not created yet' }}</dd></div>
+                    <div><dt>Checkout session</dt><dd>{{ 'Recorded' if billing_profile.stripe_checkout_session_id else 'Not created yet' }}</dd></div>
+                </dl>
+            </div>
+        </aside>
+    </div>
+
+    {% if not billing_profile.stripe_customer_id or not billing_profile.stripe_subscription_id %}
+        <div class="hive-notice hive-notice--warning">Live Stripe payment processing is not connected yet. HIVE can display and manage the subscription metadata already stored, but plan checkout and self-service billing remain placeholder workflows until a later billing integration sprint.</div>
+    {% endif %}
+</div>
 {% endblock %}
