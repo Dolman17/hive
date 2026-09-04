@@ -7,7 +7,7 @@
     <header class="hive-workspace-head">
         <div>
             <h1>Clients</h1>
-            <p>Read-only client overview from connected systems. Open the source product to manage client records or case work.</p>
+            <p>Read-only client overview from connected systems. Open Client 360 for HIVE context or EllipseCRM for case work.</p>
         </div>
         {% if source_state.source_launch_url %}
             <div class="hive-workspace-actions">
@@ -18,7 +18,7 @@
 
     <div class="hive-source-notice">
         <strong>Client identity is deliberately conservative.</strong>
-        <span>EllipseCRM is the authoritative client source in this phase. HIVE is not matching records from ResolvHR, PathlyHire or Pathly by company name, so no client identities are guessed or silently merged.</span>
+        <span>EllipseCRM is the authoritative client source. HIVE does not match ResolvHR, PathlyHire or Pathly records by company name, so no client identities are guessed or silently merged.</span>
     </div>
 
     {% if source_state.state == 'available' %}
@@ -58,7 +58,7 @@
                 <article class="hive-client-row{% if client.needs_attention %} has-attention{% endif %}">
                     <div class="hive-client-main">
                         <div class="hive-client-title-line">
-                            <h2>{{ client.name }}</h2>
+                            <h2><a href="{{ url_for('notifications.client_detail', external_client_id=client.external_id) }}">{{ client.name }}</a></h2>
                             <span class="hive-client-status hive-client-status--{{ client.account_status }}">{{ client.account_status|replace('_', ' ')|title }}</span>
                         </div>
                         <p>
@@ -76,7 +76,7 @@
                         {% if client.latest_activity_at %}
                             <span class="hive-client-updated">Latest activity {{ client.latest_activity_at[:10] }}</span>
                         {% endif %}
-                        <a class="hive-btn" href="{{ source_state.source_launch_url }}">Open EllipseCRM</a>
+                        <a class="hive-btn hive-btn--primary" href="{{ url_for('notifications.client_detail', external_client_id=client.external_id) }}">View Client 360</a>
                     </div>
                 </article>
             {% else %}
