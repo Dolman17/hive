@@ -1,37 +1,30 @@
 {% extends "base.html" %}
-
+{% block title %}Website Preview · HIVE{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase5.css') }}">
 
-<div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            Website Preview
-        </p>
+<div class="hive-business">
+    <header class="hive-business-head">
+        <div>
+            <h1>Website preview</h1>
+            <p>Review the public consultant page using your saved website settings before sharing or publishing it.</p>
+        </div>
+        <div class="hive-business-actions">
+            <a href="{{ url_for('website_settings') }}" class="hive-biz-btn">Edit website</a>
+            {% if settings.tenant_slug %}<a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}" class="hive-biz-btn hive-biz-btn--primary">Open public page</a>{% endif %}
+        </div>
+    </header>
 
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            {{ settings.business_name }}
-        </h1>
-
-        <p class="text-slate-600 mt-2">
-            Preview your public consultant website.
-        </p>
+    <div class="hive-publish-strip">
+        <div>
+            <strong>{{ 'Published' if settings.is_published else 'Not published' }}</strong>
+            <span>{{ 'Your public HIVE website is visible to visitors.' if settings.is_published else 'This preview is available to you, but the public page is not currently published.' }}</span>
+        </div>
+        <span class="hive-biz-status {{ 'hive-biz-status--good' if settings.is_published else 'hive-biz-status--warn' }}">{{ 'Live' if settings.is_published else 'Draft' }}</span>
     </div>
 
-    <div class="flex flex-wrap gap-3">
-        <a href="{{ url_for('website_settings') }}"
-           class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-            Edit Settings
-        </a>
-
-        <a href="{{ url_for('consultant_site', tenant_slug=settings.tenant_slug) }}"
-           class="rounded-xl bg-amber-400 text-slate-950 px-5 py-3 text-sm font-semibold hover:bg-amber-300">
-            Open Public URL
-        </a>
+    <div class="hive-preview-frame">
+        {% include "public/consultant_site.html" %}
     </div>
 </div>
-
-<div class="rounded-3xl border border-slate-300 bg-white shadow-sm overflow-hidden">
-    {% include "public/consultant_site.html" %}
-</div>
-
 {% endblock %}
