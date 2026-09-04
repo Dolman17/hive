@@ -363,5 +363,7 @@ def admin_notifications():
 
 
 from client_routes import register_client_routes
+from search_routes import register_search_routes
 
 register_client_routes(notifications_bp)
+register_search_routes(notifications_bp)
