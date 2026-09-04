@@ -360,3 +360,8 @@ def mark_all_notifications_read():
 def admin_notifications():
     notifications = Notification.query.order_by(Notification.created_at.desc()).limit(200).all()
     return render_template("notifications/admin_list.html", notifications=notifications)
+
+
+from client_routes import register_client_routes
+
+register_client_routes(notifications_bp)
