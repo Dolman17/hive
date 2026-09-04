@@ -3,6 +3,7 @@
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase7.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase9.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase10.css') }}">
 
 <div class="hive-workspace hive-client360-workspace">
     <div class="hive-client360-back"><a href="{{ url_for('notifications.client_list') }}">← Back to Clients</a></div>
@@ -29,6 +30,26 @@
             <div class="hive-metric"><span>Assigned actions</span><strong>{{ client.open_actions }}</strong></div>
             <div class="hive-metric"><span>Linked HIVE records</span><strong>{{ linked_records|length }}</strong></div>
         </section>
+
+        {% if intelligence %}
+            <section class="hive-client-intelligence" aria-label="Client intelligence">
+                <article class="hive-client-intel-card">
+                    <div class="hive-client-intel-heading">
+                        <h2>Attention status</h2>
+                        <span class="hive-client-intel-state hive-client-intel-state--{{ intelligence.level }}">{{ intelligence.label }}</span>
+                    </div>
+                    <ul class="hive-client-intel-reasons">
+                        {% for reason in intelligence.reasons %}<li>{{ reason }}</li>{% endfor %}
+                    </ul>
+                    <p class="hive-client-intel-method">{{ intelligence.method }}</p>
+                </article>
+                <article class="hive-client-intel-card">
+                    <h2>Commercial context</h2>
+                    <div class="hive-client-commercial-label hive-client-commercial-label--{{ intelligence.commercial.tone }}">{{ intelligence.commercial.label }}</div>
+                    <p>{{ intelligence.commercial.detail }}</p>
+                </article>
+            </section>
+        {% endif %}
 
         <div class="hive-client360-grid">
             <main class="hive-client360-main">
@@ -63,11 +84,16 @@
                     <div class="hive-client360-linked-list">
                         {% for row in linked_records %}
                             <article class="hive-client360-linked-row">
-                                <div>
+                                <div class="hive-client360-linked-row-copy">
                                     {% if row.source %}
                                         <span class="hive-client360-source">{{ row.source.source_label }}</span>
                                         <h3><a href="{{ row.source.url }}">{{ row.source.title }}</a></h3>
-                                        <p>{{ row.source.meta }}</p>
+                                        <div class="hive-client360-record-meta">
+                                            <span>{{ row.source.status_label }}</span>
+                                            {% if row.source.urgency %}<span>{{ row.source.urgency|title }} urgency</span>{% endif %}
+                                            <span>Linked {{ row.link.created_at.strftime('%d %b %Y') }}</span>
+                                        </div>
+                                        <p class="hive-client360-record-summary">{{ row.source.summary }}</p>
                                     {% else %}
                                         <span class="hive-client360-source">Unavailable source record</span>
                                         <h3>Linked record no longer exists or is no longer accessible</h3>
@@ -98,9 +124,47 @@
                         <p>{% if link_candidates %}Linking only creates a HIVE relationship. The source record is not changed.{% else %}All available HIVE records are already linked to a client, or there are no eligible records yet.{% endif %}</p>
                     </form>
                 </section>
+
+                <section class="hive-client360-panel">
+                    <div class="hive-client360-panel-head">
+                        <div>
+                            <h2>Client activity</h2>
+                            <p>Chronology built only from timestamps and audit events HIVE can verify.</p>
+                        </div>
+                    </div>
+                    <div class="hive-client360-timeline">
+                        {% for event in timeline %}
+                            <article class="hive-client360-timeline-row">
+                                <time class="hive-client360-timeline-time" datetime="{{ event.occurred_at.isoformat() }}">{{ event.occurred_at.strftime('%d %b %Y') }}<br>{{ event.occurred_at.strftime('%H:%M') }}</time>
+                                <div class="hive-client360-timeline-body">
+                                    <span>{{ event.source }}</span>
+                                    <h3>{% if event.url %}<a href="{{ event.url }}">{{ event.title }}</a>{% else %}{{ event.title }}{% endif %}</h3>
+                                    {% if event.detail %}<p>{{ event.detail }}</p>{% endif %}
+                                </div>
+                            </article>
+                        {% else %}
+                            <div class="hive-client360-timeline-empty">No verifiable client activity is available yet.</div>
+                        {% endfor %}
+                    </div>
+                </section>
             </main>
 
             <aside class="hive-client360-side">
+                <section class="hive-client360-panel">
+                    <div class="hive-client360-panel-head">
+                        <div>
+                            <h2>Linked HIVE summary</h2>
+                            <p>Commercial and continuity records explicitly associated with this client.</p>
+                        </div>
+                    </div>
+                    <div class="hive-client360-linked-summary">
+                        <div><span>Opportunities</span><strong>{{ linked_summary.opportunities or 0 }}</strong></div>
+                        <div><span>Active opportunities</span><strong>{{ linked_summary.active_opportunities or 0 }}</strong></div>
+                        <div><span>Won opportunities</span><strong>{{ linked_summary.won_opportunities or 0 }}</strong></div>
+                        <div><span>Active cover</span><strong>{{ linked_summary.active_cover or 0 }}</strong></div>
+                    </div>
+                </section>
+
                 <section class="hive-client360-panel">
                     <div class="hive-client360-panel-head">
                         <div>
@@ -136,6 +200,7 @@
                             <div class="hive-client360-inline-empty">No other connected products with active access.</div>
                         {% endfor %}
                     </div>
+                    <div class="hive-client360-insight-note">These product figures remain consultancy-wide until ResolvHR, PathlyHire and Pathly support explicit client identifiers. HIVE does not infer client ownership from names.</div>
                 </section>
             </aside>
         </div>
