@@ -1,113 +1,78 @@
 {% extends "base.html" %}
-
+{% block title %}Toolkit · HIVE{% endblock %}
 {% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase4.css') }}">
 
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">
-            HIVE Toolkit
-        </p>
+{% set search_term = request.args.get('q', '')|trim %}
+{% set match_count = namespace(value=0) %}
+{% for resource in resources %}
+    {% set haystack = ((resource.title or '') ~ ' ' ~ (resource.description or '') ~ ' ' ~ (resource.category or ''))|lower %}
+    {% if not search_term or search_term|lower in haystack %}{% set match_count.value = match_count.value + 1 %}{% endif %}
+{% endfor %}
 
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">
-            Resource Library
-        </h1>
+<div class="hive-workspace">
+    <header class="hive-workspace-head">
+        <div>
+            <h1>Toolkit</h1>
+            <p>Consultant-ready templates, delivery notes, risk flags and escalation guidance.</p>
+        </div>
+    </header>
 
-        <p class="text-slate-600 mt-2">
-            Consultant-ready templates, notes, risk flags and escalation guidance.
-        </p>
-    </div>
-
-    <a href="{{ url_for('dashboard') }}"
-       class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-        Back to Dashboard
-    </a>
-</div>
-
-<div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm mb-6">
-    <form method="GET" class="flex flex-col md:flex-row gap-3 md:items-end">
-        <div class="flex-1">
-            <label class="block text-sm font-medium text-slate-700 mb-1">
-                Filter by category
-            </label>
-
-            <select name="category"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3">
+    <form method="GET" class="hive-filterbar" aria-label="Filter Toolkit resources">
+        <div class="hive-field">
+            <label for="toolkit-search">Search resources</label>
+            <input id="toolkit-search" name="q" value="{{ search_term }}" placeholder="Search title, category or description">
+        </div>
+        <div class="hive-field">
+            <label for="toolkit-category">Category</label>
+            <select id="toolkit-category" name="category">
                 <option value="">All categories</option>
                 {% for category in categories %}
-                    <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>
-                        {{ category }}
-                    </option>
+                    <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
                 {% endfor %}
             </select>
         </div>
-
-        <button type="submit"
-                class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">
-            Filter
-        </button>
-
-        {% if selected_category %}
-            <a href="{{ url_for('resources_list') }}"
-               class="rounded-xl bg-white border border-slate-300 text-slate-800 px-5 py-3 text-sm font-semibold hover:bg-slate-50">
-                Clear
-            </a>
-        {% endif %}
-    </form>
-</div>
-
-{% if not resources %}
-    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
-        <h2 class="text-xl font-bold text-slate-950">No resources found</h2>
-        <p class="text-slate-600 mt-2">
-            Resources will appear here once an admin uploads them.
-        </p>
-    </div>
-{% endif %}
-
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-    {% for resource in resources %}
-        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                        {{ resource.category or "Resource" }}
-                    </p>
-
-                    <h2 class="text-xl font-bold text-slate-950 mt-2">
-                        {{ resource.title }}
-                    </h2>
-                </div>
-
-                <span class="rounded-full bg-slate-100 text-slate-700 px-3 py-1 text-xs font-semibold">
-                    {{ resource.required_tier|capitalize }}
-                </span>
-            </div>
-
-            {% if resource.description %}
-                <p class="text-sm text-slate-600 mt-4 leading-6 flex-1">
-                    {{ resource.description }}
-                </p>
-            {% else %}
-                <p class="text-sm text-slate-500 mt-4 leading-6 flex-1">
-                    No description added.
-                </p>
-            {% endif %}
-
-            <div class="mt-6 flex flex-wrap gap-3">
-                <a href="{{ url_for('resource_detail', resource_id=resource.id) }}"
-                   class="inline-flex rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">
-                    View Resource
-                </a>
-
-                {% if resource.file_path %}
-                    <a href="{{ url_for('resource_download', resource_id=resource.id) }}"
-                       class="inline-flex rounded-xl bg-amber-400 text-slate-950 px-4 py-2 text-sm font-semibold hover:bg-amber-300">
-                        Download
-                    </a>
-                {% endif %}
-            </div>
+        <div class="hive-workspace-actions" style="align-self:end">
+            <button class="hive-btn hive-btn--primary" type="submit">Search</button>
+            {% if search_term or selected_category %}<a class="hive-btn" href="{{ url_for('resources_list') }}">Clear</a>{% endif %}
         </div>
-    {% endfor %}
-</div>
+    </form>
 
+    <div class="hive-metric-rail" aria-label="Toolkit summary">
+        <div class="hive-metric"><span>Matching resources</span><strong>{{ match_count.value }}</strong></div>
+        <div class="hive-metric"><span>Categories</span><strong>{{ categories|length }}</strong></div>
+        <div class="hive-metric"><span>Current filter</span><strong style="font-size:16px">{{ selected_category or 'All' }}</strong></div>
+        <div class="hive-metric"><span>Library access</span><strong style="font-size:16px">Starter+</strong></div>
+    </div>
+
+    {% if not resources or match_count.value == 0 %}
+        <div class="hive-empty">
+            <h2>No resources found</h2>
+            <p>Try a different search or category. Resources are published and maintained by HIVE admin.</p>
+            {% if search_term or selected_category %}<div style="margin-top:16px"><a class="hive-btn" href="{{ url_for('resources_list') }}">Clear filters</a></div>{% endif %}
+        </div>
+    {% else %}
+        <div class="hive-resource-list">
+            {% for resource in resources %}
+                {% set haystack = ((resource.title or '') ~ ' ' ~ (resource.description or '') ~ ' ' ~ (resource.category or ''))|lower %}
+                {% if not search_term or search_term|lower in haystack %}
+                <article class="hive-resource-row">
+                    <div>
+                        <div class="hive-row-title">{{ resource.title }}</div>
+                        <div class="hive-row-copy">{{ resource.description or 'No description added.' }}</div>
+                    </div>
+                    <div class="hive-row-meta"><strong>Category</strong>{{ resource.category or 'General' }}</div>
+                    <div class="hive-row-meta"><strong>Access</strong>{{ resource.required_tier|title }}</div>
+                    <div class="hive-workspace-actions">
+                        <a class="hive-btn hive-btn--primary" href="{{ url_for('resource_detail', resource_id=resource.id) }}">Open</a>
+                        {% if resource.file_path %}<a class="hive-btn" href="{{ url_for('resource_download', resource_id=resource.id) }}">Download</a>{% endif %}
+                    </div>
+                </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="hive-notice">Favourites, recently used items and document previews are not shown yet because HIVE does not currently persist those features.</div>
+</div>
 {% endblock %}
