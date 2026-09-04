@@ -1,20 +1,55 @@
 {% extends "base.html" %}
+{% block title %}Directory Enquiries · HIVE{% endblock %}
 {% block content %}
-<h1 class="text-3xl font-bold text-slate-950 mb-6">Directory Enquiries</h1>
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="divide-y divide-slate-200">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase5.css') }}">
+
+{% set stats = namespace(total=0,new=0,active=0,won=0) %}
+{% for enquiry in enquiries %}
+    {% set stats.total = stats.total + 1 %}
+    {% if enquiry.status in ['new','assigned'] %}{% set stats.new = stats.new + 1 %}{% endif %}
+    {% if enquiry.status == 'accepted' %}{% set stats.active = stats.active + 1 %}{% endif %}
+    {% if enquiry.status == 'won' %}{% set stats.won = stats.won + 1 %}{% endif %}
+{% endfor %}
+
+<div class="hive-business">
+    <header class="hive-business-head">
+        <div>
+            <h1>Directory enquiries</h1>
+            <p>Manage enquiries submitted through your public HIVE consultant profile. These records also appear in your broader Opportunities view.</p>
+        </div>
+        <div class="hive-business-actions">
+            <a href="{{ url_for('consultant_profiles.profile_detail') }}" class="hive-biz-btn">Public profile settings</a>
+            <a href="{{ url_for('leads_list') }}" class="hive-biz-btn hive-biz-btn--primary">View all opportunities</a>
+        </div>
+    </header>
+
+    <div class="hive-enquiry-metrics">
+        <div class="hive-enquiry-metric"><span>Total enquiries</span><strong>{{ stats.total }}</strong></div>
+        <div class="hive-enquiry-metric"><span>New / assigned</span><strong>{{ stats.new }}</strong></div>
+        <div class="hive-enquiry-metric"><span>Active</span><strong>{{ stats.active }}</strong></div>
+        <div class="hive-enquiry-metric"><span>Won</span><strong>{{ stats.won }}</strong></div>
+    </div>
+
+    {% if enquiries %}
+    <div class="hive-enquiry-list">
         {% for enquiry in enquiries %}
-            <div class="p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 class="font-bold text-slate-950">{{ enquiry.company_name }}</h2>
-                    <p class="text-sm text-slate-600 mt-1">{{ enquiry.contact_name }} · {{ enquiry.contact_email }}</p>
-                    <p class="text-sm text-slate-500 mt-2">Status: {{ enquiry.status|title }} · Urgency: {{ enquiry.urgency|title }}</p>
-                </div>
-                <a href="{{ url_for('directory_enquiries.consultant_directory_enquiry_detail', enquiry_id=enquiry.id) }}" class="rounded-xl bg-slate-950 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">View</a>
+        <div class="hive-enquiry-row">
+            <div>
+                <div class="hive-enquiry-title">{{ enquiry.company_name }}</div>
+                <div class="hive-enquiry-copy">{{ enquiry.contact_name }} · {{ enquiry.contact_email }}</div>
+                {% if enquiry.support_needed %}<div class="hive-enquiry-copy">{{ enquiry.support_needed|truncate(130) }}</div>{% endif %}
             </div>
-        {% else %}
-            <div class="p-8"><h2 class="text-xl font-bold text-slate-950">No directory enquiries yet</h2></div>
+            <div class="hive-enquiry-meta"><strong>Status</strong><span class="hive-biz-status {{ 'hive-biz-status--good' if enquiry.status == 'won' else 'hive-biz-status--info' if enquiry.status == 'accepted' else 'hive-biz-status--warn' if enquiry.status in ['new','assigned'] else '' }}">{{ enquiry.status|replace('_',' ')|title }}</span></div>
+            <div class="hive-enquiry-meta"><strong>Urgency</strong>{{ enquiry.urgency|title }}</div>
+            <a href="{{ url_for('directory_enquiries.consultant_directory_enquiry_detail', enquiry_id=enquiry.id) }}" class="hive-biz-btn">Open</a>
+        </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="hive-empty">
+        <h2>No directory enquiries yet</h2>
+        <p>New enquiries submitted through your public consultant profile will appear here and in Opportunities.</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
