@@ -1,43 +1,18 @@
 {% extends "base.html" %}
+{% block title %}Notifications · HIVE{% endblock %}
 {% block content %}
-
-<div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-    <div>
-        <p class="text-sm font-semibold text-amber-600 uppercase tracking-wide">Notifications</p>
-        <h1 class="text-3xl font-bold text-slate-950 mt-2">Your Notifications</h1>
-        <p class="text-slate-600 mt-2">System notifications for HIVE activity.</p>
-    </div>
-    <form method="POST" action="{{ url_for('notifications.mark_all_notifications_read') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="rounded-xl bg-slate-950 text-white px-5 py-3 text-sm font-semibold hover:bg-slate-800">Mark all read</button>
-    </form>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase6.css') }}">
+{% set selected_state = request.args.get('state', 'all')|lower %}
+{% set counts = namespace(total=0, unread=0, read=0, visible=0) %}
+{% for notification in notifications %}
+    {% set counts.total = counts.total + 1 %}
+    {% if notification.is_read %}{% set counts.read = counts.read + 1 %}{% else %}{% set counts.unread = counts.unread + 1 %}{% endif %}
+    {% if selected_state == 'all' or (selected_state == 'unread' and not notification.is_read) or (selected_state == 'read' and notification.is_read) %}{% set counts.visible = counts.visible + 1 %}{% endif %}
+{% endfor %}
+<div class="hive-workspace">
+<header class="hive-workspace-head"><div><h1>Notifications</h1><p>Informational updates from HIVE. Work that needs action belongs in the Action Centre.</p></div>{% if counts.unread %}<form method="POST" action="{{ url_for('notifications.mark_all_notifications_read') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="hive-btn hive-btn--primary" type="submit">Mark all read</button></form>{% endif %}</header>
+<div class="hive-metric-rail"><div class="hive-metric"><span>Total</span><strong>{{ counts.total }}</strong></div><div class="hive-metric"><span>Unread</span><strong>{{ counts.unread }}</strong></div><div class="hive-metric"><span>Read</span><strong>{{ counts.read }}</strong></div><div class="hive-metric"><span>Showing</span><strong>{{ counts.visible }}</strong></div></div>
+<div class="hive-notification-toolbar"><div class="hive-notification-filters"><a class="hive-filter-link {% if selected_state == 'all' %}is-active{% endif %}" href="{{ url_for('notifications.notification_list') }}">All</a><a class="hive-filter-link {% if selected_state == 'unread' %}is-active{% endif %}" href="{{ url_for('notifications.notification_list', state='unread') }}">Unread</a><a class="hive-filter-link {% if selected_state == 'read' %}is-active{% endif %}" href="{{ url_for('notifications.notification_list', state='read') }}">Read</a></div><a class="hive-btn" href="{{ url_for('billing.integration_action_centre') }}">Open Action Centre</a></div>
+{% if counts.visible %}<div class="hive-notification-list">{% for notification in notifications %}{% if selected_state == 'all' or (selected_state == 'unread' and not notification.is_read) or (selected_state == 'read' and notification.is_read) %}<article class="hive-notification-row {% if not notification.is_read %}is-unread{% endif %}"><span class="hive-notification-mark" aria-hidden="true"></span><div class="hive-notification-copy"><h2>{{ notification.title }}</h2>{% if notification.message %}<p>{{ notification.message }}</p>{% endif %}<p class="hive-notification-meta">{{ notification.category|replace('_', ' ')|title }} · {{ notification.created_at.strftime('%d %b %Y %H:%M') if notification.created_at else 'Time unavailable' }}{% if notification.is_read and notification.read_at %} · Read {{ notification.read_at.strftime('%d %b %Y %H:%M') }}{% endif %}</p></div>{% if not notification.is_read or notification.link_url %}<form method="POST" action="{{ url_for('notifications.mark_notification_read', notification_id=notification.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="hive-btn" type="submit">{% if notification.link_url %}Open{% else %}Mark read{% endif %}</button></form>{% endif %}</article>{% endif %}{% endfor %}</div>{% else %}<div class="hive-empty"><h2>{{ 'You are all caught up' if selected_state == 'unread' else 'No notifications to show' }}</h2><p>{% if selected_state == 'unread' %}There are no unread informational updates. Check the Action Centre for work that still needs attention.{% else %}Notifications will appear here when HIVE has informational updates for your account.{% endif %}</p></div>{% endif %}
 </div>
-
-<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-    <div class="divide-y divide-slate-200">
-        {% for notification in notifications %}
-            <div class="p-6 {% if not notification.is_read %}bg-amber-50{% endif %}">
-                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div>
-                        <h2 class="font-bold text-slate-950">{{ notification.title }}</h2>
-                        <p class="text-sm text-slate-600 mt-2">{{ notification.message or '' }}</p>
-                        <p class="text-xs text-slate-500 mt-3">{{ notification.category|replace('_', ' ')|title }} · {{ notification.created_at.strftime('%d/%m/%Y %H:%M') if notification.created_at else '' }}</p>
-                    </div>
-                    <form method="POST" action="{{ url_for('notifications.mark_notification_read', notification_id=notification.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="rounded-xl bg-white border border-slate-300 text-slate-800 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
-                            {% if notification.link_url %}Open{% else %}Mark read{% endif %}
-                        </button>
-                    </form>
-                </div>
-            </div>
-        {% else %}
-            <div class="p-8">
-                <h2 class="text-xl font-bold text-slate-950">No notifications yet</h2>
-                <p class="text-slate-600 mt-2">Notifications will appear here when HIVE activity needs your attention.</p>
-            </div>
-        {% endfor %}
-    </div>
-</div>
-
 {% endblock %}
