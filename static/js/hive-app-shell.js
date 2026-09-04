@@ -6,7 +6,7 @@
     const openButton = document.getElementById("hiveSidebarOpen");
     const closeButton = document.getElementById("hiveSidebarClose");
     const scrim = document.getElementById("hiveSidebarScrim");
-    const isClientsPage = window.location.pathname === "/clients";
+    const isClientsPage = window.location.pathname === "/clients" || window.location.pathname.startsWith("/clients/");
 
     const primaryNavGroup = sidebar?.querySelector(".hive-app-nav-group");
     if (primaryNavGroup && !primaryNavGroup.querySelector('a[href="/clients"]')) {

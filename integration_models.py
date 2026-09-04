@@ -164,3 +164,41 @@ class IntegrationEvent(db.Model):
             name="uq_integration_event_external_id",
         ),
     )
+
+
+class ClientRecordLink(db.Model):
+    """Explicit consultant-owned links between an EllipseCRM client and HIVE-native records."""
+
+    __tablename__ = "client_record_link"
+
+    id = db.Column(db.Integer, primary_key=True)
+    consultant_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False,
+        index=True,
+    )
+    hive_tenant_id = db.Column(db.String(64), nullable=False, index=True)
+    external_client_id = db.Column(db.String(100), nullable=False, index=True)
+    source_type = db.Column(db.String(50), nullable=False, index=True)
+    source_record_id = db.Column(db.Integer, nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    consultant = db.relationship(
+        "User",
+        backref=db.backref("client_record_links", lazy="dynamic", cascade="all, delete-orphan"),
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "consultant_id",
+            "source_type",
+            "source_record_id",
+            name="uq_client_record_link_consultant_source",
+        ),
+        db.Index(
+            "ix_client_record_link_consultant_client",
+            "consultant_id",
+            "external_client_id",
+        ),
+    )

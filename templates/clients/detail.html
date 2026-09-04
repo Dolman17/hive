@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}{% if client %}{{ client.name }} · Client 360 · HIVE{% else %}Client 360 · HIVE{% endif %}{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase7.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/hive-phase9.css') }}">
+
+<div class="hive-workspace hive-client360-workspace">
+    <div class="hive-client360-back"><a href="{{ url_for('notifications.client_list') }}">← Back to Clients</a></div>
+
+    {% if client %}
+        <header class="hive-workspace-head">
+            <div>
+                <div class="hive-client360-title-line">
+                    <h1>{{ client.name }}</h1>
+                    <span class="hive-client-status hive-client-status--{{ client.account_status }}">{{ client.account_status|replace('_', ' ')|title }}</span>
+                </div>
+                <p>Client 360 combines authorised EllipseCRM operational context with HIVE records you explicitly link to this client.</p>
+            </div>
+            {% if source_state.source_launch_url %}
+                <div class="hive-workspace-actions">
+                    <a class="hive-btn hive-btn--primary" href="{{ source_state.source_launch_url }}">Open EllipseCRM</a>
+                </div>
+            {% endif %}
+        </header>
+
+        <section class="hive-metric-rail" aria-label="Client operational summary">
+            <div class="hive-metric"><span>Open cases</span><strong>{{ client.open_cases }}</strong></div>
+            <div class="hive-metric"><span>Urgent cases</span><strong>{{ client.urgent_cases }}</strong></div>
+            <div class="hive-metric"><span>Assigned actions</span><strong>{{ client.open_actions }}</strong></div>
+            <div class="hive-metric"><span>Linked HIVE records</span><strong>{{ linked_records|length }}</strong></div>
+        </section>
+
+        <div class="hive-client360-grid">
+            <main class="hive-client360-main">
+                <section class="hive-client360-panel">
+                    <div class="hive-client360-panel-head">
+                        <div>
+                            <h2>Client overview</h2>
+                            <p>Authorised account metadata from EllipseCRM.</p>
+                        </div>
+                    </div>
+                    <dl class="hive-client360-details">
+                        <div><dt>Service arrangement</dt><dd>{{ client.service_arrangement or 'Not set' }}</dd></div>
+                        <div><dt>Agreement</dt><dd>{{ client.agreement_status_label }}</dd></div>
+                        <div><dt>Location</dt><dd>{% if client.town_city or client.county or client.postcode %}{{ [client.town_city, client.county, client.postcode]|select|join(', ') }}{% else %}Not set{% endif %}</dd></div>
+                        <div><dt>Main contact</dt><dd>{{ client.main_contact_name or 'Not set' }}</dd></div>
+                        <div><dt>Email</dt><dd>{% if client.main_contact_email %}<a href="mailto:{{ client.main_contact_email }}">{{ client.main_contact_email }}</a>{% else %}Not set{% endif %}</dd></div>
+                        <div><dt>Phone</dt><dd>{{ client.main_contact_phone or 'Not set' }}</dd></div>
+                        <div><dt>Employees</dt><dd>{{ client.employee_count if client.employee_count is not none else 'Not recorded' }}</dd></div>
+                        <div><dt>Locations</dt><dd>{{ client.location_count if client.location_count is not none else 'Not recorded' }}</dd></div>
+                        <div><dt>Latest activity</dt><dd>{{ client.latest_activity_at[:10] if client.latest_activity_at else 'No recent activity date' }}</dd></div>
+                    </dl>
+                </section>
+
+                <section class="hive-client360-panel">
+                    <div class="hive-client360-panel-head">
+                        <div>
+                            <h2>HIVE context</h2>
+                            <p>Only records you explicitly link appear here. HIVE never links by company name.</p>
+                        </div>
+                    </div>
+
+                    <div class="hive-client360-linked-list">
+                        {% for row in linked_records %}
+                            <article class="hive-client360-linked-row">
+                                <div>
+                                    {% if row.source %}
+                                        <span class="hive-client360-source">{{ row.source.source_label }}</span>
+                                        <h3><a href="{{ row.source.url }}">{{ row.source.title }}</a></h3>
+                                        <p>{{ row.source.meta }}</p>
+                                    {% else %}
+                                        <span class="hive-client360-source">Unavailable source record</span>
+                                        <h3>Linked record no longer exists or is no longer accessible</h3>
+                                    {% endif %}
+                                </div>
+                                <form method="POST" action="{{ url_for('notifications.client_unlink_record', external_client_id=client.external_id, link_id=row.link.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="hive-btn">Unlink</button>
+                                </form>
+                            </article>
+                        {% else %}
+                            <div class="hive-client360-inline-empty">No HIVE records have been linked to this client yet.</div>
+                        {% endfor %}
+                    </div>
+
+                    <form method="POST" action="{{ url_for('notifications.client_link_record', external_client_id=client.external_id) }}" class="hive-client360-link-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label for="record_key">Link an existing HIVE record</label>
+                        <div class="hive-client360-link-controls">
+                            <select id="record_key" name="record_key" {% if not link_candidates %}disabled{% endif %}>
+                                <option value="">Choose a record…</option>
+                                {% for candidate in link_candidates %}
+                                    <option value="{{ candidate.source_type }}:{{ candidate.record_id }}">{{ candidate.source_label }} · {{ candidate.title }} · {{ candidate.meta }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="hive-btn hive-btn--primary" {% if not link_candidates %}disabled{% endif %}>Link record</button>
+                        </div>
+                        <p>{% if link_candidates %}Linking only creates a HIVE relationship. The source record is not changed.{% else %}All available HIVE records are already linked to a client, or there are no eligible records yet.{% endif %}</p>
+                    </form>
+                </section>
+            </main>
+
+            <aside class="hive-client360-side">
+                <section class="hive-client360-panel">
+                    <div class="hive-client360-panel-head">
+                        <div>
+                            <h2>EllipseCRM attention</h2>
+                            <p>Counts are restricted to work your linked EllipseCRM user can access.</p>
+                        </div>
+                    </div>
+                    <div class="hive-client360-attention-list">
+                        <div><span>Open cases</span><strong>{{ client.open_cases }}</strong></div>
+                        <div{% if client.urgent_cases %} class="is-alert"{% endif %}><span>Urgent cases</span><strong>{{ client.urgent_cases }}</strong></div>
+                        <div{% if client.open_actions %} class="is-alert"{% endif %}><span>Assigned open actions</span><strong>{{ client.open_actions }}</strong></div>
+                    </div>
+                    {% if source_state.source_launch_url %}<a class="hive-btn hive-client360-full-btn" href="{{ source_state.source_launch_url }}">Open source system</a>{% endif %}
+                </section>
+
+                <section class="hive-client360-panel hive-client360-consultancy">
+                    <div class="hive-client360-panel-head">
+                        <div>
+                            <h2>Wider product activity</h2>
+                            <p>Consultancy-wide only. These figures are not confirmed as belonging to {{ client.name }}.</p>
+                        </div>
+                    </div>
+                    <div class="hive-client360-product-list">
+                        {% for product in consultancy_products %}
+                            <div class="hive-client360-product-row">
+                                <div>
+                                    <strong>{{ product.name }}</strong>
+                                    <span>{{ product.open_actions }} open actions{% if product.urgent_actions %} · {{ product.urgent_actions }} urgent{% endif %}</span>
+                                </div>
+                                <a href="{{ product.launch_url }}">Open</a>
+                            </div>
+                        {% else %}
+                            <div class="hive-client360-inline-empty">No other connected products with active access.</div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </aside>
+        </div>
+    {% else %}
+        <section class="hive-empty hive-client-source-empty">
+            <h2>Client 360 is not available</h2>
+            <p>{{ source_state.message }}</p>
+            <div class="hive-empty-actions"><a class="hive-btn hive-btn--primary" href="{{ url_for('notifications.client_list') }}">Back to Clients</a></div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}
